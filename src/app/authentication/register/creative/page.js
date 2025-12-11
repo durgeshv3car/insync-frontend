@@ -4,22 +4,41 @@ import React from 'react'
 
 const page = () => {
   return (
-    <main className="auth-creative-wrapper">
+     <main className="auth-creative-wrapper">
       <div className="auth-creative-inner">
         <div className="creative-card-wrapper">
-          <div className="card my-4 overflow-hidden" style={{ zIndex: 1 }}>
+          <div className="card overflow-hidden" style={{ zIndex: 1 }}>
             <div className="row flex-1 g-0">
-              <div className="col-lg-6 h-100 my-auto">
-                <div className="wd-50 bg-white p-2 rounded-circle shadow-lg position-absolute translate-middle top-50 start-50">
-                  <img src="/images/logo-abbr.png" alt="img" className="img-fluid" />
-                </div>
-                <div className="creative-card-body card-body p-sm-5">
-                  <RegisterForm path={"/authentication/login/creative"} />
+              {/* Left Side - 70% White Background with Image */}
+              <div className="col-lg-8 h-100 bg-white order-0 order-lg-0">
+                <div className="h-100 d-flex align-items-center justify-content-center p-5">
+                  <Image
+                    width={499}
+                    height={399}
+                    sizes="100vw"
+                    src="/images/dashboard_logo1.png"
+
+                    alt="img"
+                    className="img-fluid"
+                  />
                 </div>
               </div>
-              <div className="col-lg-6 bg-primary">
-                <div className="h-100 d-flex align-items-center justify-content-center">
-                  <Image width={499} height={499} sizes='100vw' src="/images/auth/auth-user.png" alt="img" className="img-fluid" />
+
+              {/* Right Side - 30% with Register Form */}
+              <div className="col-lg-4 h-100 my-auto order-1 order-lg-1 position-relative">
+                {/* Logo positioned at top center */}
+                <div className="text-center pt-4 pb-3">
+                  <img
+                    src="/images/login_logo.png"
+                    alt="logo"
+                    className="img-fluid"
+                    style={{ width: '240px', height: '160px' }}
+                  />
+                </div>
+
+                {/* Register Form */}
+                <div className="creative-card-body card-body px-4 pb-5">
+                  <RegisterForm path={"/authentication/login/creative"} />
                 </div>
               </div>
             </div>

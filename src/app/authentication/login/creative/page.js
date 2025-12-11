@@ -1,34 +1,72 @@
-import LoginForm from '@/components/authentication/LoginForm'
-import Image from 'next/image'
-import React from 'react'
+"use client";
 
-const page = () => {
-    return (
-        <main className="auth-creative-wrapper">
-            <div className="auth-creative-inner">
-                <div className="creative-card-wrapper">
-                    <div className="card my-4 overflow-hidden" style={{ zIndex: 1 }}>
-                        <div className="row flex-1 g-0">
-                            <div className="col-lg-6 h-100 my-auto order-1 order-lg-0">
-                                <div className="wd-50 bg-white p-2 rounded-circle shadow-lg position-absolute translate-middle top-50 start-50 d-none d-lg-block">
-                                    <img src="/images/logo-abbr.png" alt="img" className="img-fluid" />
-                                </div>
-                                <div className="creative-card-body card-body p-sm-5">
-                                    <LoginForm registerPath={"/authentication/register/creative"} resetPath={"/authentication/reset/creative"} />
-                                </div>
-                            </div>
-                            <div className="col-lg-6 bg-primary order-0 order-lg-1">
-                                <div className="h-100 d-flex align-items-center justify-content-center">
-                                    <Image width={499} height={499} sizes='100vw' src="/images/auth/auth-user.png" alt="img" className="img-fluid" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+import LoginForm from '@/components/authentication/LoginForm';
+import Image from 'next/image';
+import React, { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
+const Page = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+
+    if (status === "authenticated" && session?.user) {
+      router.push("/"); 
+    }
+  }, [status, session, router]);
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  return (
+ <main className="auth-creative-wrapper">
+      <div className="auth-creative-inner">
+        <div className="creative-card-wrapper">
+          <div className="card  overflow-hidden" style={{ zIndex: 1 }}>
+            <div className="row flex-1 g-0">
+              {/* Left Side - 70% White Background with Image */}
+              <div className="col-lg-8 h-100 bg-white order-0 order-lg-0">
+                <div className="h-100 d-flex align-items-center justify-content-center p-5">
+                  <Image
+                    width={499}
+                    height={499}
+                    sizes="100vw"
+                    src="/images/dashboard_logo1.png"
+                    alt="img"
+                    className="img-fluid"
+                  />
                 </div>
-            </div>
-        </main>
+              </div>
 
-    )
+              {/* Right Side - 30% with Login Form */}
+              <div className="col-lg-4 h-100 my-auto order-1 order-lg-1 position-relative">
+                {/* Logo positioned at top center */}
+                <div className="text-center pt-4 pb-3">
+                  <img
+                    src="/images/login_logo.png"
+                    alt="logo"
+                    className="img-fluid"
+                    style={{ width: "240px", height: "160px" }}
+                  />
+                </div>
+
+                {/* Login Form */}
+                <div className="creative-card-body card-body px-4 pb-5">
+                  <LoginForm
+                    registerPath={"/authentication/register/creative"}
+                    resetPath={"/authentication/reset/creative"}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }
 
-export default page
+export default Page;
