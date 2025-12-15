@@ -94,7 +94,7 @@ function page() {
             variant="success"
             onClick={() => setShowCreateCampaignModal(true)}
           >
-            Create Campaigns
+            Create Audiences
           </Button>
         </div>
       </div>
@@ -106,14 +106,14 @@ function page() {
         onHide={() => setShowCreateCampaignModal(false)}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Create Campaign</Modal.Title>
+          <Modal.Title>Create Audience</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group>
-            <Form.Label>Campaign Title</Form.Label>
+            <Form.Label>Audience Title</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Enter campaign title"
+              placeholder="Enter audience title"
               value={campaignTitle}
               onChange={(e) => setCampaignTitle(e.target.value)}
             />
@@ -127,7 +127,7 @@ function page() {
             Close
           </Button>
           <Button variant="success" onClick={handleCreateCampaign}>
-            Create Campaign
+            Create Audience
           </Button>
         </Modal.Footer>
       </Modal>

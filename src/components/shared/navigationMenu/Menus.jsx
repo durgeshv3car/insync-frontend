@@ -7,8 +7,11 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { jwtDecode } from "jwt-decode";
+import { useSearchParams } from "next/navigation";
 
 const Menus = () => {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openSubDropdown, setOpenSubDropdown] = useState(null);
   const [activeParent, setActiveParent] = useState("");
@@ -45,14 +48,35 @@ const Menus = () => {
 
   //     return true;
   //   });
-  const filteredMenu = menuList.filter((menu) => {
-    const permissionsAdmin = ["preview"];
+const filteredMenu = menuList
+  .map((menu) => {
+    // SUPER ADMIN → full access except preview
     if (userDetails.role === "super_admin") {
-      return !permissionsAdmin.includes(menu.name);
+      if (menu.name === "preview") return null;
+      return menu;
     }
+
+    // NORMAL USER PERMISSIONS
     const permissionsUser = ["dashboards", "Reports"];
-    return permissionsUser.includes(menu.name);
-  });
+
+    // If not allowed → skip
+    if (!permissionsUser.includes(menu.name)) return null;
+
+    // Add token to Reports dropdown
+    if (menu.name === "Reports") {
+      return {
+        ...menu,
+        dropdownMenu: menu.dropdownMenu.map((item) => ({
+          ...item,
+          path: `${item.path}?token=${token}`,
+        })),
+      };
+    }
+
+    return menu;
+  })
+  .filter(Boolean); 
+
 
   const handleMainMenu = (e, name) => {
     if (openDropdown === name) {
@@ -101,11 +125,7 @@ const Menus = () => {
             }`}
           >
             <Link
-              href={
-                 name === "Lms"
-                  ? `/Lms?c_id=${cid}&t_id=${tid}`
-                  : path
-              }
+              href={name === "Lms" ? `/Lms?c_id=${cid}&t_id=${tid}` : path}
               className="nxl-link text-capitalize"
             >
               <span className="nxl-micon">{getIcon(icon)}</span>

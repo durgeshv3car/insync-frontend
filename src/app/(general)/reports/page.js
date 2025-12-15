@@ -1,12 +1,5 @@
-import React from 'react'
-import ReportsFilter from './components/Filters'
+import React from "react";
 
-function page() {
-  return (
-    <div>
-      <ReportsFilter />
-    </div>
-  )
+export default async function page() {
+  return <div>404 Page Not Found</div>;
 }
-
-export default page

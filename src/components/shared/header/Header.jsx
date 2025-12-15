@@ -34,6 +34,8 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAudience, setSelectedAudience] = useState(null);
 
+ 
+
   useEffect(() => {
     if (openMegaMenu) {
       document.documentElement.classList.add("nxl-lavel-mega-menu-open");

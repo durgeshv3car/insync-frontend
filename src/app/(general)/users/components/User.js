@@ -85,14 +85,7 @@ function UserPage() {
                   <td>
                     <span className="badge bg-secondary">{user.role}</span>
                   </td>
-                 <td>
-                   <button
-                      className="btn btn-sm btn-outline-warning"
-                      onClick={() => handleEdit(user._id,user)}
-                    >
-                      <Pencil size={16} /> Permissions
-                    </button>
-                 </td>
+          
                   <td className="text-end d-flex justify-content-end gap-2">
                     <button
                       className="btn btn-sm btn-outline-warning"
