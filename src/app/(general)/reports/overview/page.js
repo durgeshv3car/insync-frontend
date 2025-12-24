@@ -1,578 +1,751 @@
 "use client";
 
-import React from "react";
-import { TrendingUp, Users, Target, BarChart3, Eye, Heart, MessageCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import Chart from "chart.js/auto";
+import "./styles.css";
 
-function OverviewPage() {
-  const leftCards = [
-    {
-      title: "Total Campaigns",
-      value: "12",
-      icon: <Target size={24} />,
-      color: "#0d6efd",
-      bgColor: "#e7f1ff",
-    },
-    {
-      title: "Active Audiences",
-      value: "8",
-      icon: <Users size={24} />,
-      color: "#198754",
-      bgColor: "#e8f5e9",
-    },
-    {
-      title: "Total Videos",
-      value: "245",
-      icon: <BarChart3 size={24} />,
-      color: "#fd7e14",
-      bgColor: "#fff3e0",
-    },
-  ];
+export default function OverviewPage() {
+  const [dateRange, setDateRange] = useState("30");
+  const [campaign, setCampaign] = useState("all");
+  const [platform, setPlatform] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const rightCards = [
-    {
-      title: "Total Views",
-      value: "2.4M",
-      icon: <Eye size={24} />,
-      color: "#0d6efd",
-      bgColor: "#e7f1ff",
-    },
-    {
-      title: "Total Likes",
-      value: "156K",
-      icon: <Heart size={24} />,
-      color: "#dc3545",
-      bgColor: "#ffebee",
-    },
+  // Chart refs
+  const performanceChartRef = useRef(null);
+  const platformChartRef = useRef(null);
+  const funnelChartRef = useRef(null);
+  const revenueChartRef = useRef(null);
+  const heatmapChartRef = useRef(null);
+  const deviceChartRef = useRef(null);
+  const geographicChartRef = useRef(null);
+  const demographicsChartRef = useRef(null);
 
-  ];
+  // Store chart instances
+  const chartsRef = useRef({});
 
-  const tableData = [
-    {
-      id: 1,
-      campaignName: "Summer Promo 2024",
-      audience: "Tech Enthusiasts",
-      videos: 5,
-      views: "245,320",
-      engagement: "8.5%",
-      status: "Active",
-    },
-    {
-      id: 2,
-      campaignName: "Product Launch",
-      audience: "Business Professionals",
-      videos: 8,
-      views: "189,450",
-      engagement: "12.3%",
-      status: "Active",
-    },
-  ];
+  useEffect(() => {
+    // Performance Overview Chart
+    if (performanceChartRef.current && !chartsRef.current.performance) {
+      const ctx = performanceChartRef.current.getContext("2d");
+      chartsRef.current.performance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6", "Week 7", "Week 8"],
+          datasets: [
+            {
+              label: "Performance",
+              data: [1200, 1900, 1500, 2200, 2800, 2400, 3000, 2800],
+              borderColor: "#6366f1",
+              backgroundColor: "rgba(99, 102, 241, 0.1)",
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              pointHoverRadius: 6,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "rgba(0,0,0,0.8)",
+              padding: 12,
+              titleFont: { size: 14 },
+              bodyFont: { size: 13 },
+              borderColor: "#e5e7eb",
+              borderWidth: 1,
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 3500,
+              grid: { color: "rgba(0,0,0,0.05)" },
+            },
+          },
+        },
+      });
+    }
 
-  const additionalCards = [
-    {
-      title: "Revenue",
-      value: "$12.5K",
-      icon: <BarChart3 size={24} />,
-      color: "#0d6efd",
-      bgColor: "#e7f1ff",
-    },
-    {
-      title: "ROI",
-      value: "245%",
-      icon: <TrendingUp size={24} />,
-      color: "#198754",
-      bgColor: "#e8f5e9",
-    },
-  ];
+    // Platform Distribution Chart (Donut)
+    if (platformChartRef.current && !chartsRef.current.platform) {
+      const ctx = platformChartRef.current.getContext("2d");
+      chartsRef.current.platform = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Google Ads", "Meta Ads", "LinkedIn", "TikTok", "Other"],
+          datasets: [
+            {
+              data: [35, 28, 18, 12, 7],
+              backgroundColor: [
+                "#6366f1",
+                "#ec4899",
+                "#06b6d4",
+                "#10b981",
+                "#f59e0b",
+              ],
+              borderColor: "#fff",
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                font: { size: 12 },
+                padding: 15,
+              },
+            },
+          },
+        },
+      });
+    }
 
-  const additionalTableData = [
-    {
-      id: 1,
-      metric: "Top Video",
-      value: "Summer Promo",
-      views: "245,320",
-      status: "Trending",
-    },
-    {
-      id: 2,
-      metric: "Best Engagement",
-      value: "Product Launch",
-      views: "189,450",
-      status: "Active",
-    },
-    {
-      id: 3,
-      metric: "Most Shared",
-      value: "Brand Awareness",
-      views: "567,890",
-      status: "Completed",
-    },
-  ];
+    // Conversion Funnel Chart (Horizontal Bar)
+    if (funnelChartRef.current && !chartsRef.current.funnel) {
+      const ctx = funnelChartRef.current.getContext("2d");
+      chartsRef.current.funnel = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Impressions", "Visits", "Clicks", "Add to Cart", "Purchase"],
+          datasets: [
+            {
+              label: "Count",
+              data: [2400, 1800, 900, 450, 200],
+              backgroundColor: "#6366f1",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              beginAtZero: true,
+              grid: { color: "rgba(0,0,0,0.05)" },
+            },
+          },
+        },
+      });
+    }
 
-  const thirdSectionTableData = [
-    {
-      id: 1,
-      campaignName: "Summer Promo 2024",
-      audience: "Tech Enthusiasts",
-      videos: 5,
-      views: "245,320",
-      engagement: "8.5%",
-      status: "Active",
-    },
-    {
-      id: 2,
-      campaignName: "Product Launch",
-      audience: "Business Professionals",
-      videos: 8,
-      views: "189,450",
-      engagement: "12.3%",
-      status: "Active",
-    },
-    {
-      id: 3,
-      campaignName: "Brand Awareness",
-      audience: "General Audience",
-      videos: 12,
-      views: "567,890",
-      engagement: "6.2%",
-      status: "Completed",
-    },
-    {
-      id: 4,
-      campaignName: "Holiday Special",
-      audience: "Shoppers",
-      videos: 15,
-      views: "423,120",
-      engagement: "9.8%",
-      status: "Active",
-    },
-    {
-      id: 5,
-      campaignName: "Educational Series",
-      audience: "Students",
-      videos: 20,
-      views: "312,560",
-      engagement: "15.4%",
-      status: "Active",
-    },
-    {
-      id: 6,
-      campaignName: "Influencer Collab",
-      audience: "Social Media Users",
-      videos: 6,
-      views: "892,340",
-      engagement: "22.1%",
-      status: "Completed",
-    },
-    {
-      id: 7,
-      campaignName: "Regional Focus",
-      audience: "Local Customers",
-      videos: 10,
-      views: "156,780",
-      engagement: "11.6%",
-      status: "Active",
-    },
-    {
-      id: 8,
-      campaignName: "B2B Initiative",
-      audience: "Enterprise",
-      videos: 7,
-      views: "87,340",
-      engagement: "18.9%",
-      status: "Planning",
-    },
-  ];
+    // Revenue by Channel Chart (Stacked Bar)
+    if (revenueChartRef.current && !chartsRef.current.revenue) {
+      const ctx = revenueChartRef.current.getContext("2d");
+      chartsRef.current.revenue = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          datasets: [
+            {
+              label: "Google",
+              data: [500, 600, 700, 800, 900, 800, 700],
+              backgroundColor: "#6366f1",
+            },
+            {
+              label: "Meta",
+              data: [400, 500, 600, 700, 800, 700, 600],
+              backgroundColor: "#ec4899",
+            },
+            {
+              label: "TikTok",
+              data: [300, 400, 500, 600, 700, 600, 500],
+              backgroundColor: "#06b6d4",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, grid: { color: "rgba(0,0,0,0.05)" } },
+          },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { padding: 15 },
+            },
+          },
+        },
+      });
+    }
 
-  const renderCard = (card) => (
-    <div
-      style={{
-        backgroundColor: "#ffffff",
-        borderRadius: "8px",
-        padding: "16px",
-        display: "flex",
-        alignItems: "center",
-        gap: "16px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        border: "1px solid #e9ecef",
-      }}
-    >
-      <div
-        style={{
-          width: "50px",
-          height: "50px",
-          borderRadius: "8px",
-          backgroundColor: card.bgColor,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: card.color,
-          flexShrink: 0,
-        }}
-      >
-        {card.icon}
-      </div>
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: "0.75rem", color: "#6c757d", margin: 0 }}>
-          {card.title}
-        </p>
-        <h4
-          style={{
-            fontSize: "1.5rem",
-            fontWeight: "700",
-            color: "#1a1a1a",
-            margin: "4px 0 0 0",
-          }}
-        >
-          {card.value}
-        </h4>
-      </div>
-    </div>
-  );
+    // Hourly Performance Heatmap Chart
+    if (heatmapChartRef.current && !chartsRef.current.heatmap) {
+      const ctx = heatmapChartRef.current.getContext("2d");
+      chartsRef.current.heatmap = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [
+            "12am",
+            "1am",
+            "2am",
+            "3am",
+            "4am",
+            "5am",
+            "6am",
+            "7am",
+            "8am",
+            "9am",
+            "10am",
+            "11am",
+          ],
+          datasets: [
+            {
+              label: "Performance",
+              data: [20, 15, 10, 25, 40, 60, 80, 90, 85, 75, 65, 55],
+              backgroundColor: [
+                "#ef4444",
+                "#f97316",
+                "#f59e0b",
+                "#eab308",
+                "#84cc16",
+                "#22c55e",
+                "#10b981",
+                "#14b8a6",
+                "#06b6d4",
+                "#0ea5e9",
+                "#6366f1",
+                "#8b5cf6",
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, max: 100, grid: { color: "rgba(0,0,0,0.05)" } },
+          },
+        },
+      });
+    }
 
-  const renderAdditionalCard = (card) => (
-    <div
-      style={{
-        backgroundColor: "#ffffff",
-        borderRadius: "8px",
-        padding: "20px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        border: "1px solid #e9ecef",
-      }}
-    >
-      <p style={{ fontSize: "0.75rem", color: "#6c757d", margin: 0, marginBottom: "8px" }}>
-        {card.title}
-      </p>
-      <h4
-        style={{
-          fontSize: "1.25rem",
-          fontWeight: "700",
-          color: "#1a1a1a",
-          margin: "0 0 12px 0",
-        }}
-      >
-        {card.value}
-      </h4>
-      <p style={{ fontSize: "0.85rem", color: "#495057", margin: 0 }}>
-        {card.subtitle}
-      </p>
-      <p style={{ fontSize: "0.8rem", color: "#6c757d", margin: "8px 0 0 0" }}>
-        {card.metric}
-      </p>
-    </div>
-  );
+    // Device Breakdown Chart (Pie)
+    if (deviceChartRef.current && !chartsRef.current.device) {
+      const ctx = deviceChartRef.current.getContext("2d");
+      chartsRef.current.device = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Mobile", "Desktop", "Tablet", "Smart TV"],
+          datasets: [
+            {
+              data: [45, 30, 15, 10],
+              backgroundColor: [
+                "#6366f1",
+                "#ec4899",
+                "#06b6d4",
+                "#10b981",
+              ],
+              borderColor: "#fff",
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { font: { size: 12 }, padding: 15 },
+            },
+          },
+        },
+      });
+    }
+
+    // Geographic Performance Chart
+    if (geographicChartRef.current && !chartsRef.current.geographic) {
+      const ctx = geographicChartRef.current.getContext("2d");
+      chartsRef.current.geographic = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["USA", "UK", "Canada", "Australia", "Germany", "France", "India", "Japan"],
+          datasets: [
+            {
+              label: "Revenue",
+              data: [4500, 3800, 3200, 2900, 2600, 2400, 2100, 1900],
+              backgroundColor: "#6366f1",
+              borderRadius: 4,
+            },
+            {
+              label: "Conversions",
+              data: [3200, 2900, 2400, 2100, 1900, 1700, 1500, 1300],
+              backgroundColor: "#06b6d4",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { grid: { color: "rgba(0,0,0,0.05)" } },
+          },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { padding: 15 },
+            },
+          },
+        },
+      });
+    }
+
+    // Audience Demographics Chart
+    if (demographicsChartRef.current && !chartsRef.current.demographics) {
+      const ctx = demographicsChartRef.current.getContext("2d");
+      chartsRef.current.demographics = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["13-24", "25-34", "35-44", "45-54", "55-64", "65+"],
+          datasets: [
+            {
+              label: "Male",
+              data: [850, 1200, 950, 800, 650, 400],
+              backgroundColor: "#6366f1",
+              borderRadius: 4,
+            },
+            {
+              label: "Female",
+              data: [920, 1350, 1050, 900, 720, 450],
+              backgroundColor: "#ec4899",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { grid: { color: "rgba(0,0,0,0.05)" } },
+          },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { padding: 15 },
+            },
+          },
+        },
+      });
+    }
+
+    return () => {
+      // Cleanup charts on unmount
+      Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
+      chartsRef.current = {};
+    };
+  }, []);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <div style={{ marginBottom: "30px" }}>
-        <h1
-          style={{
-            fontSize: "1.75rem",
-            fontWeight: "700",
-            color: "#1a1a1a",
-            marginBottom: "8px",
-          }}
-        >
-          Overview
-        </h1>
-        <p style={{ fontSize: "0.95rem", color: "#6c757d", margin: 0 }}>
-          Monitor your campaigns and audience performance metrics
-        </p>
-      </div>
+    <main className="main-content">
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-        {/* Left Section */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          {/* Cards on top - 3 cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-            {leftCards.map((card, idx) => (
-              <div key={idx}>{renderCard(card)}</div>
-            ))}
+      {/* Filters Section */}
+      <section className="filters-section">
+        <div className="filter-bar">
+          <div className="filter-group">
+            <label htmlFor="dateRange">Date Range</label>
+            <select 
+              id="dateRange"
+              value={dateRange} 
+              onChange={(e) => setDateRange(e.target.value)}
+              className="filter-select"
+            >
+              <option value="7">Last 7 Days</option>
+              <option value="14">Last 14 Days</option>
+              <option value="30">Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
+            </select>
           </div>
 
-          {/* Table below cards */}
-          <div>
-            <h6
-              style={{
-                fontSize: "1rem",
-                fontWeight: "600",
-                color: "#1a1a1a",
-                marginBottom: "16px",
-              }}
+          <div className="filter-group">
+            <label htmlFor="campaign">Campaign</label>
+            <select 
+              id="campaign"
+              value={campaign} 
+              onChange={(e) => setCampaign(e.target.value)}
+              className="filter-select"
             >
-              Recent Campaigns
-            </h6>
-            <div
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "12px",
-                overflow: "hidden",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                border: "1px solid #e9ecef",
-              }}
+              <option value="all">All Campaigns</option>
+              <option value="brand">Brand Awareness</option>
+              <option value="conversion">Conversions</option>
+              <option value="retargeting">Retargeting</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="platform">Platform</label>
+            <select 
+              id="platform"
+              value={platform} 
+              onChange={(e) => setPlatform(e.target.value)}
+              className="filter-select"
             >
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
-                      <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Campaign Name
-                      </th>
-                      <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Audience
-                      </th>
-                      <th style={{ padding: "14px", textAlign: "center", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Videos
-                      </th>
-                      <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Views
-                      </th>
-                      <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Engagement
-                      </th>
-                      <th style={{ padding: "14px", textAlign: "center", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableData.map((row, idx) => (
-                      <tr
-                        key={row.id}
-                        style={{
-                          borderBottom: "1px solid #e9ecef",
-                          backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
-                        }}
-                      >
-                        <td style={{ padding: "14px", fontSize: "0.9rem", color: "#1a1a1a", fontWeight: "500" }}>
-                          {row.campaignName}
-                        </td>
-                        <td style={{ padding: "14px", fontSize: "0.9rem", color: "#6c757d" }}>
-                          {row.audience}
-                        </td>
-                        <td style={{ padding: "14px", textAlign: "center", fontSize: "0.9rem", color: "#1a1a1a", fontWeight: "500" }}>
-                          {row.videos}
-                        </td>
-                        <td style={{ padding: "14px", fontSize: "0.9rem", color: "#1a1a1a" }}>
-                          {row.views}
-                        </td>
-                        <td style={{ padding: "14px", fontSize: "0.9rem", color: "#1a1a1a", fontWeight: "600" }}>
-                          {row.engagement}
-                        </td>
-                        <td style={{ padding: "14px", textAlign: "center" }}>
-                          <span
-                            style={{
-                              display: "inline-block",
-                              padding: "4px 12px",
-                              backgroundColor: "#d4edda",
-                              color: "#155724",
-                              borderRadius: "12px",
-                              fontSize: "0.75rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            {row.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <option value="all">All Platforms</option>
+              <option value="google">Google Ads</option>
+              <option value="meta">Meta Ads</option>
+              <option value="tiktok">TikTok Ads</option>
+            </select>
+          </div>
+
+          <button className="btn btn-secondary filter-reset">
+            <i className="fas fa-redo-alt" /> Reset Filters
+          </button>
+        </div>
+      </section>
+
+      {/* Real-time Stats */}
+      <section className="realtime-section">
+        <div className="realtime-card">
+          <div className="realtime-header">
+            <div className="realtime-title">
+              <h3>Real-Time Performance</h3>
+              <span className="live-dot">● LIVE</span>
+            </div>
+            <button className="btn btn-refresh">
+              <i className="fas fa-sync-alt" /> Refresh
+            </button>
+          </div>
+
+          <div className="realtime-stats">
+            <Stat value="2,844" label="Active Users" trend="+12.5%" />
+            <Stat value="1,254" label="Clicks/Hour" trend="+8.3%" />
+            <Stat value="91" label="Conversions" trend="+15.7%" />
+            <Stat value="$4,641" label="Revenue" trend="+22.4%" />
+            <Stat value="3.37%" label="CTR" trend="-1.2%" />
+          </div>
+        </div>
+      </section>
+
+      {/* Key Metrics */}
+      <section className="metrics-section">
+        <h2 className="section-title">Key Performance Metrics</h2>
+        <div className="stats-grid">
+          <StatCard title="Impressions" value="2.4M" icon="fa-eye" change="+12%" />
+          <StatCard title="Clicks" value="847K" icon="fa-mouse-pointer" change="+8%" />
+          <StatCard title="CTR" value="3.52%" icon="fa-percentage" change="+0.5%" />
+          <StatCard title="Conversions" value="12.4K" icon="fa-shopping-cart" change="+23%" />
+          <StatCard title="Revenue" value="$124.5K" icon="fa-dollar-sign" change="+15%" />
+          <StatCard title="ROAS" value="4.2x" icon="fa-chart-line" change="+18%" />
+        </div>
+      </section>
+
+      {/* Charts Section */}
+      <section className="charts-section">
+        <h2 className="section-title">Analytics & Insights</h2>
+        <div className="charts-grid">
+          <ChartCard title="Performance Overview">
+            <canvas ref={performanceChartRef} id="performanceChart" />
+          </ChartCard>
+
+          <ChartCard title="Platform Distribution">
+            <canvas ref={platformChartRef} id="platformChart" />
+          </ChartCard>
+
+          <ChartCard title="Conversion Funnel">
+            <canvas ref={funnelChartRef} id="funnelChart" />
+          </ChartCard>
+
+          <ChartCard title="Revenue by Channel">
+            <canvas ref={revenueChartRef} id="revenueChart" />
+          </ChartCard>
+
+          <ChartCard title="Hourly Performance Heatmap">
+            <canvas ref={heatmapChartRef} id="heatmapChart" />
+          </ChartCard>
+
+          <ChartCard title="Device Breakdown">
+            <canvas ref={deviceChartRef} id="deviceChart" />
+          </ChartCard>
+        </div>
+      </section>
+
+      {/* Table */}
+      <div className="data-table-card">
+        <div className="table-header">
+          <h3>Campaign Performance</h3>
+          <div className="table-actions">
+            <button className="btn btn-sm btn-ghost">
+              <i className="fas fa-filter" /> Filter
+            </button>
+            <button className="btn btn-sm btn-ghost">
+              <i className="fas fa-download" /> Export
+            </button>
+            <button className="btn btn-primary">
+              <i className="fas fa-plus" /> New Campaign
+            </button>
+          </div>
+        </div>
+
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Campaign</th>
+              <th>Status</th>
+              <th>Impressions</th>
+              <th>Clicks</th>
+              <th>CTR</th>
+              <th>Conversions</th>
+              <th>Spend</th>
+              <th>ROAS</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div className="campaign-icon active" />Summer Sale 2024</td>
+              <td><span className="badge badge-active">Active</span></td>
+              <td>1,245,678</td>
+              <td>45,678</td>
+              <td>3.67%</td>
+              <td>1,234</td>
+              <td>$12,456</td>
+              <td>4.2x</td>
+              <td><ProgressBar percent={75} /></td>
+            </tr>
+            <tr>
+              <td><div className="campaign-icon secondary" />Brand Awareness Q3</td>
+              <td><span className="badge badge-active">Active</span></td>
+              <td>892,345</td>
+              <td>32,456</td>
+              <td>3.64%</td>
+              <td>876</td>
+              <td>$8,934</td>
+              <td>3.8x</td>
+              <td><ProgressBar percent={60} /></td>
+            </tr>
+            <tr>
+              <td><div className="campaign-icon info" />Retargeting - Cart</td>
+              <td><span className="badge badge-paused">Paused</span></td>
+              <td>456,789</td>
+              <td>16,234</td>
+              <td>3.55%</td>
+              <td>567</td>
+              <td>$5,678</td>
+              <td>3.2x</td>
+              <td><ProgressBar percent={45} /></td>
+            </tr>
+            <tr>
+              <td><div className="campaign-icon success" />App Install</td>
+              <td><span className="badge badge-active">Active</span></td>
+              <td>678,901</td>
+              <td>24,567</td>
+              <td>3.62%</td>
+              <td>2,345</td>
+              <td>$7,890</td>
+              <td>5.1x</td>
+              <td><ProgressBar percent={90} /></td>
+            </tr>
+            <tr>
+              <td><div className="campaign-icon warning" />Video Engagement</td>
+              <td><span className="badge badge-completed">Completed</span></td>
+              <td>345,678</td>
+              <td>12,345</td>
+              <td>3.57%</td>
+              <td>432</td>
+              <td>$4,567</td>
+              <td>1.8x</td>
+              <td><ProgressBar percent={100} /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Bottom Sections */}
+      <section className="bottom-sections">
+        <div className="section-row">
+          <div className="section-column">
+            <div className="info-card">
+              <div className="card-header">
+                <h3>Recent Activity</h3>
+                <a href="#" className="link-text">View All</a>
+              </div>
+              <div className="activity-list">
+                <ActivityItem icon="fa-check-circle" title="Campaign launched successfully" time="2 hours ago" color="success" />
+                <ActivityItem icon="fa-sync" title="100 conversions milestone reached" time="4 hours ago" color="info" />
+                <ActivityItem icon="fa-chart-line" title="Brand Awareness budget updated to..." time="1 day ago" color="warning" />
+                <ActivityItem icon="fa-pause-circle" title="Retargeting campaign paused due to..." time="3 hours ago" color="secondary" />
+              </div>
+            </div>
+          </div>
+
+          <div className="section-column">
+            <div className="info-card">
+              <div className="card-header">
+                <h3>Top Performers</h3>
+                <a href="#" className="link-text">See Rankings</a>
+              </div>
+              <div className="performers-list">
+                <PerformerItem rank="1" title="App Install Campaign" value="5.1x" />
+                <PerformerItem rank="2" title="Summer Sale 2024" value="4.2x" />
+                <PerformerItem rank="3" title="Brand Awareness Q3" value="3.8x" />
+                <PerformerItem rank="4" title="Retargeting - Cart" value="3.2x" />
+              </div>
+            </div>
+          </div>
+
+          <div className="section-column">
+            <div className="info-card">
+              <div className="card-header">
+                <h3>Monthly Goals</h3>
+                <a href="#" className="link-text">Manage</a>
+              </div>
+              <div className="goals-list">
+                <GoalItem title="Revenue Target" current="78%" target="$150K" />
+                <GoalItem title="Conversion Goal" current="89%" target="50K conversions" />
+                <GoalItem title="New Customers" current="64%" target="1,000 / 1,560" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Section */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          {/* 4 cards on top */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            {rightCards.map((card, idx) => (
-              <div key={idx}>{renderCard(card)}</div>
-            ))}
+        <div className="section-row">
+          <div className="section-column">
+            <ChartCard title="Geographic Performance" subtitle="Top performing regions">
+              <canvas ref={geographicChartRef} id="geographicChart" />
+            </ChartCard>
           </div>
 
-          {/* Additional cards section */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            {additionalCards.map((card, idx) => (
-              <div key={idx}>{renderCard(card)}</div>
-            ))}
-          </div>
-
-          {/* Table section */}
-          <div>
-            <h6
-              style={{
-                fontSize: "1rem",
-                fontWeight: "600",
-                color: "#1a1a1a",
-                marginBottom: "16px",
-              }}
-            >
-              Performance Details
-            </h6>
-            <div
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "12px",
-                overflow: "hidden",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                border: "1px solid #e9ecef",
-              }}
-            >
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
-                      <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Metric
-                      </th>
-                      <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Value
-                      </th>
-                      <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Views
-                      </th>
-                      <th style={{ padding: "14px", textAlign: "center", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {additionalTableData.map((row, idx) => (
-                      <tr
-                        key={row.id}
-                        style={{
-                          borderBottom: "1px solid #e9ecef",
-                          backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
-                        }}
-                      >
-                        <td style={{ padding: "14px", fontSize: "0.9rem", color: "#1a1a1a", fontWeight: "500" }}>
-                          {row.metric}
-                        </td>
-                        <td style={{ padding: "14px", fontSize: "0.9rem", color: "#6c757d" }}>
-                          {row.value}
-                        </td>
-                        <td style={{ padding: "14px", fontSize: "0.9rem", color: "#1a1a1a" }}>
-                          {row.views}
-                        </td>
-                        <td style={{ padding: "14px", textAlign: "center" }}>
-                          <span
-                            style={{
-                              display: "inline-block",
-                              padding: "4px 12px",
-                              backgroundColor: row.status === "Trending" ? "#fff3cd" : row.status === "Completed" ? "#cfe2ff" : "#d4edda",
-                              color: row.status === "Trending" ? "#997404" : row.status === "Completed" ? "#084298" : "#155724",
-                              borderRadius: "12px",
-                              fontSize: "0.75rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            {row.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          <div className="section-column">
+            <ChartCard title="Audience Demographics" subtitle="Age and gender breakdown">
+              <canvas ref={demographicsChartRef} id="demographicsChart" />
+            </ChartCard>
           </div>
         </div>
+      </section>
+    </main>
+  );
+}
+
+/* ===== Helpers (same file) ===== */
+
+function Stat({ value, label, trend }) {
+  const trendColor = trend?.startsWith('+') ? '#10b981' : '#ef4444';
+  const trendIcon = trend?.startsWith('+') ? 'fa-arrow-up' : 'fa-arrow-down';
+
+  return (
+    <div className="realtime-stat">
+      <div className="realtime-value">{value}</div>
+      <div className="realtime-label">{label}</div>
+      {trend && (
+        <div className="stat-trend" style={{ color: trendColor }}>
+          <i className={`fas ${trendIcon}`} /> {trend}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ title, value, icon, change }) {
+  const changeColor = change?.startsWith('+') ? '#10b981' : '#ef4444';
+  const changeIcon = change?.startsWith('+') ? 'fa-arrow-up' : 'fa-arrow-down';
+
+  return (
+    <div className="stat-card">
+      <div className="stat-header">
+        <i className={`fas ${icon}`} />
       </div>
-
-      {/* 3rd Section - Full Width Table */}
-      <div style={{ marginTop: "30px" }}>
-        <h6
-          style={{
-            fontSize: "1rem",
-            fontWeight: "600",
-            color: "#1a1a1a",
-            marginBottom: "16px",
-          }}
-        >
-          All Campaigns
-        </h6>
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "12px",
-            overflow: "hidden",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
-          }}
-        >
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
-                  <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                    Campaign Name
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                    Audience
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "center", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                    Videos
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                    Views
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "left", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                    Engagement
-                  </th>
-                  <th style={{ padding: "14px", textAlign: "center", fontSize: "0.8rem", fontWeight: "700", color: "#495057" }}>
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {thirdSectionTableData.map((row, idx) => (
-                  <tr
-                    key={row.id}
-                    style={{
-                      borderBottom: "1px solid #e9ecef",
-                      backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
-                    }}
-                  >
-                    <td style={{ padding: "14px", fontSize: "0.9rem", color: "#1a1a1a", fontWeight: "500" }}>
-                      {row.campaignName}
-                    </td>
-                    <td style={{ padding: "14px", fontSize: "0.9rem", color: "#6c757d" }}>
-                      {row.audience}
-                    </td>
-                    <td style={{ padding: "14px", textAlign: "center", fontSize: "0.9rem", color: "#1a1a1a", fontWeight: "500" }}>
-                      {row.videos}
-                    </td>
-                    <td style={{ padding: "14px", fontSize: "0.9rem", color: "#1a1a1a" }}>
-                      {row.views}
-                    </td>
-                    <td style={{ padding: "14px", fontSize: "0.9rem", color: "#1a1a1a", fontWeight: "600" }}>
-                      {row.engagement}
-                    </td>
-                    <td style={{ padding: "14px", textAlign: "center" }}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "4px 12px",
-                          backgroundColor: row.status === "Active" ? "#d4edda" : row.status === "Completed" ? "#cfe2ff" : "#fff3cd",
-                          color: row.status === "Active" ? "#155724" : row.status === "Completed" ? "#084298" : "#997404",
-                          borderRadius: "12px",
-                          fontSize: "0.75rem",
-                          fontWeight: "600",
-                        }}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <div className="stat-value">{value}</div>
+      <div className="stat-label">{title}</div>
+      {change && (
+        <div className="stat-footer">
+          <span className="change-badge" style={{ color: changeColor }}>
+            <i className={`fas ${changeIcon}`} /> {change}
+          </span>
+          <span className="stat-comparison">vs last month</span>
         </div>
+      )}
+    </div>
+  );
+}
+
+function ChartCard({ title, children, subtitle }) {
+  return (
+    <div className="chart-card">
+      <div className="chart-header">
+        <div className="chart-title-group">
+          <h3>{title}</h3>
+          {subtitle && <p className="chart-subtitle">{subtitle}</p>}
+        </div>
+        <button className="btn btn-sm btn-ghost" title="More options">
+          <i className="fas fa-ellipsis-h" />
+        </button>
+      </div>
+      <div className="chart-container">{children}</div>
+    </div>
+  );
+}
+
+function ProgressBar({ percent }) {
+  return (
+    <div className="progress-bar">
+      <div className="progress-fill" style={{ width: `${percent}%` }}></div>
+    </div>
+  );
+}
+
+function ActivityItem({ icon, title, time, color }) {
+  return (
+    <div className="activity-item">
+      <div className={`activity-icon activity-${color}`}>
+        <i className={`fas ${icon}`} />
+      </div>
+      <div className="activity-content">
+        <p className="activity-title">{title}</p>
+        <p className="activity-time">{time}</p>
       </div>
     </div>
   );
 }
 
-export default OverviewPage;
+function PerformerItem({ rank, title, value }) {
+  const rankColors = {
+    '1': '#ffd700',
+    '2': '#c0c0c0',
+    '3': '#cd7f32',
+  };
+
+  return (
+    <div className="performer-item">
+      <div className="performer-rank" style={{ color: rankColors[rank] || '#666' }}>
+        #{rank}
+      </div>
+      <div className="performer-content">
+        <p className="performer-title">{title}</p>
+      </div>
+      <div className="performer-value">
+        <strong>{value}</strong>
+      </div>
+    </div>
+  );
+}
+
+function GoalItem({ title, current, target }) {
+  const percent = parseInt(current);
+
+  return (
+    <div className="goal-item">
+      <div className="goal-header">
+        <p className="goal-title">{title}</p>
+        <span className="goal-percent">{current}</span>
+      </div>
+      <div className="goal-progress">
+        <div className="goal-fill" style={{ width: current }}></div>
+      </div>
+      <p className="goal-target">{target}</p>
+    </div>
+  );
+}
