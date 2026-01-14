@@ -25,6 +25,29 @@ export const getCampaignData = async (audienceId) => {
   }
 };
 
+export const getCampaignList = async (audienceId) => {
+  try {
+    const token = await getToken();
+    const res = await axios.get(
+      `${Api_Url}/campaigns/data`,
+      {
+        headers: {
+          Authorization: `${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error(
+      "Error creating token:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+
 export const createCampaignData = async (audienceId, videos) => {
   try {
     const token = await getToken();

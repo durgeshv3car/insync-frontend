@@ -19,7 +19,9 @@ import HeaderDropDownModal from "./HeaderDropDownModal";
 import MegaMenu from "./megaManu/MegaMenu";
 import { NavigationContext } from "@/contentApi/navigationProvider";
 import { usePathname } from "next/navigation";
-import { getAudience } from "@/services/createaudience";
+import { getAudience, getAudienceByUser } from "@/services/createaudience";
+import { useSession } from "next-auth/react";
+import { jwtDecode } from "jwt-decode";
 
 const Header = () => {
   const { navigationOpen, setNavigationOpen } = useContext(NavigationContext);
@@ -29,12 +31,83 @@ const Header = () => {
   const miniButtonRef = useRef(null);
   const expendButtonRef = useRef(null);
   const pathname = usePathname();
-  const checkpath = ["/reports/overview"];
+  const checkpath = ["/reports/overview","/reports/device","/reports/demographics"];
   const isPathPresent = checkpath.includes(pathname);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAudience, setSelectedAudience] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const { data: session, status } = useSession();
+  let userDetails = {
+    email: "",
+    name: "",
+    userId: "",
+    role: "",
+  };
 
- 
+  if (session?.user?.token) {
+    const decoded = jwtDecode(session?.user?.token);
+    userDetails = {
+      email: decoded.email,
+      name: decoded.name,
+      userId: decoded.id,
+      role: decoded.role,
+    };
+  }
+
+  useEffect(() => {
+    // Load from localStorage first
+    const storedAudienceName = localStorage.getItem("audienceName");
+    const storedAudienceId = localStorage.getItem("audienceId");
+
+    if (storedAudienceName && storedAudienceId) {
+      setSelectedAudience({
+        reportName: storedAudienceName,
+        _id: storedAudienceId,
+      });
+    }
+
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+  if (!isInitialized) return;
+
+  const storedId = localStorage.getItem("audienceId");
+
+  if (selectedAudience?._id && selectedAudience._id !== storedId) {
+    window.location.reload();
+  }
+}, [selectedAudience]);
+
+
+
+
+  useEffect(() => {
+    const fetchAudiences = async () => {
+      try {
+        const res = await getAudienceByUser(userDetails.userId,userDetails.role);
+        setAudienceList(res.data);
+      } catch (error) {
+        console.log("Error fetching audience:", error);
+      }
+    };
+
+
+      fetchAudiences();
+    
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (
+      selectedAudience?.reportName != undefined &&
+      selectedAudience?._id != undefined
+    ) {
+      localStorage.setItem("audienceName", selectedAudience.reportName);
+      localStorage.setItem("audienceId", selectedAudience._id);
+    }
+  }, [isInitialized, selectedAudience]);
 
   useEffect(() => {
     if (openMegaMenu) {
@@ -43,21 +116,6 @@ const Header = () => {
       document.documentElement.classList.remove("nxl-lavel-mega-menu-open");
     }
   }, [openMegaMenu]);
-  useEffect(() => {
-    const fetchAudiences = async () => {
-      try {
-        const res = await getAudience(selectedAudience?.reportName);
-
-        setAudienceList(res.data);
-      } catch (error) {
-        console.log("Error fetching audience:", error);
-      }
-    };
-
-    fetchAudiences();
-  }, [selectedAudience]);
-
-  console.log(selectedAudience)
 
   const handleThemeMode = (type) => {
     if (type === "dark") {
@@ -232,65 +290,52 @@ const Header = () => {
           </div>
           {/* <!--! [End] nxl-lavel-mega-menu-toggle !-->
                     <!--! [Start] nxl-lavel-mega-menu !--> */}
-          <div className="nxl-drp-link nxl-lavel-mega-menu">
-            <div className="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault(), setOpenMegaMenu(false);
-                }}
-                id="nxl-lavel-mega-menu-hide"
-              >
-                <i className="me-2">
-                  <FiArrowLeft />
-                </i>
-                <span>Back</span>
-              </a>
+          {isPathPresent && (
+            <div className="nxl-drp-link nxl-lavel-mega-menu">
+              <div className="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault(), setOpenMegaMenu(false);
+                  }}
+                  id="nxl-lavel-mega-menu-hide"
+                >
+                  <i className="me-2">
+                    <FiArrowLeft />
+                  </i>
+                  <span>Back</span>
+                </a>
+              </div>
+              <div>
+                {" "}
+                <DateSection />{" "}
+              </div>
+              {/* <!--! [Start] nxl-lavel-mega-menu-wrapper !--> */}
             </div>
-            <div> <DateSection/> </div>
-            {/* <!--! [Start] nxl-lavel-mega-menu-wrapper !--> */}
-          </div>
+          )}
         </div>
- 
+
         {/* <!--! [End] Header Left !-->
                 <!--! [Start] Header Right !--> */}
         <div className="header-right ms-auto">
-       
           <div className="d-flex align-items-center">
-                     
-
-            {selectedAudience?.reportName}
             {isPathPresent && (
-              <SearchModal
-                audienceList={audienceList}
-                setSelectedAudience={setSelectedAudience}
-                setSearchQuery={setSearchQuery}
-              />
+              <>
+                <span className="text-primary fw-semibold">
+                  {selectedAudience?.reportName || "Select Audience"}
+                </span>
+                <SearchModal
+                  audienceList={audienceList}
+                  setSelectedAudience={setSelectedAudience}
+                  setSearchQuery={setSearchQuery}
+                />
+              </>
             )}
+            
 
-            {/* <LanguagesModal /> */}
-            {/* <div className="nxl-h-item d-none d-sm-flex" >
-                            <div className="full-screen-switcher">
-                                <span className="nxl-head-link me-0">
-                                    <FiMaximize size={20} className="maximize" onClick={fullScreenMaximize} />
-                                    <FiMinimize size={20} className="minimize" onClick={fullScreenMinimize} />
-                                </span>
-                            </div>
-                        </div> */}
-            {/* <div className="nxl-h-item dark-light-theme">
-                            <div className="nxl-head-link me-0 dark-button" onClick={() => handleThemeMode("dark")}>
-                                <FiMoon size={20} />
-                            </div>
-                            <div className="nxl-head-link me-0 light-button" onClick={() => handleThemeMode("light")} style={{ display: "none" }}>
-                                <FiSun size={20} />
-                            </div>
-                        </div>
-                        <TimesheetsModal /> */}
-            {/* <NotificationsModal /> */}
             <ProfileModal />
           </div>
         </div>
-        {/* <!--! [End] Header Right !--> */}
       </div>
     </header>
   );

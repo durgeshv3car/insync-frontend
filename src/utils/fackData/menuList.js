@@ -19,6 +19,18 @@ export const menuList = [
         path: "/reports/overview",
         subdropdownMenu: false,
       },
+      {
+        id: 1,
+        name: "device",
+        path: "/reports/device",
+        subdropdownMenu: false,
+      },
+       {
+        id: 1,
+        name: "demographics",
+        path: "/reports/demographics",
+        subdropdownMenu: false,
+      },
     ],
   },
 

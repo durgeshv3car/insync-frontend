@@ -4,9 +4,15 @@ import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 import Select from "react-select";
 import CampaignTable from "./components/CampaignTable";
-import { createAudienceData, getAudienceData } from "@/services/audience";
+import {
+  createAudienceData,
+  deleteAudienceData,
+  getAudienceData,
+  updateAudienceData,
+} from "@/services/audience";
 import { useRouter } from "next/navigation";
-import { getCampaignData } from "@/services/campaignData";
+import { getCampaignData, getCampaignList } from "@/services/campaignData";
+import CampaignTitleTable from "./components/CampaignTitleTable";
 
 function page() {
   const Router = useRouter();
@@ -15,6 +21,8 @@ function page() {
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [audienceOptions, setAudienceOptions] = useState([]);
   const [campaignData, setCampaignData] = useState([]);
+  const [campaignList, setCampaignList] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   console.log("Selected Audience:", selectedAudience);
 
@@ -34,6 +42,17 @@ function page() {
       console.error("Error fetching audience data:", error);
     }
   };
+  const handleDeleteAudience = async (audienceId) => {
+    console.log("Delete Audience ID:", audienceId);
+    const res=await deleteAudienceData(audienceId);
+    fetchCampaignList()
+  };
+  const handleEditAudience = async (data) => {
+    console.log("Edit Audience ID:", data);
+    setEditingId(data._id || null);
+    setShowCreateCampaignModal(true);
+    setCampaignTitle(data.title || "");
+  };
 
   const fetchCampaignData = async (audienceId) => {
     try {
@@ -44,8 +63,19 @@ function page() {
     }
   };
 
+  const fetchCampaignList = async () => {
+    try {
+      const data = await getCampaignList();
+      console.log("Campaign List Data:", data);
+      setCampaignList(data.campaigns || []);
+    } catch (error) {
+      console.error("Error fetching campaign list:", error);
+    }
+  };
+
   useEffect(() => {
     fetchAudienceData();
+    fetchCampaignList();
     fetchCampaignData(selectedAudience?.value);
   }, [selectedAudience]);
 
@@ -61,10 +91,27 @@ function page() {
   };
 
   const handleCreateCampaign = async () => {
-    const res = await createAudienceData(campaignTitle);
-    if (res) {
-      setShowCreateCampaignModal(false);
-      setCampaignTitle("");
+    try {
+      if (editingId) {
+        const res = await updateAudienceData(editingId, campaignTitle);
+        if (res) {
+          setShowCreateCampaignModal(false);
+          setCampaignTitle("");
+          setEditingId(null);
+          fetchAudienceData();
+          fetchCampaignList();
+        }
+      } else {
+        const res = await createAudienceData(campaignTitle);
+        if (res) {
+          setShowCreateCampaignModal(false);
+          setCampaignTitle("");
+          fetchAudienceData();
+          fetchCampaignList();
+        }
+      }
+    } catch (error) {
+      console.error("Error saving audience:", error);
     }
   };
 
@@ -87,9 +134,11 @@ function page() {
         </div>
 
         <div className="col-md-6 d-flex justify-content-end gap-2">
-          <Button variant="primary" onClick={handleAddVideos}>
-            Add Videos
-          </Button>
+          {selectedAudience && (
+            <Button variant="primary" onClick={handleAddVideos}>
+              Add Videos
+            </Button>
+          )}
           <Button
             variant="success"
             onClick={() => setShowCreateCampaignModal(true)}
@@ -98,12 +147,23 @@ function page() {
           </Button>
         </div>
       </div>
-
-      <CampaignTable campaignData={campaignData} />
+      {selectedAudience ? (
+        <CampaignTable campaignData={campaignData} />
+      ) : (
+        <CampaignTitleTable
+          campaignData={campaignList}
+          onEdit={handleEditAudience}
+          onDelete={handleDeleteAudience}
+        />
+      )}
 
       <Modal
         show={showCreateCampaignModal}
-        onHide={() => setShowCreateCampaignModal(false)}
+        onHide={() => {
+          setEditingId(null);
+          setCampaignTitle("");
+          setShowCreateCampaignModal(false);
+        }}
       >
         <Modal.Header closeButton>
           <Modal.Title>Create Audience</Modal.Title>
@@ -127,7 +187,7 @@ function page() {
             Close
           </Button>
           <Button variant="success" onClick={handleCreateCampaign}>
-            Create Audience
+            {editingId ? "Save Changes" : "Create Audience"}
           </Button>
         </Modal.Footer>
       </Modal>

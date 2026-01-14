@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Pencil, Trash2, User } from "lucide-react";
 import EditUserModal from "./EditUserModal";
 import { useRouter } from "next/navigation";
-import { deleteUser, getAllUsers } from "@/services/users";
+import { deleteUser, deleteUserAudience, getAllUsers } from "@/services/users";
+import { Modal, Button } from "react-bootstrap";
 
 function UserPage() {
   const [users, setUsers] = useState([]);
@@ -11,23 +12,32 @@ function UserPage() {
 
   const [editingUser, setEditingUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showCampaignsModal, setShowCampaignsModal] = useState(false);
+  const [campaignsData, setCampaignsData] = useState([]);
+  const [removeAudienceId, setremoveAudienceId] = useState(null);
 
-    const getUserData = async () => {
+  const getUserData = async () => {
+    const res = await getAllUsers();
+    if (res.message) {
+      setUsers(res.userData);
+    }
+  };
 
-      const res = await getAllUsers();
-      if (res.message) {
-        setUsers(res.userData);
-      }
-    };
+  useEffect(() => {
+    getUserData();
+  }, []);
 
-    useEffect(()=>{
-      getUserData()
-    },[])
-
-  const handleEdit = (id,user) => {
-    router.push(`/users?id=${id}`)
+  const handleEdit = (id, user) => {
+    router.push(`/users?id=${id}`);
     setEditingUser(user);
     setShowModal(true);
+  };
+
+  const handleOpenCampaigns = (user) => {
+    // currently using sample data; replace with API call if needed
+    setremoveAudienceId(user.email);
+    setCampaignsData(user.AudienceId);
+    setShowCampaignsModal(true);
   };
 
   const handleSave = (_id, updatedData) => {
@@ -37,15 +47,20 @@ function UserPage() {
     setShowModal(false);
   };
 
-  const handleDelete =async (id) => {
-    const res=await deleteUser(id)
-    if (res.message){
-      getUserData()
+  const handleDelete = async (id) => {
+    const res = await deleteUser(id);
+    if (res.message) {
+      getUserData();
     }
-
   };
 
-
+  const handleDeleteAudience = async (audienceId) => {
+    const res = await deleteUserAudience(removeAudienceId, audienceId);
+    if (res.message) {
+      setShowCampaignsModal(false);
+      getUserData();
+    }
+  };
 
   return (
     <div className="container">
@@ -85,11 +100,17 @@ function UserPage() {
                   <td>
                     <span className="badge bg-secondary">{user.role}</span>
                   </td>
-          
+
                   <td className="text-end d-flex justify-content-end gap-2">
                     <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => handleOpenCampaigns(user)}
+                    >
+                      <User size={16} /> Campaigns
+                    </button>
+                    <button
                       className="btn btn-sm btn-outline-warning"
-                      onClick={() => handleEdit(user._id,user)}
+                      onClick={() => handleEdit(user._id, user)}
                     >
                       <Pencil size={16} /> Edit
                     </button>
@@ -106,6 +127,67 @@ function UserPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Campaigns Modal */}
+      <Modal
+        show={showCampaignsModal}
+        onHide={() => setShowCampaignsModal(false)}
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Campaigns</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="table-responsive">
+            <table className="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Report Name</th>
+                  <th>Advertiser ID</th>
+                  <th>Campaign ID</th>
+                  <th>Insertion Order ID</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campaignsData.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="text-center py-4">
+                      No campaigns
+                    </td>
+                  </tr>
+                ) : (
+                  campaignsData.map((c) => (
+                    <tr key={c._id}>
+                      <td>{c.reportName}</td>
+                      <td>{c.advertiserId}</td>
+                      <td>{c.campaignId}</td>
+                      <td>{c.insertionOrderId}</td>
+                      <td>
+                        {" "}
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDeleteAudience(c._id)}
+                        >
+                          <Trash2 size={16} /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowCampaignsModal(false)}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Edit Modal */}
       <EditUserModal

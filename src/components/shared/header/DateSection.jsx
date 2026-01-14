@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar, ChevronDown } from 'lucide-react';
+import { Calendar, ChevronDown, RotateCcw } from 'lucide-react';
 
 function DateSection() {
   const [show, setShow] = useState(false);
@@ -7,6 +7,7 @@ function DateSection() {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [isCustom, setIsCustom] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const dropdownRef = useRef(null);
 
   const dateRanges = [
@@ -28,6 +29,34 @@ function DateSection() {
     { value: 'LAST_365_DAYS', label: 'Last 365 Days', description: 'Excluding today' },
     { value: 'ALL_TIME', label: 'All Time', description: 'All available data' },
   ];
+
+  // Load values from localStorage on mount
+  useEffect(() => {
+    const storedRange = localStorage.getItem("selectedRange");
+    const storedStart = localStorage.getItem("startDate");
+    const storedEnd = localStorage.getItem("endDate");
+
+    if (storedRange && storedRange !== 'Select Date') {
+      setSelectedRange(storedRange);
+      if (storedRange === 'CUSTOM') {
+        setIsCustom(true);
+      }
+    }
+    if (storedStart) setCustomStartDate(storedStart);
+    if (storedEnd) setCustomEndDate(storedEnd);
+    
+    // Mark as initialized after loading
+    setIsInitialized(true);
+  }, []);
+
+  // Save to localStorage whenever state changes (only after initialization)
+  useEffect(() => {
+    if (!isInitialized) return; // Don't save until we've loaded from localStorage
+    
+    localStorage.setItem("selectedRange", selectedRange);
+    localStorage.setItem("startDate", customStartDate);
+    localStorage.setItem("endDate", customEndDate);
+  }, [selectedRange, customStartDate, customEndDate, isInitialized]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -55,41 +84,73 @@ function DateSection() {
     setSelectedRange('CUSTOM');
   };
 
-  const handleApply = () => {
-    const result = isCustom 
-      ? { type: 'CUSTOM_DATES', startDate: customStartDate, endDate: customEndDate }
-      : { type: selectedRange };
-    
-    console.log('Selected Date Range:', result);
+ const handleApply = () => {
+  const result = isCustom
+    ? { type: "CUSTOM_DATES", startDate: customStartDate, endDate: customEndDate }
+    : { type: selectedRange };
+
+  setShow(false);
+
+  window.location.reload(); 
+};
+
+
+  const handleReset = () => {
+    setSelectedRange('Select Date');
+    setCustomStartDate('');
+    setCustomEndDate('');
+    setIsCustom(false);
+    localStorage.removeItem("selectedRange");
+    localStorage.removeItem("startDate");
+    localStorage.removeItem("endDate");
     setShow(false);
+    window.location.reload();
   };
 
   const getSelectedLabel = () => {
     if (isCustom && customStartDate && customEndDate) {
       return `${customStartDate} to ${customEndDate}`;
     }
-    return dateRanges.find(r => r.value === selectedRange)?.label || 'Select Date Range';
+    const found = dateRanges.find(r => r.value === selectedRange);
+    return found?.label || 'Select Date Range';
   };
+
+  const hasSelection = selectedRange !== 'Select Date' || customStartDate || customEndDate;
 
   return (
     <div className="p-3">
       <div className="dropdown" ref={dropdownRef}>
-        <button 
-          className="btn btn-light border d-flex align-items-center gap-2"
-          type="button"
-          onClick={() => setShow(!show)}
-          style={{ fontSize: '10px' }}
-        >
-          <Calendar size={16} />
-          <span>{getSelectedLabel()}</span>
-          <ChevronDown 
-            size={16} 
-            style={{ 
-              transform: show ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s'
-            }} 
-          />
-        </button>
+        <div className="d-flex gap-2">
+          <button 
+            className="btn btn-light border d-flex align-items-center gap-2"
+            type="button"
+            onClick={() => setShow(!show)}
+            style={{ fontSize: '10px' }}
+          >
+            <Calendar size={16} />
+            <span>{getSelectedLabel()}</span>
+            <ChevronDown 
+              size={16} 
+              style={{ 
+                transform: show ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s'
+              }} 
+            />
+          </button>
+
+          {hasSelection && (
+            <button
+              className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+              type="button"
+              onClick={handleReset}
+              title="Reset selection"
+              style={{ fontSize: '10px' }}
+            >
+              <RotateCcw size={14} />
+              Reset
+            </button>
+          )}
+        </div>
 
         <div 
           className={`dropdown-menu ${show ? 'show' : ''}`}
@@ -205,20 +266,29 @@ function DateSection() {
                   )}
                 </div>
 
-                <button
-                  className="btn btn-primary btn-sm w-100"
-                  onClick={handleApply}
-                  disabled={isCustom && (!customStartDate || !customEndDate)}
-                >
-                  Apply
-                </button>
+                <div className="d-flex gap-2">
+                  <button
+                    className="btn btn-primary btn-sm flex-grow-1"
+                    onClick={handleApply}
+                    disabled={isCustom && (!customStartDate || !customEndDate)}
+                  >
+                    Apply
+                  </button>
+                  {hasSelection && (
+                    <button
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={handleReset}
+                      title="Reset"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-   
     </div>
   );
 }

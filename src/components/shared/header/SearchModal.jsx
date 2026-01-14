@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React from "react";
-import { FiChevronRight, FiCommand, FiSearch } from "react-icons/fi";
+import { FiChevronRight,FiChevronDown, FiCommand, FiSearch } from "react-icons/fi";
 
 const SearchModal = ({ audienceList, setSelectedAudience, setSearchQuery }) => {
   return (
@@ -10,7 +10,7 @@ const SearchModal = ({ audienceList, setSelectedAudience, setSearchQuery }) => {
         data-bs-toggle="dropdown"
         data-bs-auto-close="outside"
       >
-        <FiSearch size={20} />
+        <FiChevronDown size={20} />
       </div>
 
       <div className="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-search-dropdown">

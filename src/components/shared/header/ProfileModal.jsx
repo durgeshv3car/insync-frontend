@@ -34,7 +34,7 @@ const ProfileModal = () => {
   };
 
   return (
-    <div className="dropdown nxl-h-item">
+    <div className="dropdown nxl-h-item" style={{ marginLeft: "50px" }}>
       <button
         className="d-flex align-items-center btn btn-link text-decoration-none"
         type="button"

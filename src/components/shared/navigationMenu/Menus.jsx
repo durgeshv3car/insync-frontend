@@ -68,7 +68,7 @@ const filteredMenu = menuList
         ...menu,
         dropdownMenu: menu.dropdownMenu.map((item) => ({
           ...item,
-          path: `${item.path}?token=${token}`,
+          path: `${item.path}`,
         })),
       };
     }

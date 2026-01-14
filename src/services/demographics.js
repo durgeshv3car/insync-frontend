@@ -2,58 +2,46 @@ import axios from "axios";
 const Api_Url = process.env.NEXT_PUBLIC_API_BASE_URL;
 import { getToken } from "@/lib/getToken";
 
-export const createAudienceData = async (title) => {
+export const createReportsDataAge = async (params) => {
   try {
     const token = await getToken();
 
     const res = await axios.post(
-      `${Api_Url}/campaign`,
-      { title },
+      `${Api_Url}/dv360/listQueries/age`,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    return res.data;
-  } catch (error) {
-    console.log(
-      "Error fetching audience data:",
-      error.response?.data || error.message
-    );
-    throw error;
-  }
-};
-
-export const getAudienceData = async () => {
-  try {
-    const token = await getToken();
-
-    const res = await axios.get(`${Api_Url}/campaigns/data`, {
-      headers: {
-        Authorization: `Bearer ${token}`, 
+        audienceId: params.audienceId,
+        dataRange: params.dataRange,
+        startDate: params.startDate,
+        endDate: params.endDate,
       },
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-    return res.data; 
-
+    return res.data;
   } catch (error) {
     console.log(
       "Error fetching audience data:",
       error.response?.data || error.message
     );
-    throw error; // Let caller handle error
+    throw error;
   }
 };
 
-export const updateAudienceData = async (id, title) => {
+// Daily reports with filter (LAST_7_DAYS, LAST_30_DAYS, etc.)
+export const getDailyReportsByFilter = async (insertionOrderId, filter) => {
   try {
     const token = await getToken();
 
-    const res = await axios.put(
-      `${Api_Url}/campaign/${id}`,
-      { title },
+    const res = await axios.post(
+      `${Api_Url}/demographics/filter`,
+      {
+        insertionOrderId,
+        filter,
+      },
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -61,22 +49,28 @@ export const updateAudienceData = async (id, title) => {
       }
     );
 
-    return res.data;
+    return res.data.data; // Extract data array from response
   } catch (error) {
     console.log(
-      "Error updating audience data:",
+      "Error fetching daily reports by filter:",
       error.response?.data || error.message
     );
     throw error;
   }
 };
 
-export const deleteAudienceData = async (id) => {
+// Daily reports with custom date range
+export const getDailyReportsByRange = async (insertionOrderId, startDate, endDate) => {
   try {
     const token = await getToken();
 
-    const res = await axios.delete(
-      `${Api_Url}/campaign/${id}`,
+    const res = await axios.post(
+      `${Api_Url}/demographics/range`,
+      {
+        insertionOrderId,
+        startDate,
+        endDate,
+      },
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -84,14 +78,13 @@ export const deleteAudienceData = async (id) => {
       }
     );
 
-    return res.data;
+    return res.data.data;
   } catch (error) {
     console.log(
-      "Error deleting audience data:",
+      "Error fetching daily reports by range:",
       error.response?.data || error.message
     );
     throw error;
   }
 };
-
 

@@ -63,3 +63,32 @@ export const deleteUser = async (id) => {
     throw error;
   }
 };
+
+export const deleteUserAudience = async (email, audienceId) => {
+  try {
+    const token = await getToken();
+
+    const res = await axios.patch(
+      `${Api_Url}/auth/audience/remove`,
+      {
+        email,
+        audienceId, 
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error(
+      "Error deleting user audience:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
