@@ -1,4 +1,5 @@
 "use client";
+import { createReportsDataContext } from "@/services/context";
 import {
   addAudienceToUser,
   createAudience,
@@ -9,6 +10,7 @@ import {
 import { createReportsDataAge } from "@/services/demographics";
 import { createReportsDataDevice } from "@/services/device";
 import { createReportsData } from "@/services/reports";
+
 import React, { useState, useEffect } from "react";
 
 const emptyCampaign = {
@@ -86,27 +88,29 @@ const Campaign = () => {
     try {
       if (editingIndex !== null) {
         const id = campaignData._id || campaigns[editingIndex]?._id;
-        const res=await updateAudience(id, campaignData);
-         const params={
-          audienceId:res.audience._id,
-          dataRange:"ALL_TIME"
-        }
-        if(res.audience._id){
-           await createReportsData(params);
-           await createReportsDataDevice(params)
-           await createReportsDataAge(params);
+        const res = await updateAudience(id, campaignData);
+        const params = {
+          audienceId: res.audience._id,
+          dataRange: "ALL_TIME",
+        };
+        if (res.audience._id) {
+          await createReportsData(params);
+          await createReportsDataDevice(params);
+          await createReportsDataAge(params);
+          await createReportsDataContext(params);
         }
       } else {
-        const res=await createAudience(campaignData);
+        const res = await createAudience(campaignData);
         console.log("Create Audience Response:", res);
-        const params={
-          audienceId:res.audience._id,
-          dataRange:"ALL_TIME"
-        }
-        if(res.audience._id){
-           await createReportsData(params);
-           await createReportsDataDevice(params)
-           await createReportsDataAge(params);
+        const params = {
+          audienceId: res.audience._id,
+          dataRange: "ALL_TIME",
+        };
+        if (res.audience._id) {
+          await createReportsData(params);
+          await createReportsDataDevice(params);
+          await createReportsDataAge(params);
+          await createReportsDataContext(params);
         }
       }
 

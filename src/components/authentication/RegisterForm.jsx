@@ -46,7 +46,7 @@ const RegisterForm = ({ path }) => {
   return (
     <>
       <ToastContainer />
-      <h2 className="fs-20 fw-bolder mb-4">Register</h2>
+      <h2 className="fs-20 fw-bolder mb-4">Register for account</h2>
 
       <form onSubmit={formik.handleSubmit} className="w-100 mt-4 pt-2">
         {/* Full Name */}

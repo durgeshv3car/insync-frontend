@@ -47,11 +47,8 @@ const LoginForm = ({ registerPath, resetPath }) => {
   return (
     <>
       <ToastContainer />
-      <h2 className="fs-20 fw-bolder mb-4">Welcome Back</h2>
-      <h4 className="fs-13 fw-bold mb-2">Login to your account</h4>
-      <p className="fs-12 fw-medium text-muted">
-        Welcome back! Access your automate web applications and recommendations.
-      </p>
+      <h2 className="fs-20 fw-bolder mb-4">Login to your account</h2>
+
 
       <form onSubmit={formik.handleSubmit} className="w-100 mt-4 pt-2">
         {/* Email */}
