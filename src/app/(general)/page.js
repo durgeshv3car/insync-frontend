@@ -20,19 +20,7 @@ const Home = () => {
       </PageHeader>
       <div className="main-content">
         <div className="row">
-          <SiteOverviewStatistics />
-          <PaymentRecordChart />
-          <SalesMiscellaneous isFooterShow={true} dataList={projectsDataTwo} />
-          <TasksOverviewChart />
-          <LeadsOverviewChart chartHeight={315} />
-          <LatestLeads title={"Latest Leads"} />
-          <Schedule title={"Upcoming Schedule"} />
-          <Project
-            cardYSpaceClass="hrozintioal-card"
-            borderShow={true}
-            title="Project Status"
-          />
-          <TeamProgress title={"Team Progress"} footerShow={true} />
+          Dashboard Analytics
         </div>
       </div>
     </>
