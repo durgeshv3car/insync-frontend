@@ -31,7 +31,7 @@ const Header = () => {
   const miniButtonRef = useRef(null);
   const expendButtonRef = useRef(null);
   const pathname = usePathname();
-  const checkpath = ["/reports/overview","/reports/device","/reports/demographics"];
+  const checkpath = ["/reports/overview","/reports/device","/reports/demographics","/reports/creative","/reports/category"];
   const isPathPresent = checkpath.includes(pathname);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAudience, setSelectedAudience] = useState(null);

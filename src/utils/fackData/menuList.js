@@ -31,6 +31,18 @@ export const menuList = [
         path: "/reports/demographics",
         subdropdownMenu: false,
       },
+      {
+        id: 1,
+        name: "creative",
+        path: "/reports/creative",
+        subdropdownMenu: false,
+      },
+      {
+        id: 1,
+        name: "category",
+        path: "/reports/category",
+        subdropdownMenu: false,
+      },
     ],
   },
 
