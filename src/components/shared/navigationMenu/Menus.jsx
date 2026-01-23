@@ -7,212 +7,113 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { jwtDecode } from "jwt-decode";
-import { useSearchParams } from "next/navigation";
 
 const Menus = () => {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [openSubDropdown, setOpenSubDropdown] = useState(null);
-  const [activeParent, setActiveParent] = useState("");
-  const [activeChild, setActiveChild] = useState("");
-  const [cid, setCid] = useState("");
-  const [tid, setTid] = useState("");
   const pathName = usePathname();
   const { data: session } = useSession();
-  let decoded;
-  let userDetails = {
-    role: "",
-  };
+  const [openDropdown, setOpenDropdown] = useState(null);
 
+  let role = "";
   if (session?.user?.token) {
-    decoded = jwtDecode(session?.user?.token);
-    userDetails.role = decoded.role;
+    const decoded = jwtDecode(session.user.token);
+    role = decoded.role;
   }
 
-  useEffect(() => {
-    const storedCid = localStorage.getItem("c_id");
-    const storedTid = localStorage.getItem("t_id");
-    if (storedCid) setCid(storedCid);
-    if (storedTid) setTid(storedTid);
-  }, [pathName]);
-
-  //   const filteredMenu = menuList.filter((menu) => {
-  //     if (decoded.role === "super_admin") {
-  //       if (menu.name === "Lms" && (!cid || !tid)) return false;
-  //       return true;
-  //     }
-  //     const permissions = ["dashboards", "Lms"];
-  //     if (!permissions.includes(menu.name)) return false;
-  //     if (menu.name === "Lms" && (!cid || !tid)) return false;
-
-  //     return true;
-  //   });
-const filteredMenu = menuList
-  .map((menu) => {
-    // SUPER ADMIN → full access except preview
-    if (userDetails.role === "super_admin") {
-      if (menu.name === "preview") return null;
-      return menu;
-    }
-
-    // NORMAL USER PERMISSIONS
-    const permissionsUser = ["dashboards", "Reports"];
-
-    // If not allowed → skip
-    if (!permissionsUser.includes(menu.name)) return null;
-
-    // Add token to Reports dropdown
-    if (menu.name === "Reports") {
-      return {
-        ...menu,
-        dropdownMenu: menu.dropdownMenu.map((item) => ({
-          ...item,
-          path: `${item.path}`,
-        })),
-      };
-    }
-
-    return menu;
-  })
-  .filter(Boolean); 
-
-
-  const handleMainMenu = (e, name) => {
-    if (openDropdown === name) {
-      setOpenDropdown(null);
-    } else {
-      setOpenDropdown(name);
-    }
+  // ✅ Active checker (IMPORTANT FIX)
+  const isActive = (path) => {
+    if (path === "/") return pathName === "/";
+    return pathName.startsWith(path);
   };
 
-  const handleDropdownMenu = (e, name) => {
-    e.stopPropagation();
-    if (openSubDropdown === name) {
-      setOpenSubDropdown(null);
-    } else {
-      setOpenSubDropdown(name);
-    }
-  };
+  // ✅ Filter by role
+  const filteredMenu = menuList.filter((menu) => {
+    if (role === "super_admin") return menu.name !== "preview";
+    return ["dashboards", "Reports"].includes(menu.name);
+  });
 
+  // ✅ Auto open dropdown when child is active
   useEffect(() => {
-    if (pathName !== "/") {
-      const x = pathName.split("/");
-      setActiveParent(x[1]);
-      setActiveChild(x[2]);
-      setOpenDropdown(x[1]);
-      setOpenSubDropdown(x[2]);
-    } else {
-      setActiveParent("dashboards");
-      setOpenDropdown("dashboards");
-    }
+    filteredMenu.forEach((menu) => {
+      if (
+        menu.dropdownMenu?.some((d) => isActive(d.path))
+      ) {
+        setOpenDropdown(menu.name);
+      }
+    });
   }, [pathName]);
+
+  const handleMainMenu = (name) => {
+    setOpenDropdown((prev) => (prev === name ? null : name));
+  };
 
   return (
     <>
-      {filteredMenu.map(({ dropdownMenu, id, name, path, icon }) => {
+      {filteredMenu.map((menu) => {
+        const { id, name, path, icon, dropdownMenu } = menu;
         const hasDropdown =
           Array.isArray(dropdownMenu) && dropdownMenu.length > 0;
+
+        // ✅ SIMPLE MENU (no dropdown)
+        if (!hasDropdown) {
+          return (
+            <li
+              key={id}
+              className={`nxl-item ${isActive(path) ? "active" : ""}`}
+            >
+              <Link href={path} className="nxl-link">
+                <span className="nxl-micon">{getIcon(icon)}</span>
+                <span className="nxl-mtext">{name}</span>
+              </Link>
+            </li>
+          );
+        }
+
+        // ✅ DROPDOWN MENU (Reports)
+        const isParentActive =
+          dropdownMenu.some((d) => isActive(d.path));
 
         return (
           <li
             key={id}
-            onClick={(e) =>
-              hasDropdown && handleMainMenu(e, name.split(" ")[0])
-            }
-            className={`nxl-item ${hasDropdown ? "nxl-hasmenu" : ""} ${
-              activeParent === name.split(" ")[0] ? "active nxl-trigger" : ""
+            className={`nxl-item nxl-hasmenu ${
+              isParentActive ? "active nxl-trigger" : ""
             }`}
           >
-            <Link
-              href={name === "Lms" ? `/Lms?c_id=${cid}&t_id=${tid}` : path}
-              className="nxl-link text-capitalize"
+            <a
+              href="#"
+              className="nxl-link"
+              onClick={() => handleMainMenu(name)}
             >
               <span className="nxl-micon">{getIcon(icon)}</span>
-              <span className="nxl-mtext" style={{ paddingLeft: "2.5px" }}>
-                {name}
+              <span className="nxl-mtext">{name}</span>
+              <span className="nxl-arrow">
+                <FiChevronRight />
               </span>
-              {hasDropdown && (
-                <span className="nxl-arrow fs-16">
-                  <FiChevronRight />
-                </span>
-              )}
-            </Link>
+            </a>
 
-            {hasDropdown && (
-              <ul
-                className={`nxl-submenu ${
-                  openDropdown === name.split(" ")[0]
-                    ? "nxl-menu-visible"
-                    : "nxl-menu-hidden"
-                }`}
-              >
-                {dropdownMenu.map(
-                  ({ id, name, path, subdropdownMenu = [], target }) => {
-                    const x = name;
-                    return (
-                      <Fragment key={id}>
-                        {subdropdownMenu.length ? (
-                          <li
-                            className={`nxl-item nxl-hasmenu ${
-                              activeChild === name ? "active" : ""
-                            }`}
-                            onClick={(e) => handleDropdownMenu(e, x)}
-                          >
-                            <Link
-                              href={path}
-                              className="nxl-link text-capitalize"
-                            >
-                              <span className="nxl-mtext">{name}</span>
-                              <span className="nxl-arrow">
-                                <FiChevronRight />
-                              </span>
-                            </Link>
-                            {subdropdownMenu.map(({ id, name, path }) => (
-                              <ul
-                                key={id}
-                                className={`nxl-submenu ${
-                                  openSubDropdown === x
-                                    ? "nxl-menu-visible"
-                                    : "nxl-menu-hidden"
-                                }`}
-                              >
-                                <li
-                                  className={`nxl-item ${
-                                    pathName === path ? "active" : ""
-                                  }`}
-                                >
-                                  <Link
-                                    className="nxl-link text-capitalize"
-                                    href={path}
-                                  >
-                                    {name}
-                                  </Link>
-                                </li>
-                              </ul>
-                            ))}
-                          </li>
-                        ) : (
-                          <li
-                            className={`nxl-item ${
-                              pathName === path ? "active" : ""
-                            }`}
-                          >
-                            <Link
-                              className="nxl-link"
-                              href={path}
-                              target={target}
-                            >
-                              {name}
-                            </Link>
-                          </li>
-                        )}
-                      </Fragment>
-                    );
-                  }
-                )}
-              </ul>
-            )}
+            <ul
+              className={`nxl-submenu ${
+                openDropdown === name
+                  ? "nxl-menu-visible"
+                  : "nxl-menu-hidden"
+              }`}
+            >
+              {dropdownMenu.map(({ id, name, path }) => (
+                <li
+                  key={id}
+                  className={`nxl-item ${
+                    isActive(path) ? "active" : ""
+                  }`}
+                >
+                  <Link
+                    href={path}
+                    className="nxl-link text-capitalize"
+                  >
+                    {name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </li>
         );
       })}

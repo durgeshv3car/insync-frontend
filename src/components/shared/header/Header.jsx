@@ -433,12 +433,12 @@ const Header = () => {
       <div className="header-wrapper">
         {/* LEFT */}
         <div className="header-left">
-          {/* <button
+          <button
             className="btn mobile-only"
             onClick={() => setNavigationOpen(!navigationOpen)}
           >
             <FiAlignLeft size={24} />
-          </button> */}
+          </button>
 
           <button
             className="btn desktop-only"

@@ -122,120 +122,172 @@ const YouTubeTable = () => {
               </div>
             </div>
 
-            <div className="col-lg-4">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Search Query
-              </label>
-              <div className="input-group" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                <span className="input-group-text" style={{ border: "1px solid #dee2e6", backgroundColor: "#f8f9fa" }}>
-                  <Search size={16} style={{ color: "#6c757d" }} />
-                </span>
-                <input
-                  type="text"
-                  name="query"
-                  value={filters.query}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Enter search terms..."
-                  style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px" }}
-                />
-              </div>
-            </div>
+            {filters.channelName && (
+              <>
+                <div className="col-lg-4">
+                  <label
+                    style={{
+                      padding: "14px 0 8px 0",
+                      fontSize: "0.8rem",
+                      fontWeight: "700",
+                      color: "#495057",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      display: "block",
+                    }}
+                  >
+                    Search Query
+                  </label>
+                  <div
+                    className="input-group"
+                    style={{ borderRadius: "6px", overflow: "hidden" }}
+                  >
+                    <span
+                      className="input-group-text"
+                      style={{
+                        border: "1px solid #dee2e6",
+                        backgroundColor: "#f8f9fa",
+                      }}
+                    >
+                      <Search size={16} style={{ color: "#6c757d" }} />
+                    </span>
+                    <input
+                      type="text"
+                      name="query"
+                      value={filters.query}
+                      onChange={handleChange}
+                      className="form-control"
+                      placeholder="Enter search terms..."
+                      style={{
+                        border: "1px solid #dee2e6",
+                        fontSize: "0.85rem",
+                        padding: "8px 12px",
+                      }}
+                    />
+                  </div>
+                </div>
 
-            <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Region
-              </label>
-              <div className="input-group" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                <span className="input-group-text" style={{ border: "1px solid #dee2e6", backgroundColor: "#f8f9fa" }}>
-                  <BookA size={16} style={{ color: "#6c757d" }} />
-                </span>
-                <input
-                  type="text"
-                  name="regionCode"
-                  value={filters.regionCode}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="IN"
-                  maxLength={2}
-                  style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px" }}
-                />
-              </div>
-            </div>
+                <div className="col-lg-2">
+                  <label
+                    style={{
+                      padding: "14px 0 8px 0",
+                      fontSize: "0.8rem",
+                      fontWeight: "700",
+                      color: "#495057",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      display: "block",
+                    }}
+                  >
+                    Region
+                  </label>
+                  <div
+                    className="input-group"
+                    style={{ borderRadius: "6px", overflow: "hidden" }}
+                  >
+                    <span
+                      className="input-group-text"
+                      style={{
+                        border: "1px solid #dee2e6",
+                        backgroundColor: "#f8f9fa",
+                      }}
+                    >
+                      <BookA size={16} style={{ color: "#6c757d" }} />
+                    </span>
+                    <input
+                      type="text"
+                      name="regionCode"
+                      value={filters.regionCode}
+                      onChange={handleChange}
+                      className="form-control"
+                      placeholder="IN"
+                      maxLength={2}
+                      style={{
+                        border: "1px solid #dee2e6",
+                        fontSize: "0.85rem",
+                        padding: "8px 12px",
+                      }}
+                    />
+                  </div>
+                </div>
 
-            <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Max Results
-              </label>
-              <div className="input-group" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                <span className="input-group-text" style={{ border: "1px solid #dee2e6", backgroundColor: "#f8f9fa" }}>
-                  <BookOpen size={16} style={{ color: "#6c757d" }} />
-                </span>
-                <input
-                  type="number"
-                  name="maxResults"
-                  value={filters.maxResults}
-                  onChange={handleChange}
-                  className="form-control"
-                  min="1"
-                  max="200"
-                  placeholder="100"
-                  style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px" }}
-                />
-              </div>
-            </div>
+                <div className="col-lg-2">
+                  <label
+                    style={{
+                      padding: "14px 0 8px 0",
+                      fontSize: "0.8rem",
+                      fontWeight: "700",
+                      color: "#495057",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      display: "block",
+                    }}
+                  >
+                    Max Results
+                  </label>
+                  <div
+                    className="input-group"
+                    style={{ borderRadius: "6px", overflow: "hidden" }}
+                  >
+                    <span
+                      className="input-group-text"
+                      style={{
+                        border: "1px solid #dee2e6",
+                        backgroundColor: "#f8f9fa",
+                      }}
+                    >
+                      <BookOpen size={16} style={{ color: "#6c757d" }} />
+                    </span>
+                    <input
+                      type="number"
+                      name="maxResults"
+                      value={filters.maxResults}
+                      onChange={handleChange}
+                      className="form-control"
+                      min="1"
+                      max="200"
+                      placeholder="100"
+                      style={{
+                        border: "1px solid #dee2e6",
+                        fontSize: "0.85rem",
+                        padding: "8px 12px",
+                      }}
+                    />
+                  </div>
+                </div>
 
-            <div className="col-lg-2 d-flex align-items-end">
-              <button
-                className="btn w-100"
-                type="button"
-                disabled={loading}
-                onClick={handleSubmit}
-                style={{
-                  backgroundColor: loading ? "#e9ecef" : "#0d6efd",
-                  color: loading ? "#6c757d" : "#ffffff",
-                  border: "none",
-                  fontWeight: "600",
-                  padding: "10px 16px",
-                  borderRadius: "6px",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  fontSize: "0.95rem",
-                  transition: "all 0.3s ease"
-                }}
-              >
-                {loading ? "Searching..." : "Search"}
-              </button>
-            </div>
+                <div className="col-lg-2 d-flex align-items-end">
+                  <button
+                    className="btn w-100"
+                    type="button"
+                    disabled={loading || !filters.channelName || !filters.query}
+                    onClick={handleSubmit}
+                    style={{
+                      backgroundColor:
+                        loading || !filters.channelName || !filters.query
+                          ? "#e9ecef"
+                          : "#0d6efd",
+                      color:
+                        loading || !filters.channelName || !filters.query
+                          ? "#6c757d"
+                          : "#ffffff",
+                      border: "none",
+                      fontWeight: "600",
+                      padding: "10px 16px",
+                      borderRadius: "6px",
+                      cursor:
+                        loading || !filters.channelName || !filters.query
+                          ? "not-allowed"
+                          : "pointer",
+                      fontSize: "0.95rem",
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    {loading ? "Searching..." : "Search"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
