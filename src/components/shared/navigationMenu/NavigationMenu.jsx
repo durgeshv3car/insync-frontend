@@ -28,9 +28,7 @@ const NavigationManu = () => {
                 <div className={`navbar-content`}>
                     <PerfectScrollbar>
                         <ul className="nxl-navbar">
-                            <li className="nxl-item nxl-caption">
-                                <label>Navigation</label>
-                            </li>
+                           
                             <Menus />
                         </ul>
                         <div style={{ height: "18px" }}></div>
