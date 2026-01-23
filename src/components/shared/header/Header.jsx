@@ -54,30 +54,37 @@ const Header = () => {
     };
   }
 
-  useEffect(() => {
-    // Load from localStorage first
-    const storedAudienceName = localStorage.getItem("audienceName");
-    const storedAudienceId = localStorage.getItem("audienceId");
-
-    if (storedAudienceName && storedAudienceId) {
-      setSelectedAudience({
-        reportName: storedAudienceName,
-        _id: storedAudienceId,
-      });
-    }
-
-    setIsInitialized(true);
-  }, []);
-
-  useEffect(() => {
-  if (!isInitialized) return;
+useEffect(() => {
+  if (!audienceList.length) return;
 
   const storedId = localStorage.getItem("audienceId");
 
-  if (selectedAudience?._id && selectedAudience._id !== storedId) {
-    window.location.reload();
-  }
-}, [selectedAudience]);
+  const foundAudience = audienceList.find(a => a._id === storedId);
+
+  const defaultAudience = foundAudience || audienceList[0];
+
+  setSelectedAudience({
+    reportName: defaultAudience.reportName,
+    _id: defaultAudience._id,
+  });
+
+  localStorage.setItem("audienceName", defaultAudience.reportName);
+  localStorage.setItem("audienceId", defaultAudience._id);
+  localStorage.setItem("count", defaultAudience.cpm);
+
+
+  setIsInitialized(true);
+}, [audienceList]);
+
+
+ useEffect(() => {
+  if (!isInitialized || !selectedAudience) return;
+
+  localStorage.setItem("audienceName", selectedAudience.reportName);
+  localStorage.setItem("audienceId", selectedAudience._id);
+  localStorage.setItem("count", selectedAudience.cpm );
+}, [selectedAudience, isInitialized]);
+
 
 
 
@@ -104,8 +111,9 @@ const Header = () => {
       selectedAudience?.reportName != undefined &&
       selectedAudience?._id != undefined
     ) {
-      localStorage.setItem("audienceName", selectedAudience.reportName);
-      localStorage.setItem("audienceId", selectedAudience._id);
+      localStorage.setItem("audienceName", selectedAudience.reportName || audienceList[0]?.reportName);
+      localStorage.setItem("audienceId", selectedAudience._id || audienceList[0]?._id);
+      localStorage.setItem("count", selectedAudience.cpm || audienceList[0]?.cpm);
     }
   }, [isInitialized, selectedAudience]);
 
@@ -322,7 +330,7 @@ const Header = () => {
             {isPathPresent && (
               <>
                 <span className="text-primary fw-semibold">
-                  {selectedAudience?.reportName || "Select Audience"}
+                  {selectedAudience?.reportName || audienceList[0]?.reportName}
                 </span>
                 <SearchModal
                   audienceList={audienceList}

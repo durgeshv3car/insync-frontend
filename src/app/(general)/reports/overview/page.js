@@ -3,21 +3,21 @@
 import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import "./styles.css";
-import { 
+import {
   getDailyReportsByFilter,
   getDailyReportsByRange,
   getMonthlyReportsByFilter,
-  getMonthlyReportsByRange
+  getMonthlyReportsByRange,
 } from "@/services/reports";
 import { createReportsDataDevice } from "@/services/device";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
-  
+
   if (rounded >= 1000000) {
-    return Math.round(rounded / 1000000).toLocaleString() + 'M';
+    return Math.round(rounded / 1000000).toLocaleString() + "M";
   } else if (rounded >= 1000) {
-    return Math.round(rounded / 1000).toLocaleString() + 'K';
+    return Math.round(rounded / 1000).toLocaleString() + "K";
   }
   return rounded.toLocaleString();
 }
@@ -41,11 +41,13 @@ export default function OverviewPage() {
     const storedStart = localStorage.getItem("startDate");
     const storedEnd = localStorage.getItem("endDate");
     const storedAudienceId = localStorage.getItem("audienceId");
+    const storedCount = localStorage.getItem("count");
 
     if (storedRange) setDateRange(storedRange);
     if (storedStart) setStartDate(storedStart);
     if (storedEnd) setEndDate(storedEnd);
     if (storedAudienceId) setAudienceId(storedAudienceId);
+    if (storedCount) setCount(parseInt(storedCount));
 
     setIsInitialized(true);
 
@@ -65,6 +67,7 @@ export default function OverviewPage() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -101,13 +104,17 @@ export default function OverviewPage() {
   const fetchReportsData = async () => {
     // Validation: Check if dateRange is selected
     if (!dateRange) {
-      console.log("Date range is not selected. Please select a date range to fetch data.");
+      console.log(
+        "Date range is not selected. Please select a date range to fetch data.",
+      );
       return;
     }
 
     // Validation: If dateRange is CUSTOM, both startDate and endDate must be selected
     if (dateRange === "CUSTOM" && (!startDate || !endDate)) {
-      console.log("Custom date range selected. Please select both start and end dates.");
+      console.log(
+        "Custom date range selected. Please select both start and end dates.",
+      );
       return;
     }
 
@@ -119,13 +126,13 @@ export default function OverviewPage() {
         if (dateRange === "CUSTOM") {
           const [dailyData, monthlyData] = await Promise.all([
             getDailyReportsByRange(INSERTION_ORDER_ID, startDate, endDate),
-            getMonthlyReportsByRange(INSERTION_ORDER_ID, startDate, endDate)
+            getMonthlyReportsByRange(INSERTION_ORDER_ID, startDate, endDate),
           ]);
           return { dailyData, monthlyData };
         } else {
           const [dailyData, monthlyData] = await Promise.all([
             getDailyReportsByFilter(INSERTION_ORDER_ID, dateRange),
-            getMonthlyReportsByFilter(INSERTION_ORDER_ID, dateRange)
+            getMonthlyReportsByFilter(INSERTION_ORDER_ID, dateRange),
           ]);
           return { dailyData, monthlyData };
         }
@@ -146,17 +153,20 @@ export default function OverviewPage() {
       }
 
       // 3. Check if we have data. If not (or if fetch failed), trigger sync and fetch again.
-      const hasData = dailyData && Array.isArray(dailyData) && dailyData.length > 0;
+      const hasData =
+        dailyData && Array.isArray(dailyData) && dailyData.length > 0;
 
       if (!hasData || fetchErrorOccurred) {
-        console.log("Data not found in DB or error occurred, triggering sync...");
-        
+        console.log(
+          "Data not found in DB or error occurred, triggering sync...",
+        );
+
         // Clear old data to prevent showing stale results during sync
         setDailyReportsData(null);
         setMonthlyReportsData(null);
-        
+
         const isSent = await sentReportsData();
-        
+
         if (isSent) {
           console.log("Sync complete, fetching refreshed data...");
           // Fetch again after sync
@@ -167,11 +177,10 @@ export default function OverviewPage() {
       } else {
         console.log("Existing data found in DB, skipping sync.");
       }
-      
+
       setDailyReportsData(dailyData);
       setMonthlyReportsData(monthlyData);
       console.log("Report data updated successfully.");
-
     } catch (error) {
       console.error("Error in fetchReportsData workflow:", error);
       setDailyReportsData(null);
@@ -193,26 +202,45 @@ export default function OverviewPage() {
   };
 
   const calculateSummaryMetrics = () => {
-    if (!dailyReportsData || !Array.isArray(dailyReportsData) || dailyReportsData.length === 0) {
-      return { impressions: 0, clicks: 0, completeViews: 0, ctr: "0.00", vcr: "0.00" };
+    if (
+      !dailyReportsData ||
+      !Array.isArray(dailyReportsData) ||
+      dailyReportsData.length === 0
+    ) {
+      return {
+        impressions: 0,
+        clicks: 0,
+        completeViews: 0,
+        ctr: "0.00",
+        vcr: "0.00",
+      };
     }
 
-    const totals = dailyReportsData.reduce((acc, curr) => {
-      acc.impressions += parseInt(curr.impressions) || 0;
-      acc.clicks += parseInt(curr.clicks) || 0;
-      acc.completeViews += parseInt(curr.completeViewsVideo) || 0;
-      return acc;
-    }, { impressions: 0, clicks: 0, completeViews: 0 });
+    const totals = dailyReportsData.reduce(
+      (acc, curr) => {
+        acc.impressions += parseInt(curr.impressions) || 0;
+        acc.clicks += parseInt(curr.clicks) || 0;
+        acc.completeViews += parseInt(curr.completeViewsVideo) || 0;
+        return acc;
+      },
+      { impressions: 0, clicks: 0, completeViews: 0 },
+    );
 
-    const ctr = totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : "0.00";
-    const vcr = totals.impressions > 0 ? ((totals.completeViews / totals.impressions) * 100).toFixed(2) : "0.00";
+    const ctr =
+      totals.impressions > 0
+        ? ((totals.clicks / totals.impressions) * 100).toFixed(2)
+        : "0.00";
+    const vcr =
+      totals.impressions > 0
+        ? ((totals.completeViews / totals.impressions) * 100).toFixed(2)
+        : "0.00";
 
     return {
       impressions: totals.impressions,
       clicks: totals.clicks,
       completeViews: totals.completeViews,
       ctr,
-      vcr
+      vcr,
     };
   };
 
@@ -246,8 +274,6 @@ export default function OverviewPage() {
   const geographicChartRef = useRef(null);
   const demographicsChartRef = useRef(null);
 
-
-
   // Store chart instances
   const chartsRef = useRef({});
 
@@ -263,21 +289,32 @@ export default function OverviewPage() {
     }
 
     // Performance Daily Chart
-    if (performanceDailyChartRef.current && dailyReportsData && Array.isArray(dailyReportsData)) {
+    if (
+      performanceDailyChartRef.current &&
+      dailyReportsData &&
+      Array.isArray(dailyReportsData)
+    ) {
       const ctx = performanceDailyChartRef.current.getContext("2d");
-      
+
       // Process daily data from API
       const dailyData = {
-        labels: dailyReportsData.map(item => {
+        labels: dailyReportsData.map((item) => {
           // Format date from "2025/12/13" to "Dec 13"
           const date = new Date(item.date);
-          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
         }),
-        impressions: dailyReportsData.map(item => parseInt(item.impressions) || 0),
-        vcr: dailyReportsData.map(item => {
+        impressions: dailyReportsData.map(
+          (item) => parseInt(item.impressions) || 0,
+        ),
+        vcr: dailyReportsData.map((item) => {
           const impressions = parseInt(item.impressions) || 0;
           const completeViews = parseInt(item.completeViewsVideo) || 0;
-          return impressions > 0 ? ((completeViews / impressions) * 100).toFixed(2) : 0;
+          return impressions > 0
+            ? ((completeViews / impressions) * 100).toFixed(2)
+            : 0;
         }),
       };
 
@@ -326,7 +363,11 @@ export default function OverviewPage() {
             legend: {
               display: true,
               position: "top",
-              labels: { padding: 5, font: { size: 13, weight: "600" }, color: "#495057" },
+              labels: {
+                padding: 5,
+                font: { size: 13, weight: "600" },
+                color: "#495057",
+              },
             },
             tooltip: {
               backgroundColor: "rgba(255,255,255,0.95)",
@@ -340,18 +381,18 @@ export default function OverviewPage() {
               cornerRadius: 6,
               displayColors: true,
               callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
-                  if (label) label += ': ';
+                label: function (context) {
+                  let label = context.dataset.label || "";
+                  if (label) label += ": ";
                   const value = context.parsed.y;
-                  if (context.dataset.yAxisID === 'y1') {
-                    label += value + '%';
+                  if (context.dataset.yAxisID === "y1") {
+                    label += value + "%";
                   } else {
                     label += Math.round(value).toLocaleString();
                   }
                   return label;
                 },
-              }
+              },
             },
           },
           scales: {
@@ -362,10 +403,12 @@ export default function OverviewPage() {
             y: {
               beginAtZero: true,
               grid: { color: "rgba(0,0,0,0.06)", drawBorder: false },
-              ticks: { 
-                font: { size: 11, color: "#6c757d" }, 
-                padding: 10, 
-                callback: function(value) { return formatNumber(value); } 
+              ticks: {
+                font: { size: 11, color: "#6c757d" },
+                padding: 10,
+                callback: function (value) {
+                  return formatNumber(value);
+                },
               },
             },
             y1: {
@@ -374,10 +417,12 @@ export default function OverviewPage() {
               position: "right",
               beginAtZero: true,
               grid: { drawOnChartArea: false, drawBorder: false },
-              ticks: { 
-                font: { size: 11, color: "#6c757d" }, 
-                padding: 10, 
-                callback: function(value) { return value + '%'; } 
+              ticks: {
+                font: { size: 11, color: "#6c757d" },
+                padding: 10,
+                callback: function (value) {
+                  return value + "%";
+                },
               },
             },
           },
@@ -386,22 +431,33 @@ export default function OverviewPage() {
     }
 
     // Performance Monthly Chart
-    if (performanceMonthlyChartRef.current && monthlyReportsData && Array.isArray(monthlyReportsData)) {
+    if (
+      performanceMonthlyChartRef.current &&
+      monthlyReportsData &&
+      Array.isArray(monthlyReportsData)
+    ) {
       const ctx = performanceMonthlyChartRef.current.getContext("2d");
-      
+
       // Process monthly data from API
       const monthlyData = {
-        labels: monthlyReportsData.map(item => {
+        labels: monthlyReportsData.map((item) => {
           // Format month from "2025/12" to "Dec 2025"
-          const [year, month] = item.month.split('/');
+          const [year, month] = item.month.split("/");
           const date = new Date(year, month - 1);
-          return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          });
         }),
-        impressions: monthlyReportsData.map(item => parseInt(item.impressions) || 0),
-        vcr: monthlyReportsData.map(item => {
+        impressions: monthlyReportsData.map(
+          (item) => parseInt(item.impressions) || 0,
+        ),
+        vcr: monthlyReportsData.map((item) => {
           const impressions = parseInt(item.impressions) || 0;
           const completeViews = parseInt(item.completeViewsVideo) || 0;
-          return impressions > 0 ? ((completeViews / impressions) * 100).toFixed(2) : 0;
+          return impressions > 0
+            ? ((completeViews / impressions) * 100).toFixed(2)
+            : 0;
         }),
       };
 
@@ -450,7 +506,11 @@ export default function OverviewPage() {
             legend: {
               display: true,
               position: "top",
-              labels: { padding: 20, font: { size: 13, weight: "600" }, color: "#495057" },
+              labels: {
+                padding: 20,
+                font: { size: 13, weight: "600" },
+                color: "#495057",
+              },
             },
             tooltip: {
               backgroundColor: "rgba(255,255,255,0.95)",
@@ -464,18 +524,18 @@ export default function OverviewPage() {
               cornerRadius: 6,
               displayColors: true,
               callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
-                  if (label) label += ': ';
+                label: function (context) {
+                  let label = context.dataset.label || "";
+                  if (label) label += ": ";
                   const value = context.parsed.y;
-                  if (context.dataset.yAxisID === 'y1') {
-                    label += value + '%';
+                  if (context.dataset.yAxisID === "y1") {
+                    label += value + "%";
                   } else {
                     label += Math.round(value).toLocaleString();
                   }
                   return label;
                 },
-              }
+              },
             },
           },
           scales: {
@@ -486,10 +546,12 @@ export default function OverviewPage() {
             y: {
               beginAtZero: true,
               grid: { color: "rgba(0,0,0,0.06)", drawBorder: false },
-              ticks: { 
-                font: { size: 11, color: "#6c757d" }, 
-                padding: 10, 
-                callback: function(value) { return formatNumber(value); } 
+              ticks: {
+                font: { size: 11, color: "#6c757d" },
+                padding: 10,
+                callback: function (value) {
+                  return formatNumber(value);
+                },
               },
             },
             y1: {
@@ -498,302 +560,316 @@ export default function OverviewPage() {
               position: "right",
               beginAtZero: true,
               grid: { drawOnChartArea: false, drawBorder: false },
-              ticks: { 
-                font: { size: 11, color: "#6c757d" }, 
-                padding: 10, 
-                callback: function(value) { return value + '%'; } 
+              ticks: {
+                font: { size: 11, color: "#6c757d" },
+                padding: 10,
+                callback: function (value) {
+                  return value + "%";
+                },
               },
             },
           },
         },
       });
     }
-  
-      // Platform Distribution Chart (Donut)
-      if (platformChartRef.current && !chartsRef.current.platform) {
-        const ctx = platformChartRef.current.getContext("2d");
-        chartsRef.current.platform = new Chart(ctx, {
-          type: "doughnut",
-          data: {
-            labels: ["Google Ads", "Meta Ads", "LinkedIn", "TikTok", "Other"],
-            datasets: [
-              {
-                data: [35, 28, 18, 12, 7],
-                backgroundColor: [
-                  "#6366f1",
-                  "#ec4899",
-                  "#06b6d4",
-                  "#10b981",
-                  "#f59e0b",
-                ],
-                borderColor: "#fff",
-                borderWidth: 2,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: "bottom",
-                labels: {
-                  font: { size: 12 },
-                  padding: 15,
-                },
+
+    // Platform Distribution Chart (Donut)
+    if (platformChartRef.current && !chartsRef.current.platform) {
+      const ctx = platformChartRef.current.getContext("2d");
+      chartsRef.current.platform = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Google Ads", "Meta Ads", "LinkedIn", "TikTok", "Other"],
+          datasets: [
+            {
+              data: [35, 28, 18, 12, 7],
+              backgroundColor: [
+                "#6366f1",
+                "#ec4899",
+                "#06b6d4",
+                "#10b981",
+                "#f59e0b",
+              ],
+              borderColor: "#fff",
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                font: { size: 12 },
+                padding: 15,
               },
             },
           },
-        });
-      }
-  
-      // Conversion Funnel Chart (Horizontal Bar)
-      if (funnelChartRef.current && !chartsRef.current.funnel) {
-        const ctx = funnelChartRef.current.getContext("2d");
-        chartsRef.current.funnel = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: ["Impressions", "Visits", "Clicks", "Add to Cart", "Purchase"],
-            datasets: [
-              {
-                label: "Count",
-                data: [2400, 1800, 900, 450, 200],
-                backgroundColor: "#6366f1",
-                borderRadius: 4,
-              },
-            ],
-          },
-          options: {
-            indexAxis: "y",
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: {
-                beginAtZero: true,
-                grid: { color: "rgba(0,0,0,0.05)" },
-              },
+        },
+      });
+    }
+
+    // Conversion Funnel Chart (Horizontal Bar)
+    if (funnelChartRef.current && !chartsRef.current.funnel) {
+      const ctx = funnelChartRef.current.getContext("2d");
+      chartsRef.current.funnel = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [
+            "Impressions",
+            "Visits",
+            "Clicks",
+            "Add to Cart",
+            "Purchase",
+          ],
+          datasets: [
+            {
+              label: "Count",
+              data: [2400, 1800, 900, 450, 200],
+              backgroundColor: "#6366f1",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              beginAtZero: true,
+              grid: { color: "rgba(0,0,0,0.05)" },
             },
           },
-        });
-      }
-  
-      // Revenue by Channel Chart (Stacked Bar)
-      if (revenueChartRef.current && !chartsRef.current.revenue) {
-        const ctx = revenueChartRef.current.getContext("2d");
-        chartsRef.current.revenue = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            datasets: [
-              {
-                label: "Google",
-                data: [500, 600, 700, 800, 900, 800, 700],
-                backgroundColor: "#6366f1",
-              },
-              {
-                label: "Meta",
-                data: [400, 500, 600, 700, 800, 700, 600],
-                backgroundColor: "#ec4899",
-              },
-              {
-                label: "TikTok",
-                data: [300, 400, 500, 600, 700, 600, 500],
-                backgroundColor: "#06b6d4",
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: { stacked: true },
-              y: { stacked: true, grid: { color: "rgba(0,0,0,0.05)" } },
+        },
+      });
+    }
+
+    // Revenue by Channel Chart (Stacked Bar)
+    if (revenueChartRef.current && !chartsRef.current.revenue) {
+      const ctx = revenueChartRef.current.getContext("2d");
+      chartsRef.current.revenue = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          datasets: [
+            {
+              label: "Google",
+              data: [500, 600, 700, 800, 900, 800, 700],
+              backgroundColor: "#6366f1",
             },
-            plugins: {
-              legend: {
-                position: "bottom",
-                labels: { padding: 15 },
-              },
+            {
+              label: "Meta",
+              data: [400, 500, 600, 700, 800, 700, 600],
+              backgroundColor: "#ec4899",
             },
+            {
+              label: "TikTok",
+              data: [300, 400, 500, 600, 700, 600, 500],
+              backgroundColor: "#06b6d4",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, grid: { color: "rgba(0,0,0,0.05)" } },
           },
-        });
-      }
-  
-      // Hourly Performance Heatmap Chart
-      if (heatmapChartRef.current && !chartsRef.current.heatmap) {
-        const ctx = heatmapChartRef.current.getContext("2d");
-        chartsRef.current.heatmap = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: [
-              "12am",
-              "1am",
-              "2am",
-              "3am",
-              "4am",
-              "5am",
-              "6am",
-              "7am",
-              "8am",
-              "9am",
-              "10am",
-              "11am",
-            ],
-            datasets: [
-              {
-                label: "Performance",
-                data: [20, 15, 10, 25, 40, 60, 80, 90, 85, 75, 65, 55],
-                backgroundColor: [
-                  "#ef4444",
-                  "#f97316",
-                  "#f59e0b",
-                  "#eab308",
-                  "#84cc16",
-                  "#22c55e",
-                  "#10b981",
-                  "#14b8a6",
-                  "#06b6d4",
-                  "#0ea5e9",
-                  "#6366f1",
-                  "#8b5cf6",
-                ],
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { beginAtZero: true, max: 100, grid: { color: "rgba(0,0,0,0.05)" } },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { padding: 15 },
             },
           },
-        });
-      }
-  
-      // Device Breakdown Chart (Pie)
-      if (deviceChartRef.current && !chartsRef.current.device) {
-        const ctx = deviceChartRef.current.getContext("2d");
-        chartsRef.current.device = new Chart(ctx, {
-          type: "doughnut",
-          data: {
-            labels: ["Mobile", "Desktop", "Tablet", "Smart TV"],
-            datasets: [
-              {
-                data: [45, 30, 15, 10],
-                backgroundColor: [
-                  "#6366f1",
-                  "#ec4899",
-                  "#06b6d4",
-                  "#10b981",
-                ],
-                borderColor: "#fff",
-                borderWidth: 2,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: "bottom",
-                labels: { font: { size: 12 }, padding: 15 },
-              },
+        },
+      });
+    }
+
+    // Hourly Performance Heatmap Chart
+    if (heatmapChartRef.current && !chartsRef.current.heatmap) {
+      const ctx = heatmapChartRef.current.getContext("2d");
+      chartsRef.current.heatmap = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [
+            "12am",
+            "1am",
+            "2am",
+            "3am",
+            "4am",
+            "5am",
+            "6am",
+            "7am",
+            "8am",
+            "9am",
+            "10am",
+            "11am",
+          ],
+          datasets: [
+            {
+              label: "Performance",
+              data: [20, 15, 10, 25, 40, 60, 80, 90, 85, 75, 65, 55],
+              backgroundColor: [
+                "#ef4444",
+                "#f97316",
+                "#f59e0b",
+                "#eab308",
+                "#84cc16",
+                "#22c55e",
+                "#10b981",
+                "#14b8a6",
+                "#06b6d4",
+                "#0ea5e9",
+                "#6366f1",
+                "#8b5cf6",
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: "rgba(0,0,0,0.05)" },
             },
           },
-        });
-      }
-  
-      // Geographic Performance Chart
-      if (geographicChartRef.current && !chartsRef.current.geographic) {
-        const ctx = geographicChartRef.current.getContext("2d");
-        chartsRef.current.geographic = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: ["USA", "UK", "Canada", "Australia", "Germany", "France", "India", "Japan"],
-            datasets: [
-              {
-                label: "Revenue",
-                data: [4500, 3800, 3200, 2900, 2600, 2400, 2100, 1900],
-                backgroundColor: "#6366f1",
-                borderRadius: 4,
-              },
-              {
-                label: "Conversions",
-                data: [3200, 2900, 2400, 2100, 1900, 1700, 1500, 1300],
-                backgroundColor: "#06b6d4",
-                borderRadius: 4,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: { grid: { color: "rgba(0,0,0,0.05)" } },
+        },
+      });
+    }
+
+    // Device Breakdown Chart (Pie)
+    if (deviceChartRef.current && !chartsRef.current.device) {
+      const ctx = deviceChartRef.current.getContext("2d");
+      chartsRef.current.device = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Mobile", "Desktop", "Tablet", "Smart TV"],
+          datasets: [
+            {
+              data: [45, 30, 15, 10],
+              backgroundColor: ["#6366f1", "#ec4899", "#06b6d4", "#10b981"],
+              borderColor: "#fff",
+              borderWidth: 2,
             },
-            plugins: {
-              legend: {
-                position: "bottom",
-                labels: { padding: 15 },
-              },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { font: { size: 12 }, padding: 15 },
             },
           },
-        });
-      }
-  
-      // Audience Demographics Chart
-      if (demographicsChartRef.current && !chartsRef.current.demographics) {
-        const ctx = demographicsChartRef.current.getContext("2d");
-        chartsRef.current.demographics = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: ["13-24", "25-34", "35-44", "45-54", "55-64", "65+"],
-            datasets: [
-              {
-                label: "Male",
-                data: [850, 1200, 950, 800, 650, 400],
-                backgroundColor: "#6366f1",
-                borderRadius: 4,
-              },
-              {
-                label: "Female",
-                data: [920, 1350, 1050, 900, 720, 450],
-                backgroundColor: "#ec4899",
-                borderRadius: 4,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: { grid: { color: "rgba(0,0,0,0.05)" } },
+        },
+      });
+    }
+
+    // Geographic Performance Chart
+    if (geographicChartRef.current && !chartsRef.current.geographic) {
+      const ctx = geographicChartRef.current.getContext("2d");
+      chartsRef.current.geographic = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [
+            "USA",
+            "UK",
+            "Canada",
+            "Australia",
+            "Germany",
+            "France",
+            "India",
+            "Japan",
+          ],
+          datasets: [
+            {
+              label: "Revenue",
+              data: [4500, 3800, 3200, 2900, 2600, 2400, 2100, 1900],
+              backgroundColor: "#6366f1",
+              borderRadius: 4,
             },
-            plugins: {
-              legend: {
-                position: "bottom",
-                labels: { padding: 15 },
-              },
+            {
+              label: "Conversions",
+              data: [3200, 2900, 2400, 2100, 1900, 1700, 1500, 1300],
+              backgroundColor: "#06b6d4",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { grid: { color: "rgba(0,0,0,0.05)" } },
+          },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { padding: 15 },
             },
           },
-        });
-      }
-  
-      return () => {
-        // Cleanup charts on unmount
-        Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
-        chartsRef.current = {};
-      };
-    }, [dailyReportsData, monthlyReportsData]); // Re-render charts when data changes
+        },
+      });
+    }
+
+    // Audience Demographics Chart
+    if (demographicsChartRef.current && !chartsRef.current.demographics) {
+      const ctx = demographicsChartRef.current.getContext("2d");
+      chartsRef.current.demographics = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["13-24", "25-34", "35-44", "45-54", "55-64", "65+"],
+          datasets: [
+            {
+              label: "Male",
+              data: [850, 1200, 950, 800, 650, 400],
+              backgroundColor: "#6366f1",
+              borderRadius: 4,
+            },
+            {
+              label: "Female",
+              data: [920, 1350, 1050, 900, 720, 450],
+              backgroundColor: "#ec4899",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { grid: { color: "rgba(0,0,0,0.05)" } },
+          },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { padding: 15 },
+            },
+          },
+        },
+      });
+    }
+
+    return () => {
+      // Cleanup charts on unmount
+      Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
+      chartsRef.current = {};
+    };
+  }, [dailyReportsData, monthlyReportsData]); // Re-render charts when data changes
 
   return (
-     <main className="main-content">
-
+    <main className="main-content">
       {/* Filters Section */}
-
 
       {/* Real-time Stats */}
       <section className="realtime-section">
@@ -805,8 +881,14 @@ export default function OverviewPage() {
           </div>
 
           <div className="realtime-stats">
-            <Stat value={formatNumber(summaryMetrics.impressions)} label="Impressions" />
-            <Stat value={formatNumber(summaryMetrics.completeViews)} label="Complete Views" />
+            <Stat
+              value={formatNumber(summaryMetrics.impressions)}
+              label="Impressions"
+            />
+            <Stat
+              value={formatNumber(summaryMetrics.completeViews)}
+              label="Complete Views"
+            />
             <Stat value={`${summaryMetrics.vcr}%`} label="VCR" />
             <Stat value={formatNumber(summaryMetrics.clicks)} label="Clicks" />
             <Stat value={`${summaryMetrics.ctr}%`} label="CTR" />
@@ -822,28 +904,12 @@ export default function OverviewPage() {
             <canvas ref={performanceDailyChartRef} id="performanceDailyChart" />
           </ChartCard>
           <ChartCard title="Performance Monthly">
-            <canvas ref={performanceMonthlyChartRef} id="performanceMonthlyChart" />
+            <canvas
+              ref={performanceMonthlyChartRef}
+              id="performanceMonthlyChart"
+            />
           </ChartCard>
 
-          {/* <ChartCard title="Platform Distribution">
-            <canvas ref={platformChartRef} id="platformChart" />
-          </ChartCard>
-
-          <ChartCard title="Conversion Funnel">
-            <canvas ref={funnelChartRef} id="funnelChart" />
-          </ChartCard>
-
-          <ChartCard title="Revenue by Channel">
-            <canvas ref={revenueChartRef} id="revenueChart" />
-          </ChartCard>
-
-          <ChartCard title="Hourly Performance Heatmap">
-            <canvas ref={heatmapChartRef} id="heatmapChart" />
-          </ChartCard>
-
-          <ChartCard title="Device Breakdown">
-            <canvas ref={deviceChartRef} id="deviceChart" />
-          </ChartCard> */}
         </div>
       </section>
 
@@ -852,16 +918,16 @@ export default function OverviewPage() {
         <div className="table-header">
           <h3>Campaign Performance</h3>
           <div className="table-actions">
-            <button 
-              className={`btn btn-sm ${tableType === 'daily' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setTableType('daily')}
+            <button
+              className={`btn btn-sm ${tableType === "daily" ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => setTableType("daily")}
             >
               Daily
             </button>
-            <button 
-              className={`btn btn-sm ${tableType === 'monthly' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setTableType('monthly')}
-              style={{ marginLeft: '8px' }}
+            <button
+              className={`btn btn-sm ${tableType === "monthly" ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => setTableType("monthly")}
+              style={{ marginLeft: "8px" }}
             >
               Monthly
             </button>
@@ -874,23 +940,31 @@ export default function OverviewPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>{tableType === 'daily' ? 'Date' : 'Month'}</th>
+              <th>{tableType === "daily" ? "Date" : "Month"}</th>
               <th>Impressions</th>
               <th>Clicks</th>
               <th>CTR</th>
               <th>VCR</th>
+              <th>1st Quartile Views</th>
+              <th>Midpoint Views</th>
+              <th>3rd Quartile Views</th>
               <th>Complete Views</th>
               <th>Media Cost</th>
               <th>Unique Reach</th>
             </tr>
           </thead>
           <tbody>
-            {tableType === 'daily' && dailyReportsData && Array.isArray(dailyReportsData) ? (
+            {tableType === "daily" &&
+            dailyReportsData &&
+            Array.isArray(dailyReportsData) ? (
               dailyReportsData.map((item, index) => {
                 const impressions = parseInt(item.impressions) || 0;
                 const completeViews = parseInt(item.completeViewsVideo) || 0;
-                const vcr = impressions > 0 ? ((completeViews / impressions) * 100).toFixed(2) : '0.00';
-                
+                const vcr =
+                  impressions > 0
+                    ? ((completeViews / impressions) * 100).toFixed(2)
+                    : "0.00";
+
                 return (
                   <tr key={index}>
                     <td>{item.date}</td>
@@ -898,18 +972,47 @@ export default function OverviewPage() {
                     <td>{parseInt(item.clicks).toLocaleString()}</td>
                     <td>{item.ctr}</td>
                     <td>{vcr}%</td>
-                    <td>{parseInt(item.completeViewsVideo).toLocaleString()}</td>
-                    <td>₹{parseFloat(item.mediaCostAdvertiserCurrency).toFixed(2)}</td>
-                    <td>{item.uniqueReachImpressionReach !== '-' ? parseInt(item.uniqueReachImpressionReach).toLocaleString() : '-'}</td>
+                    <td>
+                      {parseInt(item.firstQuartileViewsVideo).toLocaleString()}
+                    </td>
+                    <td>
+                      {parseInt(item.midpointViewsVideo).toLocaleString()}
+                    </td>
+                    <td>
+                      {parseInt(item.thirdQuartileViewsVideo).toLocaleString()}
+                    </td>
+
+                    <td>
+                      {parseInt(item.completeViewsVideo).toLocaleString()}
+                    </td>
+                    <td>
+                      ₹
+                      {(
+                        parseFloat(item.mediaCostAdvertiserCurrency) * count
+                      ).toFixed(2)}
+                    </td>
+
+                    <td>
+                      {item.uniqueReachImpressionReach !== "-"
+                        ? parseInt(
+                            item.uniqueReachImpressionReach,
+                          ).toLocaleString()
+                        : "-"}
+                    </td>
                   </tr>
                 );
               })
-            ) : tableType === 'monthly' && monthlyReportsData && Array.isArray(monthlyReportsData) ? (
+            ) : tableType === "monthly" &&
+              monthlyReportsData &&
+              Array.isArray(monthlyReportsData) ? (
               monthlyReportsData.map((item, index) => {
                 const impressions = parseInt(item.impressions) || 0;
                 const completeViews = parseInt(item.completeViewsVideo) || 0;
-                const vcr = impressions > 0 ? ((completeViews / impressions) * 100).toFixed(2) : '0.00';
-                
+                const vcr =
+                  impressions > 0
+                    ? ((completeViews / impressions) * 100).toFixed(2)
+                    : "0.00";
+
                 return (
                   <tr key={index}>
                     <td>{item.month}</td>
@@ -917,16 +1020,43 @@ export default function OverviewPage() {
                     <td>{parseInt(item.clicks).toLocaleString()}</td>
                     <td>{item.ctr}</td>
                     <td>{vcr}%</td>
-                    <td>{parseInt(item.completeViewsVideo).toLocaleString()}</td>
-                    <td>₹{parseFloat(item.mediaCostAdvertiserCurrency).toFixed(2)}</td>
-                    <td>{item.uniqueReachImpressionReach !== '-' ? parseInt(item.uniqueReachImpressionReach).toLocaleString() : '-'}</td>
+                    <td>
+                      {parseInt(item.firstQuartileViewsVideo).toLocaleString()}
+                    </td>
+                    <td>
+                      {parseInt(item.midpointViewsVideo).toLocaleString()}
+                    </td>
+                    <td>
+                      {parseInt(item.thirdQuartileViewsVideo).toLocaleString()}
+                    </td>
+
+                    <td>
+                      {parseInt(item.completeViewsVideo).toLocaleString()}
+                    </td>
+                    <td>
+                      ₹{parseFloat(item.mediaCostAdvertiserCurrency).toFixed(2)}
+                    </td>
+                    <td>
+                      {item.uniqueReachImpressionReach !== "-"
+                        ? parseInt(
+                            item.uniqueReachImpressionReach,
+                          ).toLocaleString()
+                        : "-"}
+                    </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                  {isLoadingData ? 'Loading data...' : 'No data available'}
+                <td
+                  colSpan="8"
+                  style={{
+                    textAlign: "center",
+                    padding: "2rem",
+                    color: "#6b7280",
+                  }}
+                >
+                  {isLoadingData ? "Loading data..." : "No data available"}
                 </td>
               </tr>
             )}
@@ -935,7 +1065,6 @@ export default function OverviewPage() {
       </div>
 
       {/* Bottom Sections */}
-
     </main>
   );
 }

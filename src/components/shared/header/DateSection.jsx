@@ -3,7 +3,7 @@ import { Calendar, ChevronDown, RotateCcw } from 'lucide-react';
 
 function DateSection() {
   const [show, setShow] = useState(false);
-  const [selectedRange, setSelectedRange] = useState('Select Date');
+  const [selectedRange, setSelectedRange] = useState('LAST_30_DAYS');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [isCustom, setIsCustom] = useState(false);
