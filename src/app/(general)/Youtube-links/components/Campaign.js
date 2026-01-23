@@ -38,9 +38,11 @@ import {
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { createCampaignData } from "@/services/campaignData";
+import { useRouter } from "next/navigation";
 
 const YouTubeTable = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,6 +115,9 @@ const YouTubeTable = () => {
     console.log("Audience ID:", audienceId);
     console.log("Complete video objects:", selectedData);
     const res = await createCampaignData(audienceId, selectedData);
+    if (res.message) {
+      router.push("/audience")
+    }
   };
   const fetchCsvResults = async () => {
     setLoading(true);

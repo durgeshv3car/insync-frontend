@@ -21,7 +21,7 @@ const NavigationManu = () => {
                     <Link href="/" className="b-brand">
                         {/* <!-- ========   change your logo hear   ============ --> */}
                         <Image width={140} height={40} src="/images/logo360.png" alt="logo" className="logo logo-lg" />
-                        <Image width={140} height={40} src="/images/logo360.png" alt="logo" className="logo logo-sm" />
+                        <Image width={140} height={40} src="/images/logo-abbr.png" alt="logo" className="logo logo-sm" />
                     </Link>
                 </div>
 

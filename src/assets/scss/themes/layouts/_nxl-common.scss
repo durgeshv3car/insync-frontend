@@ -5,7 +5,6 @@
 */
 .nxl-container {
 	position: relative;
-	top: $header-height;
 	margin-left: $navigation-width;
 	min-height: calc(100vh - #{$header-height});
 	transition: all 0.3s ease;
