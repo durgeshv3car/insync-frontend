@@ -693,7 +693,9 @@ export default function OverviewPage() {
                     color: "#6b7280",
                   }}
                 >
-                  {isLoadingData ? "Loading data..." : "No data available"}
+                  {isLoadingData
+                    ? "Loading data..."
+                    : "No data available. Please select a different date range to get data."}
                 </td>
               </tr>
             )}
