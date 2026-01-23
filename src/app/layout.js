@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "react-datetime/css/react-datetime.css";
 import ClientLayout from "./ClientLayout";
 
+import "./globals.css";
 
 export const metadata = {
   title: "Duralux | Dashboard",

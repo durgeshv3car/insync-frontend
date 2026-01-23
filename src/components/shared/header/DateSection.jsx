@@ -122,7 +122,7 @@ function DateSection() {
       <div className="dropdown" ref={dropdownRef}>
         <div className="d-flex gap-2">
           <button 
-            className="btn btn-light border d-flex align-items-center gap-2"
+            className="btn btn-primary border d-flex align-items-center gap-2"
             type="button"
             onClick={() => setShow(!show)}
             style={{ fontSize: '10px' }}

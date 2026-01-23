@@ -1,0 +1,192 @@
+/* =====================
+   HEADER
+===================== */
+.nxl-header {
+  height: 64px;
+  background: #031035;
+  border-bottom: 1px solid #031035;
+  position: sticky;
+  top: 0;
+  z-index: 2000; /* ⬆️ higher than sidebar */
+}
+
+
+.header-left *{
+  color: #ffffff;
+}
+
+
+.header-right .text-decoration-none *{
+  color: #ffffff;
+}
+
+
+.navbar-content *{
+    color: #ffffff;
+}
+
+.navbar-content a:hover *{
+    color: #081947 !important;
+    font-weight: bold;
+}
+
+.navbar-content .active *{
+    color: #081947 !important;
+    font-weight: bold;
+}  
+
+.nxl-menu-visible *{
+    color: #ffffff !important;
+}
+
+
+.nxl-menu-visible .nxl-item:hover *, .nxl-item.nxl-hasmenu:hover > a:hover{
+    color: #081947 !important;
+    font-weight: bold;
+}
+
+.nxl-menu-visible .active *{
+    color: #081947 !important;
+    font-weight: bold;
+} 
+
+.nxl-navigation, html.minimenu .nxl-navigation:hover .navbar-content{
+ 	background: #081947;
+}
+
+
+
+
+/* =====================
+   HEADER WRAPPER
+===================== */
+.header-wrapper {
+  height: 100%;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =====================
+   HEADER LEFT / RIGHT
+===================== */
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* IMPORTANT: ensure toggle is clickable */
+.header-left {
+  position: relative;
+  z-index: 2100;
+}
+
+/* =====================
+   BUTTON RESET
+===================== */
+.btn svg {
+  color: #0f172a;
+}
+
+/* =====================
+   VISIBILITY UTILITIES
+===================== */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: inline-flex; /* 🔑 ensures button renders */
+}
+
+/* MOBILE */
+@media (max-width: 1023px) {
+  .mobile-only {
+    display: inline-flex;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* =====================
+   SIDEBAR FIX (OVERLAP ISSUE)
+===================== */
+.sidebar {
+  position: fixed;
+  top: 64px; /* ⬅️ BELOW HEADER */
+  left: 0;
+  height: calc(100vh - 64px);
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  z-index: 1000; /* ⬇️ LOWER than header */
+  transition: width 0.25s ease;
+}
+
+/* Collapsed sidebar */
+html.minimenu .sidebar {
+  width: 80px;
+}
+
+/* =====================
+   AUDIENCE TEXT
+===================== */
+.audience-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* =====================
+   PREVENT LOGO BLOCKING CLICKS
+===================== */
+.header-left img {
+  pointer-events: none;
+}
+
+
+
+/* =========================
+   MOBILE HEADER FIX
+========================= */
+
+/* Ensure header is ALWAYS above sidebar on mobile */
+@media (max-width: 1023px) {
+  .nxl-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3000; /* higher than sidebar */
+  }
+
+  .header-wrapper {
+    height: 64px;
+  }
+}
+
+/* =========================
+   MOBILE SIDEBAR OVERLAY
+========================= */
+@media (max-width: 1023px) {
+  .sidebar {
+    top: 0; /* overlay full screen */
+    height: 100vh;
+    z-index: 2000; /* LOWER than header */
+  }
+}
+
+/* =========================
+   MOBILE TOGGLE FORCE SHOW
+========================= */
+@media (max-width: 1023px) {
+  .mobile-only {
+    display: inline-flex !important;
+    align-items: center;
+  }
+}
