@@ -5,6 +5,8 @@ import EditUserModal from "./EditUserModal";
 import { useRouter } from "next/navigation";
 import { deleteUser, deleteUserAudience, getAllUsers } from "@/services/users";
 import { Modal, Button } from "react-bootstrap";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 
 function UserPage() {
   const [users, setUsers] = useState([]);
@@ -63,11 +65,24 @@ function UserPage() {
   };
 
   return (
-    <div className="container">
-      <h2 className="mb-4 pt-4">Users</h2>
+    <div>
+      {/* <h2 className="mb-4 pt-4">Users</h2> */}
+
+      <PageHeader>
+        {/* <PageHeaderDate /> */}
+      </PageHeader>
+
+      <div className="container mt-3">
+
+  <div  className="card stretch stretch-full  ">
+      
+      <div className="card-header">
+        <h5 className="card-title mb-0">User List</h5>
+      </div>
+      
       <div className="table-responsive">
-        <table className="table table-hover align-middle shadow-sm rounded">
-          <thead className="table-primary">
+        <table className="table table-hover mb-0">
+          <thead className="table-secondary lh-lg">
             <tr>
               <th>ID</th>
               <th>Email</th>
@@ -126,6 +141,9 @@ function UserPage() {
             )}
           </tbody>
         </table>
+      </div>
+      </div>
+
       </div>
 
       {/* Campaigns Modal */}

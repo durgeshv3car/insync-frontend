@@ -51,7 +51,7 @@
 } 
 
 .nxl-navigation, html.minimenu .nxl-navigation:hover .navbar-content{
- 	background: #081947;
+ 	background: #0d1a3f;
 }
 
 
@@ -189,4 +189,18 @@ html.minimenu .sidebar {
     display: inline-flex !important;
     align-items: center;
   }
+}
+
+
+
+.realtime-stat{
+  box-shadow: 3px 3px 7px 4px #0000000d;
+}
+
+
+.table-responsive .table thead th, .table-responsive .table tfoot th {
+    padding: 8px 15px;
+    color: #283c50;
+    font-size: 16px;
+    font-weight: 600;
 }

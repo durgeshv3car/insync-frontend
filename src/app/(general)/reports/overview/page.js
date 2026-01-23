@@ -1107,16 +1107,8 @@ function StatCard({ title, value, icon, change }) {
 
 function ChartCard({ title, children, subtitle }) {
   return (
-    <div className="chart-card">
-      <div className="chart-header">
-        <div className="chart-title-group">
-          <h3>{title}</h3>
-          {subtitle && <p className="chart-subtitle">{subtitle}</p>}
-        </div>
-        <button className="btn btn-sm btn-ghost" title="More options">
-          <i className="fas fa-ellipsis-h" />
-        </button>
-      </div>
+    <div className="chart-card" style={{padding:0}}>
+
       <div className="chart-container">{children}</div>
     </div>
   );

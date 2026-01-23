@@ -12,10 +12,6 @@ export default async function Page() {
 
   return (
     <>
-      {" "}
-      <PageHeader>
-        <PageHeaderDate />
-      </PageHeader>
       <UserPage />
     </>
   );
