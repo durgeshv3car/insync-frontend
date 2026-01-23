@@ -13,6 +13,8 @@ import {
   BookOpen 
 } from "lucide-react";
 import { getYouTubeResults } from "@/services/youtube";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 
 const YouTubeTable = () => {
   const [videos, setVideos] = useState([]);
@@ -58,15 +60,20 @@ const YouTubeTable = () => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa", padding: "20px 0" }}>
+    <div style={{ minHeight: "100vh"}}>
+      
+      <PageHeader>
+        {/* <PageHeaderDate /> */}
+      </PageHeader>
+
       <div className="container">
         {/* Header Section */}
-        <div style={{ marginBottom: "40px", paddingTop: "20px" }}>
+        {/* <div style={{ marginBottom: "40px", paddingTop: "20px" }}>
           <h1 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "8px", color: "#1a1a1a" }}>
             YouTube Search Query
           </h1>
  
-        </div>
+        </div> */}
 
         {/* Filter Card */}
         <div style={{ 
@@ -75,7 +82,8 @@ const YouTubeTable = () => {
           padding: "24px", 
           marginBottom: "30px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          border: "1px solid #e9ecef"
+          border: "1px solid #e9ecef",
+          marginTop: "16px",
         }}>
           <div style={{ marginBottom: "16px" }}>
             <h6
@@ -87,15 +95,15 @@ const YouTubeTable = () => {
                 letterSpacing: "0.5px",
               }}
             >
-              Search Filters
+              Youtube Channel video Search 
             </h6>
           </div>
 
           <div className="row g-3">
-            <div className="col-lg-4">
+            <div className="col-lg-3">
               <label
                 style={{
-                  padding: "14px 0 8px 0",
+                  padding: "0px 0 8px 0",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -125,7 +133,7 @@ const YouTubeTable = () => {
             <div className="col-lg-2">
               <label
                 style={{
-                  padding: "14px 0 8px 0",
+                  padding: "0px 0 8px 0",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -153,65 +161,10 @@ const YouTubeTable = () => {
               </div>
             </div>
 
-            <div className="col-lg-2">
+              <div className="col-lg-3">
               <label
                 style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Min Views
-              </label>
-              <input
-                type="number"
-                name="minViews"
-                value={filters.minViews}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="0"
-                style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", borderRadius: "6px", padding: "8px 12px" }}
-              />
-            </div>
-
-            <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Min Subscribers
-              </label>
-              <div className="input-group" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                <span className="input-group-text" style={{ border: "1px solid #dee2e6", backgroundColor: "#f8f9fa" }}>
-                  <Users size={16} style={{ color: "#6c757d" }} />
-                </span>
-                <input
-                  type="number"
-                  name="minSubscribers"
-                  value={filters.minSubscribers}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="0"
-                  style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px" }}
-                />
-              </div>
-            </div>
-
-            <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
+                  padding: "0px 0 8px 0",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -252,6 +205,63 @@ const YouTubeTable = () => {
                   display: "block",
                 }}
               >
+                Min Views
+              </label>
+              <input
+                type="number"
+                name="minViews"
+                value={filters.minViews}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="0"
+                style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", borderRadius: "6px", padding: "8px 12px" }}
+              />
+            </div>
+
+            <div className="col-lg-2">
+              <label
+                style={{
+                  padding: "0px 0 8px 0",
+                  fontSize: "0.8rem",
+                  fontWeight: "700",
+                  color: "#495057",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  display: "block",
+                }}
+              >
+                Min Subscribers
+              </label>
+              <div className="input-group" style={{ borderRadius: "6px", overflow: "hidden" }}>
+                <span className="input-group-text" style={{ border: "1px solid #dee2e6", backgroundColor: "#f8f9fa" }}>
+                  <Users size={16} style={{ color: "#6c757d" }} />
+                </span>
+                <input
+                  type="number"
+                  name="minSubscribers"
+                  value={filters.minSubscribers}
+                  onChange={handleChange}
+                  className="form-control"
+                  placeholder="0"
+                  style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px" }}
+                />
+              </div>
+            </div>
+
+          
+
+            <div className="col-lg-3">
+              <label
+                 style={{
+                  padding: "0px 0 8px 0",
+                  fontSize: "0.8rem",
+                  fontWeight: "700",
+                  color: "#495057",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  display: "block",
+                }}
+              >
                 Max Results
               </label>
               <div className="input-group" style={{ borderRadius: "6px", overflow: "hidden" }}>
@@ -261,7 +271,7 @@ const YouTubeTable = () => {
                 <input
                   type="number"
                   name="maxResults"
-                  value={filters.maxResults}
+                  value={filters.maxResults || "50"}
                   onChange={handleChange}
                   className="form-control"
                   min="1"
@@ -293,12 +303,10 @@ const YouTubeTable = () => {
                 {loading ? "Searching..." : "Search"}
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* Results Header */}
-        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
+ <div className="col-lg-4 d-flex align-items-end">
+     <div style={{display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="d-flex">
             <h6 style={{ fontSize: "1rem", fontWeight: "600", color: "#1a1a1a", marginBottom: "4px" }}>
               Results ({videos.length})
             </h6>
@@ -307,10 +315,20 @@ const YouTubeTable = () => {
             </p>
           </div>
         </div>
+ </div>
+
+          </div>
+        </div>
+
+        {/* Results Header */}
+   
       </div>
 
       {/* Table Section */}
-      <div style={{
+    
+      <div className="container mb-5">
+
+  <div style={{
         backgroundColor: "#ffffff",
         borderRadius: "12px",
         overflow: "hidden",
@@ -572,6 +590,9 @@ const YouTubeTable = () => {
           </div>
         )}
       </div>
+
+      </div>
+        
     </div>
   );
 };

@@ -38,6 +38,8 @@ import {
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { createCampaignData } from "@/services/campaignData";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 
 const YouTubeTable = () => {
   const searchParams = useSearchParams();
@@ -270,161 +272,14 @@ const YouTubeTable = () => {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#f8f9fa",
-        padding: "20px 0",
       }}
     >
+
+      <PageHeader>
+        {/* <PageHeaderDate /> */}
+      </PageHeader>
       <div className="container">
-        <div>
-          {/* Header Section */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingTop: "20px",
-              flexWrap: "wrap",
-              gap: "20px",
-            }}
-          >
-            <div>
-              <h1
-                style={{
-                  fontSize: "1.5rem",
-                  color: "#1a1a1a",
-                  fontWeight: "700",
-                  marginBottom: "8px",
-                }}
-              >
-                YouTube Analytics Dashboard
-              </h1>
-            </div>
-          </div>
-
-          {/* Analytics Cards */}
-          <div className="row g-4">
-            {[
-              {
-                value: analytics.totalViews,
-                label: "Views",
-                icon: <Eye size={22} />,
-                color: "#0d6efd",
-              },
-              {
-                value: analytics.totalLikes,
-                label: "Likes",
-                icon: <ThumbsUp size={22} />,
-                color: "#198754",
-              },
-              {
-                value: analytics.totalComments,
-                label: "Comments",
-                icon: <MessageCircle size={22} />,
-                color: "#fd7e14",
-              },
-              {
-                value: analytics.totalSubscribers,
-                label: "Subscribers",
-                icon: <Users size={22} />,
-                color: "#dc3545",
-              },
-            ].map((item, index) => (
-              <div key={index} className="col-lg-3 col-md-6">
-                <div
-                  style={{
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    padding: "24px 20px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "20px",
-                  }}
-                >
-                  {/* Progress Circle with Icon and Value */}
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "130px",
-                      height: "130px",
-                    }}
-                  >
-                    {/* Background Circle */}
-                    <svg
-                      width="130"
-                      height="130"
-                      style={{ transform: "rotate(-90deg)" }}
-                    >
-                      <circle
-                        cx="65"
-                        cy="65"
-                        r="58"
-                        fill="none"
-                        stroke="#e9ecef"
-                        strokeWidth="12"
-                      />
-                      {/* Colored Progress Arc - Full circle for visual effect */}
-                      <circle
-                        cx="65"
-                        cy="65"
-                        r="58"
-                        fill="none"
-                        stroke={item.color}
-                        strokeWidth="12"
-                        strokeDasharray={`${2 * Math.PI * 58 * 0.65} ${
-                          2 * Math.PI * 58
-                        }`}
-                        strokeLinecap="round"
-                        style={{
-                          transition: "stroke-dasharray 0.6s ease",
-                        }}
-                      />
-                    </svg>
-
-                    {/* Icon and Value in Center */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <div style={{ color: item.color }}>{item.icon}</div>
-                      <span
-                        style={{
-                          fontSize: "1.1rem",
-                          fontWeight: "700",
-                          color: "#212529",
-                        }}
-                      >
-                        {item.value}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Label Below Circle */}
-                  <p
-                    style={{
-                      fontSize: "0.85rem",
-                      fontWeight: "500",
-                      color: "#6c757d",
-                      marginBottom: "0",
-                      textAlign: "center",
-                    }}
-                  >
-                    {item.label}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
+       
         {/* Filters Card */}
         <div
           style={{
@@ -434,6 +289,7 @@ const YouTubeTable = () => {
             marginBottom: "30px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             border: "1px solid #e9ecef",
+            marginTop: "16px",
           }}
         >
           <div style={{ marginBottom: "16px" }}>

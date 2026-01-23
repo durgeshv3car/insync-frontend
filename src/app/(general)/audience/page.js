@@ -13,6 +13,8 @@ import {
 import { useRouter } from "next/navigation";
 import { getCampaignData, getCampaignList } from "@/services/campaignData";
 import CampaignTitleTable from "./components/CampaignTitleTable";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 
 function page() {
   const Router = useRouter();
@@ -116,10 +118,11 @@ function page() {
   };
 
   return (
-    <div className="container-fluid">
-      <div className="mb-4">
-        <h2>Audience Page</h2>
-      </div>
+    <div>
+
+
+<PageHeader>
+      </PageHeader>
 
       <div className="row mb-4">
         <div className="col-md-6">

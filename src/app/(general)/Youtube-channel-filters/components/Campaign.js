@@ -14,6 +14,8 @@ import {
   BookA,
 } from "lucide-react";
 import { getYouTubeResultsByChannel } from "@/services/youtube";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 
 const YouTubeTable = () => {
   const [videos, setVideos] = useState([]);
@@ -57,20 +59,20 @@ const YouTubeTable = () => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa", padding: "20px 0" }}>
-      <div className="container">
-        {/* Header Section */}
-        <div style={{ marginBottom: "40px", paddingTop: "20px" }}>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "8px", color: "#1a1a1a" }}>
-            YouTube Search Channel Query
-          </h1>
-        </div>
+    <div style={{ minHeight: "100vh" }}>
 
+  <PageHeader>
+        <PageHeaderDate />
+      </PageHeader>
+
+
+      <div className="container mt-3">
+    
         {/* Filter Card */}
         <div style={{ 
           backgroundColor: "#ffffff", 
           borderRadius: "12px", 
-          padding: "24px", 
+          padding: "12px", 
           marginBottom: "30px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           border: "1px solid #e9ecef"
@@ -251,6 +253,7 @@ const YouTubeTable = () => {
       </div>
 
       {/* Table Section */}
+      <div className="container">
       <div style={{
         backgroundColor: "#ffffff",
         borderRadius: "12px",
@@ -512,6 +515,7 @@ const YouTubeTable = () => {
             Showing <strong>{videos.length}</strong> video{videos.length !== 1 ? 's' : ''}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
