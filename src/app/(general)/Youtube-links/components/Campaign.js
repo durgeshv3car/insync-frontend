@@ -141,7 +141,8 @@ const YouTubeTable = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+    setFilters((prev) => ({ ...prev, [name]: value, page: 1 }));
   };
 
   useEffect(() => {

@@ -3,7 +3,7 @@ export const menuList = [
   { id: 1, name: "users", path: "/users", icon: "feather-users" },
   { id: 2, name: "YouTube Data", path: "/Youtube-links", icon: "feather-briefcase" },
   { id: 3, name: "Channel Search", path: "/Youtube-channel-filters", icon: "feather-cast" },
-  { id: 4, name: "video Search", path: "/Youtube-filters", icon: "feather-settings" },
+  { id: 4, name: "Video Search", path: "/Youtube-filters", icon: "feather-settings" },
   { id: 5, name: "Create Campaign", path: "/campaign", icon: "feather-settings" },
 
   // REPORTS MENU
@@ -47,5 +47,5 @@ export const menuList = [
   },
 
   { id: 7, name: "Audience", path: "/audience", icon: "feather-layout" },
-  { id: 8, name: "createAccount", path: `/authentication/register/creative`, icon: "feather-send" },
+  { id: 8, name: "CreateAccount", path: `/authentication/register/creative`, icon: "feather-send" },
 ];

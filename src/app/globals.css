@@ -204,3 +204,29 @@ html.minimenu .sidebar {
     font-size: 16px;
     font-weight: 600;
 }
+
+/* ===== RESET ALL CHILD LINKS FIRST ===== */
+.nxl-submenu .nxl-item .nxl-link {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+/* ===== ONLY ACTIVE CHILD = BLUE + WHITE BG ===== */
+.nxl-submenu .nxl-item.active > .nxl-link {
+  color: #0d6efd !important;
+  background: #ffffff !important;
+  border-radius: 6px;
+  padding-left: 10px;
+}
+
+/* ===== STOP PARENT .active FROM AFFECTING CHILDREN ===== */
+.nxl-item.active .nxl-submenu .nxl-item .nxl-link {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+/* ===== HOVER (optional, nice effect) ===== */
+.nxl-submenu .nxl-item .nxl-link:hover {
+  background: rgba(255,255,255,0.1);
+}
+
