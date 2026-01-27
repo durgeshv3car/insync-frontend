@@ -367,7 +367,7 @@ const Header = () => {
 
   const [audienceList, setAudienceList] = useState([]);
   const [selectedAudience, setSelectedAudience] = useState(null);
-  const [navigationExpand, setNavigationExpand] = useState(false);
+  // const [navigationExpand, setNavigationExpand] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const isPathPresent = [
@@ -440,17 +440,14 @@ const Header = () => {
             <FiAlignLeft size={24} />
           </button>
 
-          <button
-            className="btn desktop-only"
-            onClick={() => setNavigationExpand(!navigationExpand)}
-            style={{ marginRight: "8px" }}
-          >
-            {navigationExpand ? (
-              <FiArrowRight size={24} />
-            ) : (
-              <FiAlignLeft size={24} />
-            )}
-          </button>
+<button
+  className="btn desktop-only"
+   onClick={() => setNavigationOpen(!navigationOpen)}
+  style={{ marginRight: "8px" }}
+>
+  {navigationOpen ? <FiArrowRight size={24} /> : <FiAlignLeft size={24} />}
+</button>
+
 
           <Image
             src="/images/logo360.png"

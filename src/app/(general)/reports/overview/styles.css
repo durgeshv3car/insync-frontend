@@ -80,7 +80,6 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
   align-items: center;
   gap: 0.5rem;
 }
@@ -891,6 +890,14 @@
   margin: 0;
   font-size: 0.8rem;
   color: var(--text-light);
+}
+
+.dropdown-menu *{
+  color: #000;
+}
+
+.menubg *{
+  color: #fff !important;
 }
 
 /* Responsive */
