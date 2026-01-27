@@ -16,7 +16,7 @@ const VisitorsChart = () => {
     }
 
     return (
-        <div className="col-xxl-8">
+        <div>
             <div className={`card stretch stretch-full leads-overview ${isExpanded ? "card-expand" : ""} ${refreshKey ? "card-loading" : ""}`}>
                 <CardHeader title={"Visitors"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
                 <div className="card-body custom-card-action">

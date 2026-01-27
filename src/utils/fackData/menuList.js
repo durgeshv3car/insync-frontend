@@ -1,9 +1,8 @@
 export const menuList = [
-
-  { id: 1, name: "users", path: "/users", icon: "feather-users" },
-  { id: 2, name: "YouTube Data", path: "/Youtube-links", icon: "feather-briefcase" },
-  { id: 3, name: "Channel Search", path: "/Youtube-channel-filters", icon: "feather-cast" },
-  { id: 4, name: "Video Search", path: "/Youtube-filters", icon: "feather-settings" },
+  { id: 1, name: "Users", path: "/users", icon: "feather-users" },
+  { id: 2, name: "YouTubeData", path: "/Youtube-links", icon: "feather-briefcase" },
+  { id: 3, name: "YoutubeChannelQuery", path: "/Youtube-channel-filters", icon: "feather-cast" },
+  { id: 4, name: "YoutubeQuery", path: "/Youtube-filters", icon: "feather-settings" },
   { id: 5, name: "Create Campaign", path: "/campaign", icon: "feather-settings" },
 
   // REPORTS MENU

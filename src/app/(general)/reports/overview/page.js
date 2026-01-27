@@ -10,6 +10,9 @@ import {
   getMonthlyReportsByRange,
 } from "@/services/reports";
 import { createReportsDataDevice } from "@/services/device";
+import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
+import SiteOverviewChart from "@/components/widgetsCharts/SiteOverviewChart";
+
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -896,19 +899,25 @@ export default function OverviewPage() {
         </div>
       </section>
 
+
+
       {/* Charts Section */}
       <section className="charts-section">
         <h2 className="section-title">Analytics & Insights</h2>
         <div className="charts-grid">
+
+<VisitorsChart />
+<VisitorsChart />
+{/* 
           <ChartCard title="Performance Daily">
             <canvas ref={performanceDailyChartRef} id="performanceDailyChart" />
-          </ChartCard>
-          <ChartCard title="Performance Monthly">
+          </ChartCard> */}
+          {/* <ChartCard title="Performance Monthly">
             <canvas
               ref={performanceMonthlyChartRef}
               id="performanceMonthlyChart"
             />
-          </ChartCard>
+          </ChartCard> */}
 
         </div>
       </section>

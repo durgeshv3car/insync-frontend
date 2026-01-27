@@ -158,7 +158,8 @@ function DateSection() {
             width: '600px', 
             maxWidth: '90vw',
             left: 0,
-            right: 'auto'
+            right: 'auto',
+            padding: 0,
           }}
         >
           <div className="row g-0">
@@ -180,7 +181,7 @@ function DateSection() {
                     onClick={() => handleRangeSelect(range.value)}
                     className={`p-2 rounded mb-1 ${
                       selectedRange === range.value && !isCustom
-                        ? 'bg-primary bg-opacity-10 border border-primary'
+                        ? 'bg-muted bg-muted-10 border border-muted menubg'
                         : ''
                     }`}
                     style={{ cursor: 'pointer' }}
@@ -195,7 +196,7 @@ function DateSection() {
                       }
                     }}
                   >
-                    <div style={{ fontSize: '13px', fontWeight: '500' }}>
+                    <div className="text-muted" style={{ fontSize: '13px', fontWeight: '500' }}>
                       {range.label}
                     </div>
                     <div style={{ fontSize: '11px' }} className="text-muted">

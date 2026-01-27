@@ -8,6 +8,8 @@ import {
   getDailyReportsByFilter,
   getDailyReportsByRange,
 } from "@/services/device";
+import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
+import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChart";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -627,13 +629,20 @@ export default function OverviewPage() {
 
       {/* Charts Section */}
       <section className="charts-section">
-        <div className="charts-grid">
+        <div className="grid">
+          <TopCountryBarChart />
+
+
+
+
           <ChartCard
             title="Device Type (Impressions Distributions)"
             className="full-width"
           >
             <canvas ref={heatmapChartRef} id="heatmapChart" />
           </ChartCard>
+
+
         </div>
       </section>
 

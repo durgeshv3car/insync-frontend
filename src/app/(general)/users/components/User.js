@@ -75,13 +75,9 @@ function UserPage() {
       <div className="container mt-3">
 
   <div  className="card stretch stretch-full  ">
-      
-      <div className="card-header">
-        <h5 className="card-title mb-0">User List</h5>
-      </div>
-      
+     
       <div className="table-responsive">
-        <table className="table table-hover mb-0">
+        <table className="table table-hover mb-0 overflow-hidden" style={{borderRadius:"10px"}}>
           <thead className="table-secondary lh-lg">
             <tr>
               <th>ID</th>

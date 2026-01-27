@@ -124,8 +124,10 @@ function page() {
 <PageHeader>
       </PageHeader>
 
+      <div className="container mt-3">
+
       <div className="row mb-4">
-        <div className="col-md-6">
+        <div className="col-md-3">
           <Select
             options={audienceOptions}
             value={selectedAudience}
@@ -136,7 +138,7 @@ function page() {
           />
         </div>
 
-        <div className="col-md-6 d-flex justify-content-end gap-2">
+        <div className="col-md-9 d-flex justify-content-end gap-2">
           {selectedAudience && (
             <Button variant="primary" onClick={handleAddVideos}>
               Add Videos
@@ -150,6 +152,7 @@ function page() {
           </Button>
         </div>
       </div>
+      
       {selectedAudience ? (
         <CampaignTable campaignData={campaignData} />
       ) : (
@@ -159,6 +162,10 @@ function page() {
           onDelete={handleDeleteAudience}
         />
       )}
+
+
+        
+      </div>
 
       <Modal
         show={showCreateCampaignModal}
