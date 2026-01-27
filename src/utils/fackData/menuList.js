@@ -5,6 +5,9 @@ export const menuList = [
   { id: 4, name: "YoutubeQuery", path: "/Youtube-filters", icon: "feather-settings" },
   { id: 5, name: "Create Campaign", path: "/campaign", icon: "feather-settings" },
 
+  // Project
+
+
   // REPORTS MENU
   {
     id: 6,
