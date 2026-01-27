@@ -1,5 +1,7 @@
 import UserPage from "./components/User";
 import { checkPermissions } from "../checkPermissions";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 
 export default async function Page() {
   const isSuperAdmin = await checkPermissions();
@@ -8,5 +10,9 @@ export default async function Page() {
     return <div className="text-center text-danger mt-5">Access Denied</div>;
   }
 
-  return <UserPage />;
+  return (
+    <>
+      <UserPage />
+    </>
+  );
 }

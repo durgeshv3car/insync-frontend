@@ -584,7 +584,9 @@ export default function OverviewPage() {
             ) : (
               <tr>
                 <td colSpan="5" style={{ textAlign: "center", padding: "2rem", color: "#6b7280" }}>
-                  {isLoadingData ? "Loading data..." : "No demographics data available"}
+                  {isLoadingData
+                    ? "Loading data..."
+                    : "No demographics data available. Please select a different date range to get data."}
                 </td>
               </tr>
             )}

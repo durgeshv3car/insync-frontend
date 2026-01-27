@@ -2,6 +2,8 @@
 import { SessionProvider } from "next-auth/react";
 import NavigationProvider from "@/contentApi/navigationProvider";
 import SettingSideBarProvider from "@/contentApi/settingSideBarProvider";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const metadata = {
   title: "Duralux | Dashboard",
@@ -12,7 +14,10 @@ export default function ClientLayout({ children }) {
   return (
     <SessionProvider>
       <SettingSideBarProvider>
-        <NavigationProvider>{children}</NavigationProvider>
+        <NavigationProvider>
+          <ToastContainer position="top-right" autoClose={3000} />
+          {children}
+        </NavigationProvider>
       </SettingSideBarProvider>
     </SessionProvider>
   );

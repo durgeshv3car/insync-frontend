@@ -1,19 +1,11 @@
-import axios from "axios";
-const Api_Url = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 import { getToken } from "@/lib/getToken";
 
 export const createAudienceData = async (title) => {
   try {
-    const token = await getToken();
-
-    const res = await axios.post(
-      `${Api_Url}/campaign`,
-      { title },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const res = await api.post(
+      `/campaign`,
+      { title }
     );
 
     return res.data;
@@ -28,13 +20,7 @@ export const createAudienceData = async (title) => {
 
 export const getAudienceData = async () => {
   try {
-    const token = await getToken();
-
-    const res = await axios.get(`${Api_Url}/campaigns/data`, {
-      headers: {
-        Authorization: `Bearer ${token}`, 
-      },
-    });
+    const res = await api.get(`/campaigns/data`);
 
     return res.data; 
 
@@ -49,16 +35,9 @@ export const getAudienceData = async () => {
 
 export const updateAudienceData = async (id, title) => {
   try {
-    const token = await getToken();
-
-    const res = await axios.put(
-      `${Api_Url}/campaign/${id}`,
-      { title },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const res = await api.put(
+      `/campaign/${id}`,
+      { title }
     );
 
     return res.data;
@@ -73,15 +52,8 @@ export const updateAudienceData = async (id, title) => {
 
 export const deleteAudienceData = async (id) => {
   try {
-    const token = await getToken();
-
-    const res = await axios.delete(
-      `${Api_Url}/campaign/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const res = await api.delete(
+      `/campaign/${id}`
     );
 
     return res.data;

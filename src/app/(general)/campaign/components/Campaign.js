@@ -18,6 +18,7 @@ const emptyCampaign = {
   advertiserId: "",
   campaignId: "",
   insertionOrderId: "",
+  cpm: "",
 };
 
 const Campaign = () => {
@@ -81,7 +82,8 @@ const Campaign = () => {
       campaignData?.reportName?.trim() &&
       campaignData?.advertiserId?.trim() &&
       campaignData?.campaignId?.trim() &&
-      campaignData?.insertionOrderId?.trim();
+      campaignData?.insertionOrderId?.trim() &&
+      campaignData?.cpm?.toString().trim();
 
     if (!isValid) return;
 
@@ -183,6 +185,7 @@ const Campaign = () => {
                 <th>Advertiser ID</th>
                 <th>Campaign ID</th>
                 <th>Insertion Order ID</th>
+                <th>CPM</th>
                 <th className="text-end">Actions</th>
               </tr>
             </thead>
@@ -214,6 +217,7 @@ const Campaign = () => {
                     <td className="align-middle">{c.advertiserId}</td>
                     <td className="align-middle">{c.campaignId}</td>
                     <td className="align-middle">{c.insertionOrderId}</td>
+                    <td className="align-middle">{c.cpm}</td>
                     <td className="text-end align-middle">
                       {/* action buttons as a single row with gap and inline SVG icons */}
                       <div
@@ -406,6 +410,24 @@ const Campaign = () => {
                         />
                       </div>
                     </div>
+                    <div className="row mb-3">
+                      <div className="col-4 d-flex align-items-center">
+                        <label className="fw-semibold mb-0">CPM</label>
+                      </div>
+                      <div className="col-8">
+                        <input
+                          type="number"
+                          name="cpm"
+                          value={campaignData?.cpm || ""}
+                          onChange={handleInputChange}
+                          className="form-control"
+                          placeholder="Enter CPM"
+                          min="0"
+                          step="0.01"
+                          required
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="modal-footer">
                     <button
@@ -423,7 +445,8 @@ const Campaign = () => {
                           campaignData?.reportName?.trim() &&
                           campaignData?.advertiserId?.trim() &&
                           campaignData?.campaignId?.trim() &&
-                          campaignData?.insertionOrderId?.trim()
+                          campaignData?.insertionOrderId?.trim() &&
+                          campaignData?.cpm?.toString().trim()
                         )
                       }
                     >

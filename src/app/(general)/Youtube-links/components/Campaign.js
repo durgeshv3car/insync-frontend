@@ -38,11 +38,13 @@ import {
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { createCampaignData } from "@/services/campaignData";
+import { useRouter } from "next/navigation";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 
 const YouTubeTable = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,6 +117,9 @@ const YouTubeTable = () => {
     console.log("Audience ID:", audienceId);
     console.log("Complete video objects:", selectedData);
     const res = await createCampaignData(audienceId, selectedData);
+    if (res.message) {
+      router.push("/audience")
+    }
   };
   const fetchCsvResults = async () => {
     setLoading(true);
@@ -136,7 +141,8 @@ const YouTubeTable = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+    setFilters((prev) => ({ ...prev, [name]: value, page: 1 }));
   };
 
   useEffect(() => {

@@ -344,7 +344,6 @@
 // export default Header;
 
 
-
 "use client";
 
 import React, { useContext, useEffect, useState } from "react";
@@ -360,14 +359,16 @@ import { useSession } from "next-auth/react";
 import { jwtDecode } from "jwt-decode";
 
 const Header = () => {
-  // const { setNavigationOpen } = useContext(NavigationContext);
-  const { navigationOpen, setNavigationOpen } =  useContext(NavigationContext);
+  const { navigationOpen, setNavigationOpen } =
+    useContext(NavigationContext);
+
   const pathname = usePathname();
   const { data: session } = useSession();
 
   const [audienceList, setAudienceList] = useState([]);
   const [selectedAudience, setSelectedAudience] = useState(null);
   const [navigationExpand, setNavigationExpand] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const isPathPresent = [
     "/reports/overview",
@@ -377,89 +378,85 @@ const Header = () => {
     "/reports/category",
   ].includes(pathname);
 
+  // Decode user
   let userDetails = { userId: "", role: "" };
-
   if (session?.user?.token) {
     const decoded = jwtDecode(session.user.token);
     userDetails = { userId: decoded.id, role: decoded.role };
   }
 
-  /* Fetch audiences */
+  // Fetch audiences
   useEffect(() => {
-    if (!userDetails.userId) return;
+    const fetchAudiences = async () => {
+      try {
+        const res = await getAudienceByUser(
+          userDetails.userId,
+          userDetails.role
+        );
+        setAudienceList(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
 
-    getAudienceByUser(userDetails.userId, userDetails.role)
-      .then((res) => setAudienceList(res.data || []))
-      .catch(console.error);
-  }, [userDetails.userId]);
+    if (userDetails.userId) fetchAudiences();
+  }, [session]);
 
-  /* Local storage sync */
+  // Initialize audience from localStorage
   useEffect(() => {
-    const name = localStorage.getItem("audienceName");
-    const id = localStorage.getItem("audienceId");
-    if (name && id) setSelectedAudience({ reportName: name, _id: id });
-  }, []);
+    if (!audienceList.length) return;
 
+    const storedId = localStorage.getItem("audienceId");
+    const found = audienceList.find((a) => a._id === storedId);
+    const defaultAudience = found || audienceList[0];
+
+    setSelectedAudience(defaultAudience);
+
+    localStorage.setItem("audienceId", defaultAudience._id);
+    localStorage.setItem("audienceName", defaultAudience.reportName);
+    localStorage.setItem("count", defaultAudience.cpm);
+
+    setIsInitialized(true);
+  }, [audienceList]);
+
+  // Update localStorage when audience changes
   useEffect(() => {
-    if (!selectedAudience) return;
-    localStorage.setItem("audienceName", selectedAudience.reportName);
+    if (!isInitialized || !selectedAudience) return;
+
     localStorage.setItem("audienceId", selectedAudience._id);
-  }, [selectedAudience]);
-
-  /* Sidebar toggle */
-  useEffect(() => {
-    document.documentElement.classList.toggle(
-      "minimenu",
-      navigationExpand
-    );
-  }, [navigationExpand]);
+    localStorage.setItem("audienceName", selectedAudience.reportName);
+    localStorage.setItem("count", selectedAudience.cpm);
+  }, [selectedAudience, isInitialized]);
 
   return (
     <header className="nxl-header">
       <div className="header-wrapper">
-
         {/* LEFT */}
         <div className="header-left">
+          <button
+            className="btn mobile-only"
+            onClick={() => setNavigationOpen(!navigationOpen)}
+          >
+            <FiAlignLeft size={24} />
+          </button>
 
           <button
-  className="btn mobile-only"
-  onClick={() => setNavigationOpen(!navigationOpen)}
-  aria-label="Toggle menu"
->
-  <FiAlignLeft size={24} />
-</button>
+            className="btn desktop-only"
+            onClick={() => setNavigationExpand(!navigationExpand)}
+            style={{ marginRight: "8px" }}
+          >
+            {navigationExpand ? (
+              <FiArrowRight size={24} />
+            ) : (
+              <FiAlignLeft size={24} />
+            )}
+          </button>
 
-  {/* DESKTOP TOGGLE */}
-<button
-  className="btn desktop-only"
-  onClick={() => setNavigationExpand(!navigationExpand)}
-  style={{ marginRight: "8px" }}
->
-  {navigationExpand ? (
-    <FiArrowRight size={24} />
-  ) : (
-    <FiAlignLeft size={24} />
-  )}
-</button>
-
-
-          {/* LOGO DESKTOP */}
           <Image
             src="/images/logo360.png"
             alt="Logo"
             width={120}
             height={32}
-            className="desktop-only"
-            priority
-          />
-
-          {/* LOGO MOBILE */}
-          <Image
-            src="/images/logo360.png"
-            alt="Logo"
-            width={120}
-            height={32}
-            className="mobile-only"
             priority
           />
 
@@ -467,19 +464,19 @@ const Header = () => {
         </div>
 
         {/* RIGHT */}
-        <div className="header-right">
-          {isPathPresent && (
+        <div className="header-right ms-auto d-flex align-items-center">
+          {isPathPresent && selectedAudience && (
             <>
-              <span className="audience-name">
-                {selectedAudience?.reportName || "Select Audience"}
+              <span className="text-primary fw-semibold me-3">
+                {selectedAudience.reportName}
               </span>
-
               <SearchModal
                 audienceList={audienceList}
                 setSelectedAudience={setSelectedAudience}
               />
             </>
           )}
+
           <ProfileModal />
         </div>
       </div>
@@ -488,3 +485,4 @@ const Header = () => {
 };
 
 export default Header;
+
