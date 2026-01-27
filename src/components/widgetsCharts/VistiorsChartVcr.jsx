@@ -3,30 +3,30 @@ import React from 'react'
 import CardHeader from '@/components/shared/CardHeader'
 import useCardTitleActions from '@/hooks/useCardTitleActions'
 import CardLoader from '@/components/shared/CardLoader'
-import { topCountryBarChartOptions } from '@/utils/chartsLogic/topCountryBarChartOptions'
+import { visitorChartOption } from '@/utils/chartsLogic/visitorChartOptionVcr'
 import dynamic from 'next/dynamic'
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 
-const TopCountryBarChart = ({dailyReportsData}) => {
-    const chartOptions = topCountryBarChartOptions(dailyReportsData)
-    console.log("dailyReportsData in TopCountryBarChart:", dailyReportsData);
-    const { refreshKey, isRemoved, isExpanded, handleRefresh, handleExpand, handleDelete } = useCardTitleActions();
+const VisitorsChart = ({dailyReportsData}) => {
+    const chartOptions = visitorChartOption(dailyReportsData)
 
+    const { refreshKey, isRemoved, isExpanded, handleRefresh, handleExpand, handleDelete } = useCardTitleActions();
     if (isRemoved) {
         return null;
     }
+    console.log("dailyReportsData in VisitorsChart:", dailyReportsData);
+
     return (
         <div>
             <div className={`card stretch stretch-full leads-overview ${isExpanded ? "card-expand" : ""} ${refreshKey ? "card-loading" : ""}`}>
-                <CardHeader title={"Top Countries"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
-
-                <div className="card-body custom-card-action p-0">
+                <CardHeader title={"Visitors"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
+                <div className="card-body custom-card-action">
                     <ReactApexChart
-                        type='bar'
+                        type='area'
                         options={chartOptions}
                         series={chartOptions.series}
-                        height={400}
+                        height={350}
                     />
                 </div>
 
@@ -36,4 +36,4 @@ const TopCountryBarChart = ({dailyReportsData}) => {
     )
 }
 
-export default TopCountryBarChart
+export default VisitorsChart

@@ -11,6 +11,7 @@ import {
 } from "@/services/reports";
 import { createReportsDataDevice } from "@/services/device";
 import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
+import VisitorsChartVcr from "@/components/widgetsCharts/VistiorsChartVcr";
 import SiteOverviewChart from "@/components/widgetsCharts/SiteOverviewChart";
 
 
@@ -906,8 +907,8 @@ export default function OverviewPage() {
         <h2 className="section-title">Analytics & Insights</h2>
         <div className="charts-grid">
 
-<VisitorsChart />
-<VisitorsChart />
+<VisitorsChart dailyReportsData={dailyReportsData}  />
+<VisitorsChartVcr  dailyReportsData={dailyReportsData}/>
 {/* 
           <ChartCard title="Performance Daily">
             <canvas ref={performanceDailyChartRef} id="performanceDailyChart" />

@@ -8,12 +8,14 @@ import dynamic from 'next/dynamic'
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 
-const VisitorsChart = () => {
-    const chartOptions = visitorChartOption()
+const VisitorsChart = ({dailyReportsData}) => {
+    const chartOptions = visitorChartOption(dailyReportsData)
+
     const { refreshKey, isRemoved, isExpanded, handleRefresh, handleExpand, handleDelete } = useCardTitleActions();
     if (isRemoved) {
         return null;
     }
+    console.log("dailyReportsData in VisitorsChart:", dailyReportsData);
 
     return (
         <div>

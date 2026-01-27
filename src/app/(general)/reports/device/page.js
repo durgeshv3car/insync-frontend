@@ -630,18 +630,7 @@ export default function OverviewPage() {
       {/* Charts Section */}
       <section className="charts-section">
         <div className="grid">
-          <TopCountryBarChart />
-
-
-
-
-          <ChartCard
-            title="Device Type (Impressions Distributions)"
-            className="full-width"
-          >
-            <canvas ref={heatmapChartRef} id="heatmapChart" />
-          </ChartCard>
-
+          <TopCountryBarChart dailyReportsData={dailyReportsData} />
 
         </div>
       </section>

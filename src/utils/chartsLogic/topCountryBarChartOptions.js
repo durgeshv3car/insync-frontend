@@ -1,34 +1,63 @@
-export const topCountryBarChartOptions = () => {
-    const chartOptions = {
-        chart: { type: "bar", height: 400, fontFamily: "inherit", toolbar: { show: !1 } },
-        legend: { show: !1 },
-        series: [{ name: "Visitors", data: [87, 82, 68, 49] }],
-        colors: ["#3454d1", "#ffa21d", "#ea4d4d", "#25b865"],
-        grid: { strokeDashArray: 4, position: "back", xaxis: { lines: { show: !0 } }, yaxis: { lines: { show: !1 } } },
-        plotOptions: {
-            bar: {
-                columnWidth: "15%",
-                horizontal: !1,
-                distributed: !0,
-                borderRadius: 6,
-                borderRadiusApplication: "end",
-                dataLabels: {
-                    position: "top"
-                }
-            }
-        },
-        labels: { show: !1 },
-        dataLabels: { enabled: !1 },
-        stroke: { show: !1 },
-        xaxis: { categories: ["USA", "India", "UK", "France"], axisTicks: { show: !0 }, axisBorder: { show: !1 } },
-        yaxis: { labels: { show: !0 }, axisTicks: { show: !1 }, axisBorder: { show: !1 } },
-        tooltip: {
-            y: {
-                formatter: function (e) {
-                    return e + "k";
-                },
-            },
-        },
+export const topCountryBarChartOptions = (dailyReportsData = []) => {
+  const dataArray = Array.isArray(dailyReportsData)
+    ? dailyReportsData
+    : [];
+
+  const deviceMap = {};
+
+  dataArray.forEach((item) => {
+    const device = item.deviceType || "Unknown";
+    const impressions = Number(item.impressions) || 0;
+
+    if (!deviceMap[device]) {
+      deviceMap[device] = 0;
     }
-    return chartOptions
-}
+
+    deviceMap[device] += impressions;
+  });
+
+  const categories = Object.keys(deviceMap);
+  const seriesData = Object.values(deviceMap);
+
+  return {
+    chart: {
+      type: "bar",
+      height: 400,
+      fontFamily: "inherit",
+      toolbar: { show: false },
+    },
+    legend: { show: false },
+    series: [{ name: "Impressions", data: seriesData }],
+    colors: ["#3454d1", "#ffa21d", "#ea4d4d", "#25b865"],
+    grid: {
+      strokeDashArray: 4,
+      position: "back",
+      xaxis: { lines: { show: true } },
+      yaxis: { lines: { show: false } },
+    },
+    plotOptions: {
+      bar: {
+        columnWidth: "25%",
+        borderRadius: 6,
+        distributed: true,
+        dataLabels: { position: "top" },
+      },
+    },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories,
+      axisTicks: { show: true },
+      axisBorder: { show: false },
+    },
+    yaxis: {
+      labels: { show: true },
+      axisTicks: { show: false },
+      axisBorder: { show: false },
+    },
+    tooltip: {
+      y: {
+        formatter: (val) => val,
+      },
+    },
+  };
+};

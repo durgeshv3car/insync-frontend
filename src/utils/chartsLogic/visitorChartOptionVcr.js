@@ -1,7 +1,8 @@
 export const visitorChartOption = (dailyReportsData = []) => {
+  // Sort by date
    const dataArray = Array.isArray(dailyReportsData)
     ? dailyReportsData
-    : dailyReportsData?.data || [];   // handles {data: []}
+    : dailyReportsData?.data || [];  
 
   const sorted = dataArray.sort(
     (a, b) => new Date(a.date) - new Date(b.date)
@@ -9,27 +10,28 @@ export const visitorChartOption = (dailyReportsData = []) => {
 
   const categories = [];
   const impressionsSeries = [];
-  const ctrSeries = [];
+  const vcrSeries = [];
 
   sorted.forEach((item) => {
     const dateLabel = item.date.split("/").slice(1).join("/"); // MM/DD
     categories.push(dateLabel);
 
     const impressions = Number(item.impressions) || 0;
+    const completeViews = Number(item.completeViewsVideo) || 0;
 
-    // ctr comes like "0.081%"
-    const ctr = item.ctr
-      ? parseFloat(item.ctr.replace("%", ""))
-      : 0;
+    const vcr =
+      impressions > 0
+        ? ((completeViews / impressions) * 100).toFixed(2)
+        : 0;
 
     impressionsSeries.push(impressions);
-    ctrSeries.push(ctr);
+    vcrSeries.push(Number(vcr));
   });
 
   return {
     series: [
       { name: "Impressions", data: impressionsSeries },
-      { name: "CTR (%)", data: ctrSeries },
+      { name: "VCR (%)", data: vcrSeries },
     ],
     chart: { height: 350, type: "area", toolbar: { show: false } },
     stroke: { curve: "smooth", width: 2 },
@@ -56,7 +58,7 @@ export const visitorChartOption = (dailyReportsData = []) => {
       },
       {
         opposite: true,
-        title: { text: "CTR %" },
+        title: { text: "VCR %" },
         labels: {
           formatter: (val) => val + "%",
         },
