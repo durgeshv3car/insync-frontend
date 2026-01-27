@@ -14,7 +14,7 @@ import {
 const CardHeader = ({ title, refresh, remove, expanded }) => {
   return (
     <div className="card-header">
-      <h5 className="card-title">{title}</h5>
+      <h5 className="card-title">Device Type (Impressions Distributions)</h5>
       <div className="card-header-action">
         <div className="card-header-btn">
           <div data-toggle="tooltip" data-title="Delete" onClick={remove}>
@@ -42,56 +42,7 @@ const CardHeader = ({ title, refresh, remove, expanded }) => {
             </span>
           </div>
         </div>
-        <div className="filter-dropdown">
-          <div
-            className="avatar-text avatar-sm"
-            data-bs-toggle="dropdown"
-            data-bs-offset="25, 25"
-          >
-            <div data-toggle="tooltip" data-title="Options" className="lh-1">
-              <FiMoreVertical />
-            </div>
-          </div>
-          <div className="dropdown-menu dropdown-menu-end">
-            <Link href="#" className="dropdown-item">
-              <i>
-                <FiAtSign />
-              </i>
-              New
-            </Link>
-            <Link href="#" className="dropdown-item">
-              <i>
-                <FiCalendar />
-              </i>
-              Event
-            </Link>
-            <Link href="#" className="dropdown-item">
-              <i>
-                <FiBell />
-              </i>
-              Snoozed
-            </Link>
-            <Link href="#" className="dropdown-item">
-              <i>
-                <FiTrash />
-              </i>
-              Deleted
-            </Link>
-            <div className="dropdown-divider"></div>
-            <Link href="#" className="dropdown-item">
-              <i>
-                <FiSettings />
-              </i>
-              Settings
-            </Link>
-            <Link href="#" className="dropdown-item">
-              <i>
-                <FiLifeBuoy />
-              </i>
-              Tips & Tricks
-            </Link>
-          </div>
-        </div>
+    
       </div>
     </div>
   );

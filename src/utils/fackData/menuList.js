@@ -1,5 +1,4 @@
 export const menuList = [
-  { id: 0, name: "Dashboards", path: "/", icon: "feather-airplay" },
   { id: 1, name: "Users", path: "/users", icon: "feather-users" },
   { id: 2, name: "YouTubeData", path: "/Youtube-links", icon: "feather-briefcase" },
   { id: 3, name: "YoutubeChannelQuery", path: "/Youtube-channel-filters", icon: "feather-cast" },
@@ -15,7 +14,7 @@ export const menuList = [
     dropdownMenu: [
       {
         id: 1,
-        name: "overview",
+        name: "Dashboard",
         path: "/reports/overview",
         subdropdownMenu: false,
       },
