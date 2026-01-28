@@ -3,30 +3,30 @@ import React from 'react'
 import CardHeader from '@/components/shared/CardHeader'
 import useCardTitleActions from '@/hooks/useCardTitleActions'
 import CardLoader from '@/components/shared/CardLoader'
-import { visitorChartOption } from '@/utils/chartsLogic/visitorChartOptionVcr'
+import { topCountryBarChartOptions } from '@/utils/chartsLogic/topCountryBarChartOptionsGender'
 import dynamic from 'next/dynamic'
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 
-const VisitorsChart = ({dailyReportsData}) => {
-    const chartOptions = visitorChartOption(dailyReportsData)
-
+const TopCountryBarChart = ({dailyReportsData,activeMetric}) => {
+    const chartOptions = topCountryBarChartOptions(dailyReportsData,activeMetric)
+    console.log("dailyReportsData in TopCountryBarChart:", activeMetric);
     const { refreshKey, isRemoved, isExpanded, handleRefresh, handleExpand, handleDelete } = useCardTitleActions();
+
     if (isRemoved) {
         return null;
     }
-    console.log("dailyReportsData in VisitorsChart:", dailyReportsData);
-
     return (
         <div>
             <div className={`card stretch stretch-full leads-overview ${isExpanded ? "card-expand" : ""} ${refreshKey ? "card-loading" : ""}`}>
-                <CardHeader title={"Impression & Vcr"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
-                <div className="card-body custom-card-action">
+                <CardHeader title={"Gender Level Performance"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
+
+                <div className="card-body custom-card-action p-0">
                     <ReactApexChart
-                        type='area'
+                        type='bar'
                         options={chartOptions}
                         series={chartOptions.series}
-                        height={350}
+                        height={400}
                     />
                 </div>
 
@@ -36,4 +36,4 @@ const VisitorsChart = ({dailyReportsData}) => {
     )
 }
 
-export default VisitorsChart
+export default TopCountryBarChart

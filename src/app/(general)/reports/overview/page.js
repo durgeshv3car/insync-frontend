@@ -14,7 +14,6 @@ import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
 import VisitorsChartVcr from "@/components/widgetsCharts/VistiorsChartVcr";
 import SiteOverviewChart from "@/components/widgetsCharts/SiteOverviewChart";
 
-
 function formatNumber(num) {
   const rounded = Math.round(num);
 
@@ -900,16 +899,13 @@ export default function OverviewPage() {
         </div>
       </section>
 
-
-
       {/* Charts Section */}
       <section className="charts-section">
         <h2 className="section-title">Analytics & Insights</h2>
         <div className="charts-grid">
-
-<VisitorsChart dailyReportsData={dailyReportsData}  />
-<VisitorsChartVcr  dailyReportsData={dailyReportsData}/>
-{/* 
+          <VisitorsChart dailyReportsData={dailyReportsData} />
+          <VisitorsChartVcr dailyReportsData={dailyReportsData} />
+          {/* 
           <ChartCard title="Performance Daily">
             <canvas ref={performanceDailyChartRef} id="performanceDailyChart" />
           </ChartCard> */}
@@ -919,7 +915,6 @@ export default function OverviewPage() {
               id="performanceMonthlyChart"
             />
           </ChartCard> */}
-
         </div>
       </section>
 
@@ -1117,8 +1112,7 @@ function StatCard({ title, value, icon, change }) {
 
 function ChartCard({ title, children, subtitle }) {
   return (
-    <div className="chart-card" style={{padding:0}}>
-
+    <div className="chart-card" style={{ padding: 0 }}>
       <div className="chart-container">{children}</div>
     </div>
   );

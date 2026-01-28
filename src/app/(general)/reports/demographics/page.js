@@ -8,6 +8,7 @@ import {
   getDailyReportsByFilter,
   getDailyReportsByRange,
 } from "@/services/demographics";
+import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChartGender";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -91,7 +92,7 @@ const groupDemographicsData = (data) => {
 };
 
 export default function OverviewPage() {
-  const [activeMetric, setActiveMetric] = useState("Impressions");
+  const [activeMetric, setActiveMetric] = useState("CTR");
   const [expandedAgeRow, setExpandedAgeRow] = useState(null);
   const [dateRange, setDateRange] = useState("");
   const [campaign, setCampaign] = useState("all");
@@ -494,10 +495,9 @@ export default function OverviewPage() {
           ))}
         </div>
         <div className="charts-grid">
-          <ChartCard title="Gender Level Performance">
-            <canvas ref={genderChartRef} id="genderChart" />
-          </ChartCard>
-          <ChartCard title="Age Level Performance">
+          <TopCountryBarChart dailyReportsData={dailyReportsData} activeMetric={activeMetric} />
+         
+          <ChartCard title="Age Level Performance" style={{ height: "420px !important" }}>
             <canvas ref={ageLevelChartRef} id="ageLevelChart" />
           </ChartCard>
           <ChartCard title="Age Breakdown">

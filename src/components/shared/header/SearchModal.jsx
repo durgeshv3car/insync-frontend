@@ -1,98 +1,424 @@
-import Link from "next/link";
-import React from "react";
-import { FiChevronRight,FiChevronDown, FiCommand, FiSearch } from "react-icons/fi";
+import React, { useState } from "react";
+import { FiChevronRight, FiChevronDown, FiSearch, FiUsers, FiX } from "react-icons/fi";
 
-const SearchModal = ({ audienceList, setSelectedAudience, setSearchQuery }) => {
+const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter audience list based on search query
+  const filteredAudienceList = audienceList.filter((audience) =>
+    audience.reportName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    audience.insertionOrderId?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleCloseDropdown = () => {
+    // Close the Bootstrap dropdown
+    const dropdownElement = document.querySelector('.dropdown-menu.show');
+    if (dropdownElement) {
+      const button = dropdownElement.previousElementSibling;
+      if (button) {
+        button.click();
+      }
+    }
+  };
+
   return (
-    <div className="dropdown nxl-h-item nxl-header-search">
-      <div
-        className="nxl-head-link me-0"
+    <div className="dropdown">
+      {/* Dropdown Toggle Button */}
+      <button
+        className="btn d-flex align-items-center gap-2"
         data-bs-toggle="dropdown"
-        data-bs-auto-close="outside"
+        data-bs-auto-close="false"
+        style={{
+          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          color: "white",
+          padding: "10px 16px",
+          borderRadius: "10px",
+          fontSize: "14px",
+          fontWeight: "500",
+          transition: "all 0.3s ease",
+          maxWidth: "320px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.15)";
+          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
+          e.currentTarget.style.transform = "translateY(-1px)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
+        }}
       >
-        <FiChevronDown size={20} />
-      </div>
+        <FiUsers size={16} color="white" />
+        <span 
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: 1,
+          }}
+        >
+          {selectedAudience?.reportName || "Select Campaign"}
+        </span>
+        <FiChevronDown size={16} color="white" />
+      </button>
 
-      <div className="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-search-dropdown">
-        <div className="input-group search-form">
-          <span className="input-group-text">
-            <i className="fs-6 text-muted">
-              <FiSearch />
-            </i>
+      {/* Dropdown Menu */}
+      <div
+        className="dropdown-menu dropdown-menu-end shadow-lg"
+        style={{
+          minWidth: "420px",
+          maxWidth: "480px",
+          borderRadius: "16px",
+          border: "none",
+          padding: "0",
+          marginTop: "8px",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          overflow: "hidden",
+          background: "linear-gradient(to bottom, #ffffff, #f9fafb)",
+        }}
+      >
+        {/* Header with Gradient */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            padding: "20px 24px",
+            color: "white",
+            position: "relative",
+          }}
+        >
+          {/* Close Button */}
+          <button
+            onClick={handleCloseDropdown}
+            style={{
+              position: "absolute",
+              top: "16px",
+              right: "16px",
+              background: "rgba(255, 255, 255, 0.2)",
+              border: "none",
+              color: "white",
+              cursor: "pointer",
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "8px",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
+              e.currentTarget.style.transform = "rotate(90deg)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.transform = "rotate(0deg)";
+            }}
+          >
+            <FiX size={20} />
+          </button>
+
+          <h6 
+            style={{
+              margin: 0,
+              fontSize: "16px",
+              fontWeight: "600",
+              marginBottom: "12px",
+              paddingRight: "40px",
+            }}
+          >
+            Select Your Campaign
+          </h6>
+          
+          {/* Search Input */}
+          <div className="position-relative">
+            <FiSearch
+              size={18}
+              style={{
+                position: "absolute",
+                left: "16px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "#9ca3af",
+                pointerEvents: "none",
+                zIndex: 1,
+              }}
+            />
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search Campaigns..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                paddingLeft: "48px",
+                paddingRight: searchQuery ? "48px" : "16px",
+                height: "48px",
+                border: "none",
+                borderRadius: "12px",
+                fontSize: "14px",
+                backgroundColor: "white",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                transition: "all 0.2s ease",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.boxShadow = "0 8px 16px -4px rgba(0, 0, 0, 0.2)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                style={{
+                  position: "absolute",
+                  right: "14px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "#f3f4f6",
+                  border: "none",
+                  color: "#6b7280",
+                  cursor: "pointer",
+                  width: "28px",
+                  height: "28px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "8px",
+                  transition: "all 0.2s ease",
+                  zIndex: 1,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#e5e7eb";
+                  e.currentTarget.style.color = "#374151";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f3f4f6";
+                  e.currentTarget.style.color = "#6b7280";
+                }}
+              >
+                <FiX size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Results Header */}
+        <div
+          style={{
+            padding: "16px 24px 12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "white",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "12px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+              color: "#6b7280",
+            }}
+          >
+            Available Campaigns
           </span>
-
-          {/* 🔍 Search input */}
-          <input
-            type="text"
-            className="form-control search-input-field"
-            placeholder="Search...."
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-
-          <span className="input-group-text">
-            <button type="button" className="btn-close"></button>
+          <span
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              color: "white",
+              fontSize: "11px",
+              fontWeight: "700",
+              padding: "6px 12px",
+              borderRadius: "20px",
+              boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
+            }}
+          >
+            {filteredAudienceList.length}
           </span>
         </div>
 
-        <div className="search-items-wrapper">
-          <div className="dropdown-divider"></div>
-          <div className="users-result px-4 py-2">
-            <Title name={"Audience"} number={audienceList.length} />
-
-            {audienceList.map(({ reportName, _id, insertionOrderId }) => (
-              <Card
+        {/* Results List */}
+        <div
+          style={{
+            maxHeight: "380px",
+            overflowY: "auto",
+            padding: "0 16px 16px",
+            backgroundColor: "white",
+          }}
+          className="custom-scrollbar"
+        >
+          {filteredAudienceList.length > 0 ? (
+            filteredAudienceList.map(({ reportName, _id, insertionOrderId }) => (
+              <AudienceCard
                 key={_id}
-                subTitle={insertionOrderId}
                 title={reportName}
-                badge={<FiChevronRight size={12} />}
-                /** 👍 pass selected value to parent */
-                onSelect={() =>
+                subTitle={insertionOrderId}
+                isSelected={selectedAudience?._id === _id}
+                onSelect={() => {
                   setSelectedAudience({
                     _id,
                     reportName,
-                    insertionOrderId
-                  })
-                }
+                    insertionOrderId,
+                  });
+                }}
               />
-            ))}
-          </div>
+            ))
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "60px 20px",
+                color: "#9ca3af",
+              }}
+            >
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  margin: "0 auto 20px",
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FiSearch size={36} style={{ opacity: 0.4 }} />
+              </div>
+              <p style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: "#374151" }}>
+                No audiences found
+              </p>
+              <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#9ca3af" }}>
+                Try adjusting your search terms
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Custom Scrollbar Styles */}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f3f4f6;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        }
+      `}</style>
     </div>
   );
 };
 
 export default SearchModal;
 
-// ------------------------------
-const Title = ({ name, number }) => {
-  return (
-    <h4 className="fs-13 fw-normal text-gray-600 mb-3">
-      {name}
-      <span className="badge small bg-gray-200 rounded ms-1 text-dark">
-        {number}
-      </span>
-    </h4>
-  );
-};
+// Audience Card Component
+const AudienceCard = ({ title, subTitle, onSelect, isSelected }) => {
+  const [isHovered, setIsHovered] = useState(false);
 
-// ------------------------------
-const Card = ({ icon, title, subTitle, badge, onSelect }) => {
   return (
     <div
-      className="d-flex align-items-center justify-content-between hr-card"
-      style={{ cursor: "pointer" }}
-      /** ✔ when clicked → send selectedAudience */
       onClick={onSelect}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        padding: "16px 18px",
+        borderRadius: "12px",
+        marginBottom: "8px",
+        cursor: "pointer",
+        backgroundColor: isSelected 
+          ? "#f0f9ff"
+          : isHovered 
+          ? "#f9fafb" 
+          : "white",
+        border: isSelected
+          ? "2px solid #667eea"
+          : isHovered
+          ? "2px solid #e5e7eb"
+          : "2px solid #f3f4f6",
+        transition: "all 0.2s ease",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        boxShadow: isHovered || isSelected
+          ? "0 4px 12px rgba(0, 0, 0, 0.08)"
+          : "0 1px 3px rgba(0, 0, 0, 0.05)",
+        transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+      }}
     >
-      <div className="d-flex align-items-center gap-3">
-        <div>
-          <span className="font-body fw-bold d-block mb-1">{title}</span>
-          <p className="fs-11 text-muted mb-0">{subTitle}</p>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: "15px",
+            fontWeight: "600",
+            color: isSelected ? "#667eea" : "#111827",
+            marginBottom: "6px",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {title}
+        </div>
+        <div
+          style={{
+            fontSize: "13px",
+            color: "#6b7280",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {subTitle || "No ID"}
         </div>
       </div>
-
-      <span className="avatar-text avatar-md">{badge}</span>
+      <div
+        style={{
+          width: "40px",
+          height: "40px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "10px",
+          background: isSelected
+            ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            : isHovered
+            ? "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)"
+            : "#f9fafb",
+          color: isSelected ? "white" : "#6b7280",
+          transition: "all 0.2s ease",
+          flexShrink: 0,
+          marginLeft: "16px",
+          boxShadow: isSelected ? "0 4px 12px rgba(102, 126, 234, 0.3)" : "none",
+        }}
+      >
+        {isSelected ? (
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              fill="currentColor"
+            />
+          </svg>
+        ) : (
+          <FiChevronRight size={18} />
+        )}
+      </div>
     </div>
   );
 };

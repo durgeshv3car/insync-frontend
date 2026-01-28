@@ -19,7 +19,7 @@ const TopCountryBarChart = ({dailyReportsData}) => {
     return (
         <div>
             <div className={`card stretch stretch-full leads-overview ${isExpanded ? "card-expand" : ""} ${refreshKey ? "card-loading" : ""}`}>
-                <CardHeader title={"Top Countries"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
+                <CardHeader title={"Device & Ad type (Impression Distribution)"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
 
                 <div className="card-body custom-card-action p-0">
                     <ReactApexChart

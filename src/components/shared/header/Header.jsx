@@ -79,9 +79,6 @@
 //   }
 // }, [selectedAudience]);
 
-
-
-
 //   useEffect(() => {
 //     const fetchAudiences = async () => {
 //       try {
@@ -92,9 +89,8 @@
 //       }
 //     };
 
-
 //       fetchAudiences();
-    
+
 //   }, []);
 
 //   useEffect(() => {
@@ -331,7 +327,6 @@
 //                 />
 //               </>
 //             )}
-            
 
 //             <ProfileModal />
 //           </div>
@@ -342,7 +337,6 @@
 // };
 
 // export default Header;
-
 
 "use client";
 
@@ -359,8 +353,7 @@ import { useSession } from "next-auth/react";
 import { jwtDecode } from "jwt-decode";
 
 const Header = () => {
-  const { navigationOpen, setNavigationOpen } =
-    useContext(NavigationContext);
+  const { navigationOpen, setNavigationOpen } = useContext(NavigationContext);
 
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -391,7 +384,7 @@ const Header = () => {
       try {
         const res = await getAudienceByUser(
           userDetails.userId,
-          userDetails.role
+          userDetails.role,
         );
         setAudienceList(res.data);
       } catch (err) {
@@ -428,26 +421,38 @@ const Header = () => {
     localStorage.setItem("count", selectedAudience.cpm);
   }, [selectedAudience, isInitialized]);
 
+  // Handle desktop navigation toggle
+  useEffect(() => {
+    const handleNavigationToggle = () => {
+      if (navigationOpen) {
+        // Open navigation - remove minimenu class
+        document.documentElement.classList.remove("minimenu");
+      } else {
+        // Close navigation - add minimenu class
+        document.documentElement.classList.add("minimenu");
+      }
+    };
+
+    handleNavigationToggle();
+  }, [navigationOpen]);
+
   return (
     <header className="nxl-header">
       <div className="header-wrapper">
         {/* LEFT */}
-        <div className="header-left">
+        <div className="header-left d-flex align-items-center gap-3">
+          {/* Single Navigation Toggle for All Screens */}
           <button
-            className="btn mobile-only"
+            className="btn p-0 border-0 bg-transparent"
             onClick={() => setNavigationOpen(!navigationOpen)}
+            style={{ marginRight: "8px" }}
           >
-            <FiAlignLeft size={24} />
+            {navigationOpen ? (
+              <FiArrowRight size={24} />
+            ) : (
+              <FiAlignLeft size={24} />
+            )}
           </button>
-
-<button
-  className="btn desktop-only"
-   onClick={() => setNavigationOpen(!navigationOpen)}
-  style={{ marginRight: "8px" }}
->
-  {navigationOpen ? <FiArrowRight size={24} /> : <FiAlignLeft size={24} />}
-</button>
-
 
           <Image
             src="/images/logo360.png"
@@ -463,15 +468,11 @@ const Header = () => {
         {/* RIGHT */}
         <div className="header-right ms-auto d-flex align-items-center">
           {isPathPresent && selectedAudience && (
-            <>
-              <span className="text-primary fw-semibold me-3">
-                {selectedAudience.reportName}
-              </span>
-              <SearchModal
-                audienceList={audienceList}
-                setSelectedAudience={setSelectedAudience}
-              />
-            </>
+            <SearchModal
+              audienceList={audienceList}
+              setSelectedAudience={setSelectedAudience}
+              selectedAudience={selectedAudience}
+            />
           )}
 
           <ProfileModal />
@@ -482,4 +483,3 @@ const Header = () => {
 };
 
 export default Header;
-
