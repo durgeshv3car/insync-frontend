@@ -440,13 +440,13 @@ const Header = () => {
             <FiAlignLeft size={24} />
           </button>
 
-<button
+{/* <button
   className="btn desktop-only"
    onClick={() => setNavigationOpen(!navigationOpen)}
   style={{ marginRight: "8px" }}
 >
   {navigationOpen ? <FiArrowRight size={24} /> : <FiAlignLeft size={24} />}
-</button>
+</button> */}
 
 
           <Image

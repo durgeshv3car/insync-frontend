@@ -635,14 +635,7 @@
 		left: -#{$navigation-width};
 		box-shadow: none;
 		transition: all 0.15s ease-in-out;
-		&.mob-navigation-active {
-			left: 0 !important;
-			.navbar-wrapper {
-				position: relative;
-				z-index: 5;
-				background: inherit;
-			}
-		}
+
 	}
 	.minimenu {
 		.nxl-header {
