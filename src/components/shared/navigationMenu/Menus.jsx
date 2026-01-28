@@ -79,10 +79,13 @@ const Menus = () => {
               isParentActive ? "active nxl-trigger" : ""
             }`}
           >
-            <a
+          <a
               href="#"
               className="nxl-link"
-              onClick={() => handleMainMenu(name)}
+              onClick={(e) => {
+                e.preventDefault();
+                handleMainMenu(name);
+              }}
             >
               <span className="nxl-micon">{getIcon(icon)}</span>
               <span className="nxl-mtext">{name}</span>

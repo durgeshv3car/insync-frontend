@@ -78,10 +78,11 @@
 		&:after {
 			top: 0;
 			bottom: 0;
-			width: 50%;
+			width: 60%;
 			content: "";
 			position: fixed;
-			background: $gray-200;
+			background: #010b23;
+			z-index: -1;
 		}
 		.creative-card-wrapper {
 			width: 100%;

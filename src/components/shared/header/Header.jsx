@@ -421,20 +421,34 @@ const Header = () => {
     localStorage.setItem("count", selectedAudience.cpm);
   }, [selectedAudience, isInitialized]);
 
-  // Handle desktop navigation toggle
+  // Handle desktop navigation toggle class
   useEffect(() => {
-    const handleNavigationToggle = () => {
-      if (navigationOpen) {
-        // Open navigation - remove minimenu class
-        document.documentElement.classList.remove("minimenu");
+    const handleNavigationSync = () => {
+      const isDesktop = window.innerWidth > 1024;
+      if (isDesktop) {
+        if (navigationOpen) {
+          document.documentElement.classList.remove("minimenu");
+        } else {
+          document.documentElement.classList.add("minimenu");
+        }
       } else {
-        // Close navigation - add minimenu class
-        document.documentElement.classList.add("minimenu");
+        // Mobile: remove minimenu class, controlled by mob-navigation-active instead
+        document.documentElement.classList.remove("minimenu");
       }
     };
 
-    handleNavigationToggle();
+    handleNavigationSync();
+    window.addEventListener("resize", handleNavigationSync);
+    return () => window.removeEventListener("resize", handleNavigationSync);
   }, [navigationOpen]);
+
+  // Handle mobile menu auto-close on navigation
+  useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 1024;
+    if (isMobile && navigationOpen) {
+      setNavigationOpen(false);
+    }
+  }, [pathname]);
 
   return (
     <header className="nxl-header">

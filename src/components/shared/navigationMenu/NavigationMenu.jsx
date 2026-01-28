@@ -11,9 +11,7 @@ import { NavigationContext } from '@/contentApi/navigationProvider';
 const NavigationManu = () => {
     const { navigationOpen, setNavigationOpen } = useContext(NavigationContext)
     const pathName = usePathname()
-    useEffect(() => {
-        setNavigationOpen(false)
-    }, [pathName])
+    
     return (
         <nav className={`nxl-navigation ${navigationOpen ? "mob-navigation-active" : ""}`}>
             <div className="navbar-wrapper">
