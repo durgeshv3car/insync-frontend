@@ -15,7 +15,6 @@ const page = () => {
                   <Image
                     width={800}
                     height={399}
-                    sizes="100vw"
                     src="/images/dashboard_logo1.png"
 
                     alt="img"
