@@ -10,6 +10,27 @@ import {
 } from "@/services/device";
 import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
 import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChart";
+import { FiSmartphone, FiMonitor, FiTablet, FiTv } from "react-icons/fi";
+
+const getDeviceIcon = (type) => {
+  const t = type?.toLowerCase();
+
+  if (t.includes("mobile") || t.includes("smart phone"))
+    return <FiSmartphone size={16} style={{ marginRight: 6 }} />;
+
+  if (t.includes("desktop"))
+    return <FiMonitor size={16} style={{ marginRight: 6 }} />;
+
+  if (t.includes("tablet"))
+    return <FiTablet size={16} style={{ marginRight: 6 }} />;
+
+  if (t.includes("tv") || t.includes("connected tv"))
+    return <FiTv size={16} style={{ marginRight: 6 }} />;
+
+  return null;
+};
+
+
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -31,21 +52,23 @@ export default function OverviewPage() {
   const [audienceId, setAudienceId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [insertionOrderId, setInsertionOrderId] = useState("");
 
-  // Global insertionOrderId - TODO: Make this dynamic later
-  const INSERTION_ORDER_ID = "1024667156";
+  const INSERTION_ORDER_ID = insertionOrderId;
 
   useEffect(() => {
     // Load initial values from localStorage
     const storedRange = localStorage.getItem("selectedRange");
     const storedStart = localStorage.getItem("startDate");
     const storedEnd = localStorage.getItem("endDate");
+    const insertionOrderId = localStorage.getItem("insertionId");
     const storedAudienceId = localStorage.getItem("audienceId");
 
     if (storedRange) setDateRange(storedRange);
     if (storedStart) setStartDate(storedStart);
     if (storedEnd) setEndDate(storedEnd);
     if (storedAudienceId) setAudienceId(storedAudienceId);
+    if (insertionOrderId) setInsertionOrderId(insertionOrderId);
 
     setIsInitialized(true);
 
@@ -57,6 +80,7 @@ export default function OverviewPage() {
       if (key === "startDate") setStartDate(newValue || "");
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
+      if (key === "insertionId") setInsertionOrderId(newValue || "");
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -73,6 +97,7 @@ export default function OverviewPage() {
     localStorage.setItem("startDate", startDate);
     localStorage.setItem("endDate", endDate);
     localStorage.setItem("audienceId", audienceId);
+    localStorage.setItem("insertionId", insertionOrderId);
   }, [dateRange, startDate, endDate, audienceId, isInitialized]);
 
   const params = {
@@ -101,7 +126,7 @@ export default function OverviewPage() {
     // Validation: Check if dateRange is selected
     if (!dateRange) {
       console.log(
-        "Date range is not selected. Please select a date range to fetch data."
+        "Date range is not selected. Please select a date range to fetch data.",
       );
       return;
     }
@@ -109,7 +134,7 @@ export default function OverviewPage() {
     // Validation: If dateRange is CUSTOM, both startDate and endDate must be selected
     if (dateRange === "CUSTOM" && (!startDate || !endDate)) {
       console.log(
-        "Custom date range selected. Please select both start and end dates."
+        "Custom date range selected. Please select both start and end dates.",
       );
       return;
     }
@@ -123,13 +148,13 @@ export default function OverviewPage() {
           const dailyData = await getDailyReportsByRange(
             INSERTION_ORDER_ID,
             startDate,
-            endDate
+            endDate,
           );
           return { dailyData };
         } else {
           const dailyData = await getDailyReportsByFilter(
             INSERTION_ORDER_ID,
-            dateRange
+            dateRange,
           );
           return { dailyData };
         }
@@ -154,7 +179,7 @@ export default function OverviewPage() {
 
       if (!hasData || fetchErrorOccurred) {
         console.log(
-          "Data not found in DB or error occurred, triggering sync..."
+          "Data not found in DB or error occurred, triggering sync...",
         );
 
         // Clear old data to prevent showing stale results during sync
@@ -216,7 +241,7 @@ export default function OverviewPage() {
         acc.completeViews += parseInt(curr.completeViewsVideo) || 0;
         return acc;
       },
-      { impressions: 0, clicks: 0, completeViews: 0 }
+      { impressions: 0, clicks: 0, completeViews: 0 },
     );
 
     const ctr =
@@ -267,8 +292,7 @@ export default function OverviewPage() {
       acc[device].impressions += parseInt(curr.impressions) || 0;
       acc[device].clicks += parseInt(curr.clicks) || 0;
       acc[device].completeViews += parseInt(curr.completeViewsVideo) || 0;
-      acc[device].spend +=
-        parseFloat(curr.mediaCostAdvertiserCurrency) || 0;
+      acc[device].spend += parseFloat(curr.mediaCostAdvertiserCurrency) || 0;
       return acc;
     }, {});
 
@@ -321,7 +345,7 @@ export default function OverviewPage() {
           });
         }),
         impressions: dailyReportsData.map(
-          (item) => parseInt(item.impressions) || 0
+          (item) => parseInt(item.impressions) || 0,
         ),
         vcr: dailyReportsData.map((item) => {
           const impressions = parseInt(item.impressions) || 0;
@@ -443,7 +467,6 @@ export default function OverviewPage() {
         },
       });
     }
-
 
     // Platform Distribution Chart (Donut)
     if (platformChartRef.current && !chartsRef.current.platform) {
@@ -616,6 +639,8 @@ export default function OverviewPage() {
       });
     }
 
+
+
     return () => {
       // Cleanup charts on unmount
       Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
@@ -625,13 +650,10 @@ export default function OverviewPage() {
 
   return (
     <main className="main-content">
-      
-
       {/* Charts Section */}
       <section className="charts-section">
         <div className="grid">
           <TopCountryBarChart dailyReportsData={dailyReportsData} />
-
         </div>
       </section>
 
@@ -639,11 +661,11 @@ export default function OverviewPage() {
       <div className="data-table-card">
         <div className="table-header">
           <h3>Device Performance Summary</h3>
-          <div className="table-actions">
+          {/* <div className="table-actions">
             <button className="btn btn-sm btn-ghost">
               <i className="fas fa-download" /> Export
             </button>
-          </div>
+          </div> */}
         </div>
 
         <table className="data-table">
@@ -651,6 +673,7 @@ export default function OverviewPage() {
             <tr>
               <th>Device Type</th>
               <th>Impressions</th>
+              <th>Clicks</th>
               <th>CTR</th>
               <th>VCR</th>
               <th>Complete Views</th>
@@ -671,10 +694,15 @@ export default function OverviewPage() {
                 return (
                   <tr key={index}>
                     <td>
-                      <div className={`campaign-icon active`} />
-                      {item.deviceType}
+                      <div className="d-flex align-items-center">
+                        <div className=" me-2" />
+                        {getDeviceIcon(item.deviceType)}
+                        {item.deviceType}
+                      </div>
                     </td>
+
                     <td>{item.impressions.toLocaleString()}</td>
+                    <td>{item.clicks.toLocaleString()}</td>
                     <td>{ctr}%</td>
                     <td>{vcr}%</td>
                     <td>{item.completeViews.toLocaleString()}</td>

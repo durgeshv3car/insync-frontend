@@ -294,9 +294,6 @@ const YouTubeTable = () => {
         {/* Results Header */}
         <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <h6 style={{ fontSize: "1rem", fontWeight: "600", color: "#1a1a1a", marginBottom: "4px" }}>
-              Results ({videos.length})
-            </h6>
             <p style={{ fontSize: "0.85rem", color: "#6c757d", marginBottom: "0" }}>
               {videos.length > 0 ? `Showing ${videos.length} video${videos.length !== 1 ? 's' : ''}` : "No videos to display"}
             </p>

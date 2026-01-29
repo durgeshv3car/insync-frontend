@@ -396,6 +396,7 @@ const Header = () => {
   }, [session]);
 
   // Initialize audience from localStorage
+  
   useEffect(() => {
     if (!audienceList.length) return;
 
@@ -407,6 +408,7 @@ const Header = () => {
 
     localStorage.setItem("audienceId", defaultAudience._id);
     localStorage.setItem("audienceName", defaultAudience.reportName);
+    localStorage.setItem("insertionId",defaultAudience.insertionOrderId); 
     localStorage.setItem("count", defaultAudience.cpm);
 
     setIsInitialized(true);
@@ -418,6 +420,7 @@ const Header = () => {
 
     localStorage.setItem("audienceId", selectedAudience._id);
     localStorage.setItem("audienceName", selectedAudience.reportName);
+    localStorage.setItem("insertionId",selectedAudience.insertionOrderId); 
     localStorage.setItem("count", selectedAudience.cpm);
   }, [selectedAudience, isInitialized]);
 

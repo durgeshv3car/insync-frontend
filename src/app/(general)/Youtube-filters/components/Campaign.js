@@ -59,6 +59,10 @@ const YouTubeTable = () => {
     return Number(num).toLocaleString();
   };
 
+  if(loading){
+    return <div style={{ minHeight: "100vh"}}>Loading...</div>
+  }
+
   return (
     <div style={{ minHeight: "100vh"}}>
       
@@ -307,9 +311,6 @@ const YouTubeTable = () => {
  <div className="col-lg-4 d-flex align-items-end">
      <div style={{display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div className="d-flex">
-            <h6 style={{ fontSize: "1rem", fontWeight: "600", color: "#1a1a1a", marginBottom: "4px" }}>
-              Results ({videos.length})
-            </h6>
             <p style={{ fontSize: "0.85rem", color: "#6c757d", marginBottom: "0" }}>
               {videos.length > 0 ? `Showing ${videos.length} video${videos.length !== 1 ? 's' : ''}` : "No videos to display"}
             </p>

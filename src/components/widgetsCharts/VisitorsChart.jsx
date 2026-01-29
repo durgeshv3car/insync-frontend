@@ -20,7 +20,7 @@ const VisitorsChart = ({dailyReportsData}) => {
     return (
         <div>
             <div className={`card stretch stretch-full leads-overview ${isExpanded ? "card-expand" : ""} ${refreshKey ? "card-loading" : ""}`}>
-                <CardHeader title={"Impression & Ctr"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
+                <CardHeader title={"Impression & CTR"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
                 <div className="card-body custom-card-action">
                     <ReactApexChart
                         type='area'

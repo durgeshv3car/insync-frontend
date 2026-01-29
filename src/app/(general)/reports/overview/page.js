@@ -34,9 +34,11 @@ export default function OverviewPage() {
   const [audienceId, setAudienceId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [count, setCount] = useState(0);
+  const [insertionOrderId, setInsertionOrderId] = useState("");
 
   // Global insertionOrderId - TODO: Make this dynamic later
-  const INSERTION_ORDER_ID = "1024667156";
+  const INSERTION_ORDER_ID = insertionOrderId;
 
   useEffect(() => {
     // Load initial values from localStorage
@@ -45,12 +47,14 @@ export default function OverviewPage() {
     const storedEnd = localStorage.getItem("endDate");
     const storedAudienceId = localStorage.getItem("audienceId");
     const storedCount = localStorage.getItem("count");
+    const storedInsertionId = localStorage.getItem("insertionId");
 
     if (storedRange) setDateRange(storedRange);
     if (storedStart) setStartDate(storedStart);
     if (storedEnd) setEndDate(storedEnd);
     if (storedAudienceId) setAudienceId(storedAudienceId);
     if (storedCount) setCount(parseInt(storedCount));
+    if (storedInsertionId) setInsertionOrderId(storedInsertionId);
 
     setIsInitialized(true);
 
@@ -62,6 +66,7 @@ export default function OverviewPage() {
       if (key === "startDate") setStartDate(newValue || "");
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
+      if (key === "insertionId") setInsertionOrderId(newValue || "");
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -70,7 +75,6 @@ export default function OverviewPage() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
-  const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -79,6 +83,8 @@ export default function OverviewPage() {
     localStorage.setItem("startDate", startDate);
     localStorage.setItem("endDate", endDate);
     localStorage.setItem("audienceId", audienceId);
+    localStorage.setItem("count", count);
+    localStorage.setItem("insertionId", insertionOrderId);
   }, [dateRange, startDate, endDate, audienceId, isInitialized]);
 
   const params = {
@@ -936,9 +942,9 @@ export default function OverviewPage() {
             >
               Monthly
             </button>
-            <button className="btn btn-sm btn-ghost">
+            {/* <button className="btn btn-sm btn-ghost">
               <i className="fas fa-download" /> Export
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -962,95 +968,110 @@ export default function OverviewPage() {
             {tableType === "daily" &&
             dailyReportsData &&
             Array.isArray(dailyReportsData) ? (
-              dailyReportsData.map((item, index) => {
-                const impressions = parseInt(item.impressions) || 0;
-                const completeViews = parseInt(item.completeViewsVideo) || 0;
-                const vcr =
-                  impressions > 0
-                    ? ((completeViews / impressions) * 100).toFixed(2)
-                    : "0.00";
+              [...dailyReportsData]
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .map((item, index) => {
+                  const impressions = parseInt(item.impressions) || 0;
+                  const completeViews = parseInt(item.completeViewsVideo) || 0;
+                  const vcr =
+                    impressions > 0
+                      ? ((completeViews / impressions) * 100).toFixed(2)
+                      : "0.00";
 
-                return (
-                  <tr key={index}>
-                    <td>{item.date}</td>
-                    <td>{parseInt(item.impressions).toLocaleString()}</td>
-                    <td>{parseInt(item.clicks).toLocaleString()}</td>
-                    <td>{item.ctr}</td>
-                    <td>{vcr}%</td>
-                    <td>
-                      {parseInt(item.firstQuartileViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      {parseInt(item.midpointViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      {parseInt(item.thirdQuartileViewsVideo).toLocaleString()}
-                    </td>
+                  return (
+                    <tr key={index}>
+                      <td>{item.date}</td>
+                      <td>{parseInt(item.impressions).toLocaleString()}</td>
+                      <td>{parseInt(item.clicks).toLocaleString()}</td>
+                      <td>{item.ctr}</td>
+                      <td>{vcr}%</td>
+                      <td>
+                        {parseInt(
+                          item.firstQuartileViewsVideo,
+                        ).toLocaleString()}
+                      </td>
+                      <td>
+                        {parseInt(item.midpointViewsVideo).toLocaleString()}
+                      </td>
+                      <td>
+                        {parseInt(
+                          item.thirdQuartileViewsVideo,
+                        ).toLocaleString()}
+                      </td>
 
-                    <td>
-                      {parseInt(item.completeViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      ₹
-                      {(
-                        parseFloat(item.mediaCostAdvertiserCurrency) * count
-                      ).toFixed(2)}
-                    </td>
+                      <td>
+                        {parseInt(item.completeViewsVideo).toLocaleString()}
+                      </td>
+                      <td>
+                        ₹
+                        {(
+                          parseFloat(item.mediaCostAdvertiserCurrency) * count
+                        ).toFixed(2)}
+                      </td>
 
-                    <td>
-                      {item.uniqueReachImpressionReach !== "-"
-                        ? parseInt(
-                            item.uniqueReachImpressionReach,
-                          ).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
-                );
-              })
+                      <td>
+                        {item.uniqueReachImpressionReach !== "-"
+                          ? parseInt(
+                              item.uniqueReachImpressionReach,
+                            ).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  );
+                })
             ) : tableType === "monthly" &&
               monthlyReportsData &&
               Array.isArray(monthlyReportsData) ? (
-              monthlyReportsData.map((item, index) => {
-                const impressions = parseInt(item.impressions) || 0;
-                const completeViews = parseInt(item.completeViewsVideo) || 0;
-                const vcr =
-                  impressions > 0
-                    ? ((completeViews / impressions) * 100).toFixed(2)
-                    : "0.00";
+              [...monthlyReportsData]
+                .sort((a, b) => b.month.localeCompare(a.month))
+                .map((item, index) => {
+                  const impressions = parseInt(item.impressions) || 0;
+                  const completeViews = parseInt(item.completeViewsVideo) || 0;
+                  const vcr =
+                    impressions > 0
+                      ? ((completeViews / impressions) * 100).toFixed(2)
+                      : "0.00";
 
-                return (
-                  <tr key={index}>
-                    <td>{item.month}</td>
-                    <td>{parseInt(item.impressions).toLocaleString()}</td>
-                    <td>{parseInt(item.clicks).toLocaleString()}</td>
-                    <td>{item.ctr}</td>
-                    <td>{vcr}%</td>
-                    <td>
-                      {parseInt(item.firstQuartileViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      {parseInt(item.midpointViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      {parseInt(item.thirdQuartileViewsVideo).toLocaleString()}
-                    </td>
+                  return (
+                    <tr key={index}>
+                      <td>{item.month}</td>
+                      <td>{parseInt(item.impressions).toLocaleString()}</td>
+                      <td>{parseInt(item.clicks).toLocaleString()}</td>
+                      <td>{item.ctr}</td>
+                      <td>{vcr}%</td>
+                      <td>
+                        {parseInt(
+                          item.firstQuartileViewsVideo,
+                        ).toLocaleString()}
+                      </td>
+                      <td>
+                        {parseInt(item.midpointViewsVideo).toLocaleString()}
+                      </td>
+                      <td>
+                        {parseInt(
+                          item.thirdQuartileViewsVideo,
+                        ).toLocaleString()}
+                      </td>
 
-                    <td>
-                      {parseInt(item.completeViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      ₹{parseFloat(item.mediaCostAdvertiserCurrency).toFixed(2)}
-                    </td>
-                    <td>
-                      {item.uniqueReachImpressionReach !== "-"
-                        ? parseInt(
-                            item.uniqueReachImpressionReach,
-                          ).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
-                );
-              })
+                      <td>
+                        {parseInt(item.completeViewsVideo).toLocaleString()}
+                      </td>
+                      <td>
+                        ₹
+                        {parseFloat(item.mediaCostAdvertiserCurrency).toFixed(
+                          2,
+                        )}
+                      </td>
+                      <td>
+                        {item.uniqueReachImpressionReach !== "-"
+                          ? parseInt(
+                              item.uniqueReachImpressionReach,
+                            ).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  );
+                })
             ) : (
               <tr>
                 <td
