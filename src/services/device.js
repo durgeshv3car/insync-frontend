@@ -1,15 +1,23 @@
-import api from "@/lib/api";
+import axios from "axios";
 import { getToken } from "@/lib/getToken";
+
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const createReportsDataDevice = async (params) => {
   try {
-    const res = await api.post(
-      `/dv360/listQueries/device`,
+    const token = await getToken();
+    const res = await axios.post(
+      `${API_URL}/dv360/listQueries/device`,
       {
         audienceId: params.audienceId,
         dataRange: params.dataRange,
         startDate: params.startDate,
         endDate: params.endDate,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
       }
     );
 
@@ -26,11 +34,17 @@ export const createReportsDataDevice = async (params) => {
 // Daily reports with filter (LAST_7_DAYS, LAST_30_DAYS, etc.)
 export const getDailyReportsByFilter = async (insertionOrderId, filter) => {
   try {
-    const res = await api.post(
-      `/device/filter`,
+    const token = await getToken();
+    const res = await axios.post(
+      `${API_URL}/device/filter`,
       {
         insertionOrderId,
         filter,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
       }
     );
 
@@ -47,12 +61,18 @@ export const getDailyReportsByFilter = async (insertionOrderId, filter) => {
 // Daily reports with custom date range
 export const getDailyReportsByRange = async (insertionOrderId, startDate, endDate) => {
   try {
-    const res = await api.post(
-      `/device/range`,
+    const token = await getToken();
+    const res = await axios.post(
+      `${API_URL}/device/range`,
       {
         insertionOrderId,
         startDate,
         endDate,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
       }
     );
 
@@ -65,4 +85,3 @@ export const getDailyReportsByRange = async (insertionOrderId, startDate, endDat
     throw error;
   }
 };
-

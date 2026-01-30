@@ -1,25 +1,29 @@
-import api from "@/lib/api";
+import axios from "axios";
+import { getToken } from "@/lib/getToken";
 
-
-
-
-
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const getYouTubeResultsByChannel = async (filters) => {
   try {
-    const res = await api.post(
-      `/query/searchByChannel`,
+    const token = await getToken();
+    const res = await axios.post(
+      `${API_URL}/query/searchByChannel`,
       {
         channelName: filters.channelName,
-        query: filters.query, 
+        query: Array.isArray(filters.query) ? filters.query : [filters.query], 
         sortBy: filters.sortBy,
-        regionCode: filters.regionCode,
         maxResults: filters.maxResults,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
       }
     );
 
     if (res.status === 202 && res.data.jobId) {
-      return await pollSearchJob(res.data.jobId, filters);
+      const { regionCode, ...pollingFilters } = filters;
+      return await pollSearchJob(res.data.jobId, pollingFilters);
     }
 
     return res.data;
@@ -38,7 +42,12 @@ export const getYouTubeResultsByChannel = async (filters) => {
  */
 export const getSearchJobStatus = async (jobId) => {
   try {
-    const res = await api.get(`/query/job/${jobId}`);
+    const token = await getToken();
+    const res = await axios.get(`${API_URL}/query/job/${jobId}`, {
+      headers: {
+        Authorization: token,
+      },
+    });
     return res.data;
   } catch (error) {
     console.error(
@@ -73,10 +82,11 @@ const pollSearchJob = async (jobId, filters) => {
 
 export const getYouTubeResults = async (filters) => {
   try {
-    const res = await api.post(
-      `/query/search`,
+    const token = await getToken();
+    const res = await axios.post(
+      `${API_URL}/query/search`,
       {
-        query: filters.query, // send as array
+        query: Array.isArray(filters.query) ? filters.query : [filters.query], // send as array
         minViews: filters.minViews,
         minSubscribers: filters.minSubscribers,
         regionCode: filters.regionCode,
@@ -84,6 +94,11 @@ export const getYouTubeResults = async (filters) => {
         maxResults: filters.maxResults,
         startDate: filters.startDate,
         endDate: filters.endDate,
+      },
+      {
+        headers: {
+          Authorization: token,
+        },
       }
     );
 
@@ -104,9 +119,21 @@ export const getYouTubeResults = async (filters) => {
 
 export const getQueryResults = async (filters) => {
   try {
+    const token = await getToken();
+    const params = {
+      ...filters,
+      // Ensure query and channelName are strings for backend .split(",") compatibility
+      query: Array.isArray(filters.query) ? filters.query.join(",") : filters.query,
+      channelName: Array.isArray(filters.channelName) ? filters.channelName.join(",") : filters.channelName,
+      // Prioritize explicit limit over maxResults
+      limit: filters.limit || filters.maxResults || 2000,
+    };
     
-    const res = await api.get(`/query/results`, {
-      params: filters,
+    const res = await axios.get(`${API_URL}/query/results`, {
+      params,
+      headers: {
+        Authorization: token,
+      },
     });
 
     return res.data;
@@ -121,8 +148,13 @@ export const getQueryResults = async (filters) => {
 
 export const getFiltersResults = async () => {
   try {
+    const token = await getToken();
     
-    const res = await api.get(`/query/regions`);
+    const res = await axios.get(`${API_URL}/query/regions`, {
+      headers: {
+        Authorization: token,
+      },
+    });
 
     return res.data;
   } catch (error) {
@@ -137,9 +169,13 @@ export const getFiltersResults = async () => {
 
 export const getcsvResults = async (filters) => {
    try {
+    const token = await getToken();
     
-    const res = await api.get(`/query/download`, {
+    const res = await axios.get(`${API_URL}/query/download`, {
       params: filters,
+      headers: {
+        Authorization: token,
+      },
     });
 
     return res.data;

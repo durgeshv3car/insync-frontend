@@ -1,11 +1,19 @@
-import api from "@/lib/api";
+import axios from "axios";
 import { getToken } from "@/lib/getToken";
+
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const getCreativeData = async (report_type) => {
   try {
-    const res = await api.post(
-      `/eskimi/get/creative`,
-      {report_type}
+    const token = await getToken();
+    const res = await axios.post(
+      `${API_URL}/eskimi/get/creative`,
+      {report_type},
+      {
+        headers: {
+          Authorization: token,
+        },
+      }
     );
     return res.data;
   } catch (error) {
@@ -13,5 +21,3 @@ export const getCreativeData = async (report_type) => {
     throw error;
   }
 };
-
-

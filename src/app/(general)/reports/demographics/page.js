@@ -9,6 +9,7 @@ import {
   getDailyReportsByRange,
 } from "@/services/demographics";
 import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChartGender";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -473,7 +474,9 @@ export default function OverviewPage() {
 // Re-render charts when data changes
 
   return (
+    <><PageHeader></PageHeader>
     <main className="main-content">
+      
       
 
       {/* Charts Section */}
@@ -601,6 +604,7 @@ export default function OverviewPage() {
 
       {/* Bottom Sections */}
     </main>
+    </>
   );
 }
 

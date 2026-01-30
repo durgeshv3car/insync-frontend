@@ -6,7 +6,6 @@ const Home = () => {
   return (
     <>
       <PageHeader>
-        <PageHeaderDate />
       </PageHeader>
 
       <div className="container-fluid mt-4">

@@ -59,9 +59,14 @@ const YouTubeTable = () => {
     return Number(num).toLocaleString();
   };
 
-  if(loading){
-    return <div style={{ minHeight: "100vh"}}>Loading...</div>
-  }
+ if (loading) {
+  return (
+    <div className="d-flex justify-content-center align-items-center vh-100">
+      <h4>Processing...</h4>
+    </div>
+  );
+}
+
 
   return (
     <div style={{ minHeight: "100vh"}}>

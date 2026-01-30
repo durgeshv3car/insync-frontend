@@ -63,7 +63,7 @@ const YouTubeTable = () => {
   const [filters, setFilters] = useState({
     channelName: "",
     query: "",
-    regionCode: "IN",
+    regionCode: "all",
     minViews: "",
     minSubscribers: "",
     startDate: "",
@@ -491,6 +491,7 @@ const YouTubeTable = () => {
                   padding: "8px 12px",
                 }}
               >
+                <option value="all">All</option>
                 {regions.map((code, idx) => (
                   <option key={idx} value={code}>
                     {code}

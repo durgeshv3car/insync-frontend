@@ -11,7 +11,6 @@ import {
   AlertCircle,
   Filter,
   BookOpen,
-  BookA,
 } from "lucide-react";
 import { getYouTubeResultsByChannel } from "@/services/youtube";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
@@ -24,7 +23,6 @@ const YouTubeTable = () => {
     channelName: "",
     query: "",
     sortBy: "relevance",
-    regionCode: "IN",
     maxResults: 100,
   });
 
@@ -33,10 +31,10 @@ const YouTubeTable = () => {
     try {
       const res = await getYouTubeResultsByChannel(filters);
       console.log("YouTube Results:", res);
-      if (res && Array.isArray(res.data)) {
-        setVideos(res.data);
-      } else if (res.results) {
-        setVideos(res.results);
+      if (res) {
+        // Capture videos from either .results (standard) or .data
+        const videoData = res.results || (Array.isArray(res.data) ? res.data : []);
+        setVideos(videoData);
       }
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
@@ -57,16 +55,24 @@ const YouTubeTable = () => {
     if (!num) return "0";
     return Number(num).toLocaleString();
   };
+   if (loading) {
+  return (
+    <div className="d-flex justify-content-center align-items-center vh-100">
+      <h4>Processing...</h4>
+    </div>
+  );
+}
 
   return (
     <div style={{ minHeight: "100vh" }}>
 
   <PageHeader>
-        <PageHeaderDate />
+
       </PageHeader>
 
 
       <div className="container mt-3">
+
     
         {/* Filter Card */}
         <div style={{ 
@@ -167,49 +173,7 @@ const YouTubeTable = () => {
                   </div>
                 </div>
 
-                <div className="col-lg-2">
-                  <label
-                    style={{
-                      padding: "14px 0 8px 0",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      display: "block",
-                    }}
-                  >
-                    Region
-                  </label>
-                  <div
-                    className="input-group"
-                    style={{ borderRadius: "6px", overflow: "hidden" }}
-                  >
-                    <span
-                      className="input-group-text"
-                      style={{
-                        border: "1px solid #dee2e6",
-                        backgroundColor: "#f8f9fa",
-                      }}
-                    >
-                      <BookA size={16} style={{ color: "#6c757d" }} />
-                    </span>
-                    <input
-                      type="text"
-                      name="regionCode"
-                      value={filters.regionCode}
-                      onChange={handleChange}
-                      className="form-control"
-                      placeholder="IN"
-                      maxLength={2}
-                      style={{
-                        border: "1px solid #dee2e6",
-                        fontSize: "0.85rem",
-                        padding: "8px 12px",
-                      }}
-                    />
-                  </div>
-                </div>
+
 
                 <div className="col-lg-2">
                   <label
@@ -326,7 +290,7 @@ const YouTubeTable = () => {
                   color: "#495057",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
-                  width: "16%"
+                  width: "21%"
                 }}>Video</th>
                 <th style={{ 
                   padding: "10px",
@@ -388,22 +352,13 @@ const YouTubeTable = () => {
                   letterSpacing: "0.5px",
                   width: "10%"
                 }}>Published</th>
-                <th style={{ 
-                  padding: "14px",
-                  textAlign: "center",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  width: "5%"
-                }}>Region</th>
+
               </tr>
             </thead>
             <tbody>
               {videos.length === 0 && !loading && (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: "center", padding: "60px 20px", borderBottom: "1px solid #dee2e6" }}>
+                  <td colSpan="7" style={{ textAlign: "center", padding: "60px 20px", borderBottom: "1px solid #dee2e6" }}>
                     <div>
                       <AlertCircle size={48} style={{ color: "#dee2e6", marginBottom: "16px" }} />
                       <h5 style={{ color: "#6c757d", fontWeight: "500", marginBottom: "8px", fontSize: "1.1rem" }}>
@@ -533,20 +488,7 @@ const YouTubeTable = () => {
                       {new Date(v.publishedDate).toLocaleDateString()}
                     </span>
                   </td>
-                  <td style={{ padding: "12px", verticalAlign: "middle", textAlign: "center", minWidth: 0 }}>
-                    <span style={{
-                      display: "inline-block",
-                      padding: "3px 8px",
-                      backgroundColor: "#e9ecef",
-                      color: "#495057",
-                      borderRadius: "12px",
-                      fontSize: "0.7rem",
-                      fontWeight: "500",
-                      whiteSpace: "nowrap"
-                    }}>
-                      {v.regionCode}
-                    </span>
-                  </td>
+
                 </tr>
               ))}
             </tbody>

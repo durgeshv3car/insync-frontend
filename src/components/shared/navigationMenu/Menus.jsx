@@ -1,5 +1,5 @@
 "use client";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { FiChevronRight } from "react-icons/fi";
 import { menuList } from "@/utils/fackData/menuList";
 import getIcon from "@/utils/getIcon";
@@ -26,21 +26,21 @@ const Menus = () => {
   };
 
   // ✅ Filter by role
-  const filteredMenu = menuList.filter((menu) => {
-    if (role === "super_admin") return menu.name !== "preview";
-    return ["dashboards", "Reports"].includes(menu.name);
-  });
+  const filteredMenu = useMemo(() => {
+    if (role === "super_admin") return menuList.filter((menu) => menu.name !== "preview");
+    return menuList.filter((menu) => ["dashboards", "Reports"].includes(menu.name));
+  }, [role]);
 
-  // ✅ Auto open dropdown when child is active
+  // ✅ Auto open dropdown when child is active and close when not
   useEffect(() => {
+    let activeDropdown = null;
     filteredMenu.forEach((menu) => {
-      if (
-        menu.dropdownMenu?.some((d) => isActive(d.path))
-      ) {
-        setOpenDropdown(menu.name);
+      if (menu.dropdownMenu?.some((d) => isActive(d.path))) {
+        activeDropdown = menu.name;
       }
     });
-  }, [pathName]);
+    setOpenDropdown(activeDropdown);
+  }, [pathName, filteredMenu]);
 
   const handleMainMenu = (name) => {
     setOpenDropdown((prev) => (prev === name ? null : name));

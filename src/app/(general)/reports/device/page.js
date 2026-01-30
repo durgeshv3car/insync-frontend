@@ -11,6 +11,7 @@ import {
 import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
 import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChart";
 import { FiSmartphone, FiMonitor, FiTablet, FiTv } from "react-icons/fi";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
 
 const getDeviceIcon = (type) => {
   const t = type?.toLowerCase();
@@ -649,7 +650,9 @@ export default function OverviewPage() {
   }, [dailyReportsData, aggregatedData]); // Re-render charts when data changes
 
   return (
+    <><PageHeader></PageHeader>
     <main className="main-content">
+      
       {/* Charts Section */}
       <section className="charts-section">
         <div className="grid">
@@ -731,6 +734,7 @@ export default function OverviewPage() {
 
       {/* Bottom Sections */}
     </main>
+    </>
   );
 }
 

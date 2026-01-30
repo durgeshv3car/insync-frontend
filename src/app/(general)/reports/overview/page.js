@@ -13,6 +13,7 @@ import { createReportsDataDevice } from "@/services/device";
 import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
 import VisitorsChartVcr from "@/components/widgetsCharts/VistiorsChartVcr";
 import SiteOverviewChart from "@/components/widgetsCharts/SiteOverviewChart";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -877,8 +878,10 @@ export default function OverviewPage() {
   }, [dailyReportsData, monthlyReportsData]); // Re-render charts when data changes
 
   return (
+    <> <PageHeader></PageHeader>
     <main className="main-content">
       {/* Filters Section */}
+     
 
       {/* Real-time Stats */}
       <section className="realtime-section">
@@ -1094,6 +1097,7 @@ export default function OverviewPage() {
 
       {/* Bottom Sections */}
     </main>
+    </>
   );
 }
 
