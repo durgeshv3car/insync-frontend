@@ -1,9 +1,14 @@
 import React from 'react'
 import Campaign from './components/Campaign'
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
 
 function page() {
   return (
-    <div><Campaign/></div>
+    <>
+    <PageHeader>
+      </PageHeader>
+    <Campaign/>
+    </>
   )
 }
 

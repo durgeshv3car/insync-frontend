@@ -63,12 +63,12 @@ const YouTubeTable = () => {
   const [filters, setFilters] = useState({
     channelName: "",
     query: "",
-    regionCode: "IN",
+    regionCode: "all",
     minViews: "",
     minSubscribers: "",
     startDate: "",
     endDate: "",
-    videoType: "long",
+    videoType: "all",
     sortBy: "relevance",
     page: currentPage,
     limit: 20,
@@ -165,7 +165,6 @@ const YouTubeTable = () => {
       "Comments",
       "Subscribers",
       "Published Date",
-      "Region",
       "Video Link",
       "Rating",
     ];
@@ -209,7 +208,6 @@ const YouTubeTable = () => {
             <th>Comments</th>
             <th>Subscribers</th>
             <th>Published Date</th>
-            <th>Region</th>
             <th>Video Link</th>
             <th>Rating</th>
           </tr>
@@ -226,7 +224,6 @@ const YouTubeTable = () => {
               <td>${v.comments}</td>
               <td>${v.subscribers}</td>
               <td>${new Date(v.publishedDate).toLocaleDateString()}</td>
-              <td>${v.regionCode}</td>
               <td>${v.link}</td>
               <td>${v.erBySubscribers}</td>
             </tr>
@@ -424,6 +421,7 @@ const YouTubeTable = () => {
                   padding: "8px 12px",
                 }}
               >
+                <option value="all">All</option>
                 <option value="long">Long</option>
                 <option value="short">Short</option>
               </select>
@@ -493,6 +491,7 @@ const YouTubeTable = () => {
                   padding: "8px 12px",
                 }}
               >
+                <option value="all">All</option>
                 {regions.map((code, idx) => (
                   <option key={idx} value={code}>
                     {code}
@@ -680,7 +679,8 @@ const YouTubeTable = () => {
             <table
               style={{
                 width: "100%",
-                borderCollapse: "collapse",
+                borderCollapse: "separate",
+                borderSpacing: "0",
                 tableLayout: "fixed",
               }}
             >
@@ -714,7 +714,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "15%",
+                      width: "18%",
                     }}
                   >
                     Video
@@ -728,7 +728,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "11%",
+                      width: "12%",
                     }}
                   >
                     Channel
@@ -742,7 +742,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "11%",
+                      width: "12%",
                     }}
                   >
                     Keyword
@@ -756,7 +756,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "10%",
+                      width: "8%",
                     }}
                   >
                     Views
@@ -770,7 +770,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "10%",
+                      width: "8%",
                     }}
                   >
                     Likes
@@ -784,7 +784,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "10%",
+                      width: "8%",
                     }}
                   >
                     Comments
@@ -798,7 +798,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "11%",
+                      width: "8%",
                     }}
                   >
                     Subscribers
@@ -816,20 +816,6 @@ const YouTubeTable = () => {
                     }}
                   >
                     Published
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "5%",
-                    }}
-                  >
-                    Region
                   </th>
                   <th
                     style={{
@@ -911,7 +897,9 @@ const YouTubeTable = () => {
                         padding: "12px",
                         verticalAlign: "middle",
                         textAlign: "center",
-                        minWidth: 0,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <input
@@ -932,7 +920,10 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        minWidth: 0,
+                        maxWidth: "0", 
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
@@ -940,7 +931,7 @@ const YouTubeTable = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "10px",
-                          minWidth: 0,
+                          maxWidth: "100%", 
                         }}
                       >
                         <img
@@ -956,7 +947,7 @@ const YouTubeTable = () => {
                           }}
                         />
                         <div
-                          style={{ minWidth: 0, flex: 1, overflow: "hidden" }}
+                          style={{ flex: 1, minWidth: 0, overflow: "hidden" }}
                         >
                           <div
                             style={{
@@ -995,7 +986,10 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        minWidth: 0,
+                        maxWidth: "0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
@@ -1003,7 +997,7 @@ const YouTubeTable = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "8px",
-                          minWidth: 0,
+                          maxWidth: "100%",
                         }}
                       >
                         <div
@@ -1030,7 +1024,7 @@ const YouTubeTable = () => {
                             whiteSpace: "nowrap",
                             fontSize: "0.85rem",
                             color: "#1a1a1a",
-                            minWidth: 0,
+                            flex: 1,
                           }}
                           title={v.channelName}
                         >
@@ -1042,7 +1036,10 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        minWidth: 0,
+                        maxWidth: "0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
@@ -1050,7 +1047,7 @@ const YouTubeTable = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "8px",
-                          minWidth: 0,
+                          maxWidth: "100%",
                         }}
                       >
                         <div
@@ -1077,7 +1074,7 @@ const YouTubeTable = () => {
                             whiteSpace: "nowrap",
                             fontSize: "0.85rem",
                             color: "#1a1a1a",
-                            minWidth: 0,
+                            flex: 1,
                           }}
                           title={v.query}
                         >
@@ -1089,7 +1086,10 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        minWidth: 0,
+                        maxWidth: "0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
@@ -1097,6 +1097,7 @@ const YouTubeTable = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "6px",
+                          maxWidth: "100%",
                         }}
                       >
                         <Eye
@@ -1108,6 +1109,9 @@ const YouTubeTable = () => {
                             fontSize: "0.8rem",
                             color: "#1a1a1a",
                             fontWeight: "500",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {Number(v.views).toLocaleString()}
@@ -1118,7 +1122,10 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        minWidth: 0,
+                         maxWidth: "0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
@@ -1126,6 +1133,7 @@ const YouTubeTable = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "6px",
+                          maxWidth: "100%",
                         }}
                       >
                         <ThumbsUp
@@ -1137,6 +1145,9 @@ const YouTubeTable = () => {
                             fontSize: "0.8rem",
                             color: "#1a1a1a",
                             fontWeight: "500",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {Number(v.likes).toLocaleString()}
@@ -1147,7 +1158,10 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        minWidth: 0,
+                         maxWidth: "0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
@@ -1155,6 +1169,7 @@ const YouTubeTable = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "6px",
+                          maxWidth: "100%",
                         }}
                       >
                         <MessageCircle
@@ -1166,6 +1181,9 @@ const YouTubeTable = () => {
                             fontSize: "0.8rem",
                             color: "#1a1a1a",
                             fontWeight: "500",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {Number(v.comments).toLocaleString()}
@@ -1176,7 +1194,10 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        minWidth: 0,
+                         maxWidth: "0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
@@ -1184,6 +1205,7 @@ const YouTubeTable = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "6px",
+                          maxWidth: "100%",
                         }}
                       >
                         <Users
@@ -1195,6 +1217,9 @@ const YouTubeTable = () => {
                             fontSize: "0.8rem",
                             color: "#1a1a1a",
                             fontWeight: "500",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {Number(v.subscribers).toLocaleString()}
@@ -1205,7 +1230,10 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        minWidth: 0,
+                         maxWidth: "0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <span
@@ -1226,30 +1254,10 @@ const YouTubeTable = () => {
                         padding: "12px",
                         verticalAlign: "middle",
                         textAlign: "center",
-                        minWidth: 0,
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "3px 8px",
-                          backgroundColor: "#e9ecef",
-                          color: "#495057",
-                          borderRadius: "12px",
-                          fontSize: "0.7rem",
-                          fontWeight: "500",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {v.regionCode}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        textAlign: "center",
-                        minWidth: 0,
+                         maxWidth: "0",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
@@ -1258,6 +1266,7 @@ const YouTubeTable = () => {
                           alignItems: "center",
                           justifyContent: "center",
                           gap: "0px",
+                          maxWidth: "100%",
                         }}
                       >
                         {[

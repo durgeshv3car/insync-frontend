@@ -43,7 +43,19 @@ export const topCountryBarChartOptions = (dailyReportsData = []) => {
         dataLabels: { position: "top" },
       },
     },
-    dataLabels: { enabled: false },
+    dataLabels: {
+      enabled: true,
+      offsetY: -30,
+      style: {
+        fontSize: '12px',
+        colors: ["#304758"]
+      },
+      formatter: function (val) {
+        if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+        if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+        return val;
+      }
+    },
     xaxis: {
       categories,
       axisTicks: { show: true },

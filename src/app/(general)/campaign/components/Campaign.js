@@ -86,7 +86,7 @@ const Campaign = () => {
       campaignData?.cpm?.toString().trim();
 
     if (!isValid) return;
-
+    setLoading(true);
     try {
       if (editingIndex !== null) {
         const id = campaignData._id || campaigns[editingIndex]?._id;
@@ -123,6 +123,8 @@ const Campaign = () => {
     } catch (err) {
       console.error("Error saving campaign:", err);
       closeModal();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,6 +162,14 @@ const Campaign = () => {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <h4>Processing...</h4>
+      </div>
+    );
+  }
 
   return (
     <div className="card">
@@ -329,7 +339,7 @@ const Campaign = () => {
             tabIndex={-1}
             style={{ display: "block" }}
           >
-            <div className="modal-dialog modal-lg">
+            <div className="modal-dialog modal-lg modal-dialog-centered">
               <div className="modal-content">
                 <form onSubmit={handleSave}>
                   <div className="modal-header">

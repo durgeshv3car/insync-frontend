@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "./styles.css";
+
+Chart.register(ChartDataLabels);
 import {
   getDailyReportsByFilter,
   getDailyReportsByRange,
@@ -13,6 +16,7 @@ import { createReportsDataDevice } from "@/services/device";
 import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
 import VisitorsChartVcr from "@/components/widgetsCharts/VistiorsChartVcr";
 import SiteOverviewChart from "@/components/widgetsCharts/SiteOverviewChart";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -34,9 +38,11 @@ export default function OverviewPage() {
   const [audienceId, setAudienceId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [count, setCount] = useState(0);
+  const [insertionOrderId, setInsertionOrderId] = useState("");
 
   // Global insertionOrderId - TODO: Make this dynamic later
-  const INSERTION_ORDER_ID = "1024667156";
+  const INSERTION_ORDER_ID = insertionOrderId;
 
   useEffect(() => {
     // Load initial values from localStorage
@@ -45,12 +51,14 @@ export default function OverviewPage() {
     const storedEnd = localStorage.getItem("endDate");
     const storedAudienceId = localStorage.getItem("audienceId");
     const storedCount = localStorage.getItem("count");
+    const storedInsertionId = localStorage.getItem("insertionId");
 
     if (storedRange) setDateRange(storedRange);
     if (storedStart) setStartDate(storedStart);
     if (storedEnd) setEndDate(storedEnd);
     if (storedAudienceId) setAudienceId(storedAudienceId);
     if (storedCount) setCount(parseInt(storedCount));
+    if (storedInsertionId) setInsertionOrderId(storedInsertionId);
 
     setIsInitialized(true);
 
@@ -62,6 +70,7 @@ export default function OverviewPage() {
       if (key === "startDate") setStartDate(newValue || "");
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
+      if (key === "insertionId") setInsertionOrderId(newValue || "");
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -70,7 +79,6 @@ export default function OverviewPage() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
-  const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -79,6 +87,8 @@ export default function OverviewPage() {
     localStorage.setItem("startDate", startDate);
     localStorage.setItem("endDate", endDate);
     localStorage.setItem("audienceId", audienceId);
+    localStorage.setItem("count", count);
+    localStorage.setItem("insertionId", insertionOrderId);
   }, [dateRange, startDate, endDate, audienceId, isInitialized]);
 
   const params = {
@@ -265,6 +275,13 @@ export default function OverviewPage() {
   const [topPerformers, setTopPerformers] = useState([]);
   const [goals, setGoals] = useState([]);
   const [tableType, setTableType] = useState("daily"); // 'daily' or 'monthly'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Reset page when data or table type changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [dailyReportsData, monthlyReportsData, tableType]);
 
   // Chart refs
   const performanceDailyChartRef = useRef(null);
@@ -396,6 +413,19 @@ export default function OverviewPage() {
                   return label;
                 },
               },
+            },
+            datalabels: {
+              display: 'auto',
+              align: 'top',
+              anchor: 'end',
+              formatter: (value, context) => {
+                if (context.dataset.yAxisID === "y1") {
+                  return value + "%";
+                }
+                return formatNumber(value);
+              },
+              font: { size: 10, weight: 'bold' },
+              color: (context) => context.dataset.borderColor,
             },
           },
           scales: {
@@ -540,6 +570,19 @@ export default function OverviewPage() {
                 },
               },
             },
+            datalabels: {
+              display: 'auto',
+              align: 'top',
+              anchor: 'end',
+              formatter: (value, context) => {
+                if (context.dataset.yAxisID === "y1") {
+                  return value + "%";
+                }
+                return formatNumber(value);
+              },
+              font: { size: 10, weight: 'bold' },
+              color: (context) => context.dataset.borderColor,
+            },
           },
           scales: {
             x: {
@@ -609,6 +652,11 @@ export default function OverviewPage() {
                 padding: 15,
               },
             },
+            datalabels: {
+              color: '#fff',
+              formatter: (value) => value + '%',
+              font: { weight: 'bold' }
+            }
           },
         },
       });
@@ -640,7 +688,15 @@ export default function OverviewPage() {
           indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: { 
+            legend: { display: false },
+            datalabels: {
+              align: 'end',
+              anchor: 'end',
+              color: '#6366f1',
+              font: { weight: 'bold' }
+            }
+          },
           scales: {
             x: {
               beginAtZero: true,
@@ -688,6 +744,11 @@ export default function OverviewPage() {
               position: "bottom",
               labels: { padding: 15 },
             },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: (val) => val > 0 ? val : ''
+            }
           },
         },
       });
@@ -737,7 +798,15 @@ export default function OverviewPage() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: { 
+            legend: { display: false },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              align: 'top',
+              anchor: 'center'
+            }
+          },
           scales: {
             y: {
               beginAtZero: true,
@@ -773,6 +842,11 @@ export default function OverviewPage() {
               position: "bottom",
               labels: { font: { size: 12 }, padding: 15 },
             },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: (val) => val + '%'
+            }
           },
         },
       });
@@ -820,6 +894,13 @@ export default function OverviewPage() {
               position: "bottom",
               labels: { padding: 15 },
             },
+            datalabels: {
+              align: 'end',
+              anchor: 'end',
+              color: (context) => context.dataset.backgroundColor,
+              font: { weight: 'bold', size: 10 },
+              formatter: formatNumber
+            }
           },
         },
       });
@@ -858,6 +939,11 @@ export default function OverviewPage() {
               position: "bottom",
               labels: { padding: 15 },
             },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold', size: 10 },
+              formatter: formatNumber
+            }
           },
         },
       });
@@ -871,8 +957,10 @@ export default function OverviewPage() {
   }, [dailyReportsData, monthlyReportsData]); // Re-render charts when data changes
 
   return (
+    <> <PageHeader></PageHeader>
     <main className="main-content">
       {/* Filters Section */}
+     
 
       {/* Real-time Stats */}
       <section className="realtime-section">
@@ -936,9 +1024,9 @@ export default function OverviewPage() {
             >
               Monthly
             </button>
-            <button className="btn btn-sm btn-ghost">
+            {/* <button className="btn btn-sm btn-ghost">
               <i className="fas fa-download" /> Export
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -962,99 +1050,124 @@ export default function OverviewPage() {
             {tableType === "daily" &&
             dailyReportsData &&
             Array.isArray(dailyReportsData) ? (
-              dailyReportsData.map((item, index) => {
-                const impressions = parseInt(item.impressions) || 0;
-                const completeViews = parseInt(item.completeViewsVideo) || 0;
-                const vcr =
-                  impressions > 0
-                    ? ((completeViews / impressions) * 100).toFixed(2)
-                    : "0.00";
+              (() => {
+                const sortedData = [...dailyReportsData].sort((a, b) => b.date.localeCompare(a.date));
+                const indexOfLastRow = currentPage * rowsPerPage;
+                const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+                const currentRows = sortedData.slice(indexOfFirstRow, indexOfLastRow);
 
-                return (
-                  <tr key={index}>
-                    <td>{item.date}</td>
-                    <td>{parseInt(item.impressions).toLocaleString()}</td>
-                    <td>{parseInt(item.clicks).toLocaleString()}</td>
-                    <td>{item.ctr}</td>
-                    <td>{vcr}%</td>
-                    <td>
-                      {parseInt(item.firstQuartileViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      {parseInt(item.midpointViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      {parseInt(item.thirdQuartileViewsVideo).toLocaleString()}
-                    </td>
+                return currentRows.map((item, index) => {
+                  const impressions = parseInt(item.impressions) || 0;
+                  const completeViews = parseInt(item.completeViewsVideo) || 0;
+                  const vcr =
+                    impressions > 0
+                      ? ((completeViews / impressions) * 100).toFixed(2)
+                      : "0.00";
 
-                    <td>
-                      {parseInt(item.completeViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      ₹
-                      {(
-                        parseFloat(item.mediaCostAdvertiserCurrency) * count
-                      ).toFixed(2)}
-                    </td>
+                  return (
+                    <tr key={index}>
+                      <td>{item.date}</td>
+                      <td>{parseInt(item.impressions).toLocaleString()}</td>
+                      <td>{parseInt(item.clicks).toLocaleString()}</td>
+                      <td>{item.ctr}</td>
+                      <td>{vcr}%</td>
+                      <td>
+                        {parseInt(
+                          item.firstQuartileViewsVideo,
+                        ).toLocaleString()}
+                      </td>
+                      <td>
+                        {parseInt(item.midpointViewsVideo).toLocaleString()}
+                      </td>
+                      <td>
+                        {parseInt(
+                          item.thirdQuartileViewsVideo,
+                        ).toLocaleString()}
+                      </td>
 
-                    <td>
-                      {item.uniqueReachImpressionReach !== "-"
-                        ? parseInt(
-                            item.uniqueReachImpressionReach,
-                          ).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
-                );
-              })
+                      <td>
+                        {parseInt(item.completeViewsVideo).toLocaleString()}
+                      </td>
+                      <td>
+                        ₹
+                        {(
+                          parseFloat(item.mediaCostAdvertiserCurrency) * count
+                        ).toFixed(2)}
+                      </td>
+
+                      <td>
+                        {item.uniqueReachImpressionReach !== "-"
+                          ? parseInt(
+                              item.uniqueReachImpressionReach,
+                            ).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  );
+                });
+              })()
             ) : tableType === "monthly" &&
               monthlyReportsData &&
               Array.isArray(monthlyReportsData) ? (
-              monthlyReportsData.map((item, index) => {
-                const impressions = parseInt(item.impressions) || 0;
-                const completeViews = parseInt(item.completeViewsVideo) || 0;
-                const vcr =
-                  impressions > 0
-                    ? ((completeViews / impressions) * 100).toFixed(2)
-                    : "0.00";
+              (() => {
+                const sortedData = [...monthlyReportsData].sort((a, b) => b.month.localeCompare(a.month));
+                const indexOfLastRow = currentPage * rowsPerPage;
+                const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+                const currentRows = sortedData.slice(indexOfFirstRow, indexOfLastRow);
 
-                return (
-                  <tr key={index}>
-                    <td>{item.month}</td>
-                    <td>{parseInt(item.impressions).toLocaleString()}</td>
-                    <td>{parseInt(item.clicks).toLocaleString()}</td>
-                    <td>{item.ctr}</td>
-                    <td>{vcr}%</td>
-                    <td>
-                      {parseInt(item.firstQuartileViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      {parseInt(item.midpointViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      {parseInt(item.thirdQuartileViewsVideo).toLocaleString()}
-                    </td>
+                return currentRows.map((item, index) => {
+                  const impressions = parseInt(item.impressions) || 0;
+                  const completeViews = parseInt(item.completeViewsVideo) || 0;
+                  const vcr =
+                    impressions > 0
+                      ? ((completeViews / impressions) * 100).toFixed(2)
+                      : "0.00";
 
-                    <td>
-                      {parseInt(item.completeViewsVideo).toLocaleString()}
-                    </td>
-                    <td>
-                      ₹{parseFloat(item.mediaCostAdvertiserCurrency).toFixed(2)}
-                    </td>
-                    <td>
-                      {item.uniqueReachImpressionReach !== "-"
-                        ? parseInt(
-                            item.uniqueReachImpressionReach,
-                          ).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
-                );
-              })
+                  return (
+                    <tr key={index}>
+                      <td>{item.month}</td>
+                      <td>{parseInt(item.impressions).toLocaleString()}</td>
+                      <td>{parseInt(item.clicks).toLocaleString()}</td>
+                      <td>{item.ctr}</td>
+                      <td>{vcr}%</td>
+                      <td>
+                        {parseInt(
+                          item.firstQuartileViewsVideo,
+                        ).toLocaleString()}
+                      </td>
+                      <td>
+                        {parseInt(item.midpointViewsVideo).toLocaleString()}
+                      </td>
+                      <td>
+                        {parseInt(
+                          item.thirdQuartileViewsVideo,
+                        ).toLocaleString()}
+                      </td>
+
+                      <td>
+                        {parseInt(item.completeViewsVideo).toLocaleString()}
+                      </td>
+                      <td>
+                        ₹
+                        {parseFloat(item.mediaCostAdvertiserCurrency).toFixed(
+                          2,
+                        )}
+                      </td>
+                      <td>
+                        {item.uniqueReachImpressionReach !== "-"
+                          ? parseInt(
+                              item.uniqueReachImpressionReach,
+                            ).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  );
+                });
+              })()
             ) : (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="11"
                   style={{
                     textAlign: "center",
                     padding: "2rem",
@@ -1071,8 +1184,81 @@ export default function OverviewPage() {
         </table>
       </div>
 
+      {/* Pagination UI */}
+      {(tableType === "daily" ? dailyReportsData : monthlyReportsData)?.length > 0 && (
+        <div className="pagination-wrapper">
+          <div className="rows-per-page">
+            <span>Rows per page:</span>
+            <select 
+              value={rowsPerPage} 
+              onChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="rows-select"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+
+          <div className="pagination-controls">
+            <span className="pagination-info">
+              Showing {((currentPage - 1) * rowsPerPage) + 1} to {Math.min(currentPage * rowsPerPage, (tableType === "daily" ? dailyReportsData : monthlyReportsData).length)} of {(tableType === "daily" ? dailyReportsData : monthlyReportsData).length}
+            </span>
+            <div className="pagination-buttons">
+              <button 
+                className="btn btn-sm btn-ghost" 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <i className="fas fa-chevron-left" />
+              </button>
+              
+              {/* Simple page numbers */}
+              {(() => {
+                const totalPages = Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage);
+                const pages = [];
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                
+                if (endPage - startPage < 4) {
+                  startPage = Math.max(1, endPage - 4);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(
+                    <button
+                      key={i}
+                      className={`btn btn-sm ${currentPage === i ? 'btn-primary' : 'btn-ghost'}`}
+                      onClick={() => setCurrentPage(i)}
+                    >
+                      {i}
+                    </button>
+                  );
+                }
+                return pages;
+              })()}
+
+              <button 
+                className="btn btn-sm btn-ghost" 
+                onClick={() => {
+                  const totalPages = Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage);
+                  setCurrentPage(p => Math.min(totalPages, p + 1));
+                }}
+                disabled={currentPage === Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage)}
+              >
+                <i className="fas fa-chevron-right" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Sections */}
     </main>
+    </>
   );
 }
 

@@ -83,26 +83,35 @@ export const topCountryBarChartOptions = (
     },
   ],
  
-colors: categories.map((g) => colorMap[g] || "#999"),
-plotOptions: {
-  bar: {
-    columnWidth: "30%",
-    borderRadius: 6,
-    distributed: true,
+  colors: categories.map((g) => colorMap[g] || "#999"),
+  dataLabels: {
+    enabled: true,
+    formatter: function (val, opts) {
+      if (activeMetric === "Impressions") {
+        if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+        if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+        return val;
+      }
+      return val.toFixed(2) + "%";
+    },
+    style: {
+      fontSize: '12px',
+      colors: ["#fff"]
+    }
   },
-},
   plotOptions: {
     bar: {
       columnWidth: "30%",
       borderRadius: 6,
       distributed: true,
+      dataLabels: {
+        position: 'top', // top, center, bottom
+      },
     },
   },
   xaxis: {
     categories,
   },
-
-  // ✅ ADD THIS BLOCK
   yaxis: {
     labels: {
       formatter: (val) => {

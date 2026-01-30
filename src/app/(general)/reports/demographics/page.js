@@ -2,13 +2,17 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "./styles.css";
+
+Chart.register(ChartDataLabels);
 import {
   createReportsDataAge,
   getDailyReportsByFilter,
   getDailyReportsByRange,
 } from "@/services/demographics";
 import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChartGender";
+import PageHeader from "@/components/shared/pageHeader/PageHeader";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -92,7 +96,7 @@ const groupDemographicsData = (data) => {
 };
 
 export default function OverviewPage() {
-  const [activeMetric, setActiveMetric] = useState("CTR");
+  const [activeMetric, setActiveMetric] = useState("Impressions");
   const [expandedAgeRow, setExpandedAgeRow] = useState(null);
   const [dateRange, setDateRange] = useState("");
   const [campaign, setCampaign] = useState("all");
@@ -102,21 +106,24 @@ export default function OverviewPage() {
   const [audienceId, setAudienceId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [insertionOrderId, setInsertionOrderId] = useState("");
 
   // Global insertionOrderId - TODO: Make this dynamic later
-  const INSERTION_ORDER_ID = "1024667156";
+  const INSERTION_ORDER_ID = insertionOrderId;
 
   useEffect(() => {
     // Load initial values from localStorage
     const storedRange = localStorage.getItem("selectedRange");
     const storedStart = localStorage.getItem("startDate");
     const storedEnd = localStorage.getItem("endDate");
+    const insertionOrderId = localStorage.getItem("insertionId");
     const storedAudienceId = localStorage.getItem("audienceId");
 
     if (storedRange) setDateRange(storedRange);
     if (storedStart) setStartDate(storedStart);
     if (storedEnd) setEndDate(storedEnd);
     if (storedAudienceId) setAudienceId(storedAudienceId);
+    if (insertionOrderId) setInsertionOrderId(insertionOrderId);
 
     setIsInitialized(true);
 
@@ -128,6 +135,7 @@ export default function OverviewPage() {
       if (key === "startDate") setStartDate(newValue || "");
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
+      if (key === "insertionId") setInsertionOrderId(newValue || "");
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -144,6 +152,7 @@ export default function OverviewPage() {
     localStorage.setItem("startDate", startDate);
     localStorage.setItem("endDate", endDate);
     localStorage.setItem("audienceId", audienceId);
+    localStorage.setItem("insertionId", insertionOrderId);
   }, [dateRange, startDate, endDate, audienceId, isInitialized]);
 
   const params = {
@@ -384,6 +393,13 @@ export default function OverviewPage() {
               callbacks: {
                 label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y.toFixed(2) + '%'}`
               }
+            },
+            datalabels: {
+              align: 'top',
+              anchor: 'center',
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v.toFixed(2) + '%'
             }
           },
           scales: { 
@@ -426,6 +442,13 @@ export default function OverviewPage() {
               callbacks: {
                 label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y + '%'}`
               }
+            },
+            datalabels: {
+              align: 'top',
+              anchor: 'center',
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%'
             }
           },
           scales: {
@@ -455,7 +478,18 @@ export default function OverviewPage() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: "bottom" } }
+          plugins: { 
+            legend: { position: "bottom" },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: (value, ctx) => {
+                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '';
+                return percentage;
+              }
+            }
+          }
         }
       });
     }
@@ -468,7 +502,9 @@ export default function OverviewPage() {
 // Re-render charts when data changes
 
   return (
+    <><PageHeader></PageHeader>
     <main className="main-content">
+      
       
 
       {/* Charts Section */}
@@ -500,7 +536,7 @@ export default function OverviewPage() {
           <ChartCard title="Age Level Performance" style={{ height: "420px !important" }}>
             <canvas ref={ageLevelChartRef} id="ageLevelChart" />
           </ChartCard>
-          <ChartCard title="Age Breakdown">
+          <ChartCard title="Age Breakdown (Impression Distribution)">
             <canvas ref={ageBreakdownChartRef} id="ageBreakdownChart" />
           </ChartCard>
         </div>
@@ -510,11 +546,11 @@ export default function OverviewPage() {
       <div className="data-table-card">
         <div className="table-header">
           <h3>Demographics Summary</h3>
-          <div className="table-actions">
+          {/* <div className="table-actions">
             <button className="btn btn-sm btn-ghost">
               <i className="fas fa-download" /> Export
             </button>
-          </div>
+          </div> */}
         </div>
 
         <table className="data-table">
@@ -596,6 +632,7 @@ export default function OverviewPage() {
 
       {/* Bottom Sections */}
     </main>
+    </>
   );
 }
 
