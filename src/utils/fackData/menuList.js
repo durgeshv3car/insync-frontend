@@ -70,7 +70,7 @@ export const menuList = [
   { id: 7, name: "Audience", path: "/audience", icon: "feather-layout" },
   {
     id: 8,
-    name: "CreateAccount",
+    name: "Create Account",
     path: `/authentication/register/creative`,
     icon: "feather-send",
   },
