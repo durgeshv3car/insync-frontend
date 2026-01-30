@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "./styles.css";
+
+Chart.register(ChartDataLabels);
 import {
   getDailyReportsByFilter,
   getDailyReportsByRange,
@@ -272,6 +275,13 @@ export default function OverviewPage() {
   const [topPerformers, setTopPerformers] = useState([]);
   const [goals, setGoals] = useState([]);
   const [tableType, setTableType] = useState("daily"); // 'daily' or 'monthly'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Reset page when data or table type changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [dailyReportsData, monthlyReportsData, tableType]);
 
   // Chart refs
   const performanceDailyChartRef = useRef(null);
@@ -403,6 +413,19 @@ export default function OverviewPage() {
                   return label;
                 },
               },
+            },
+            datalabels: {
+              display: 'auto',
+              align: 'top',
+              anchor: 'end',
+              formatter: (value, context) => {
+                if (context.dataset.yAxisID === "y1") {
+                  return value + "%";
+                }
+                return formatNumber(value);
+              },
+              font: { size: 10, weight: 'bold' },
+              color: (context) => context.dataset.borderColor,
             },
           },
           scales: {
@@ -547,6 +570,19 @@ export default function OverviewPage() {
                 },
               },
             },
+            datalabels: {
+              display: 'auto',
+              align: 'top',
+              anchor: 'end',
+              formatter: (value, context) => {
+                if (context.dataset.yAxisID === "y1") {
+                  return value + "%";
+                }
+                return formatNumber(value);
+              },
+              font: { size: 10, weight: 'bold' },
+              color: (context) => context.dataset.borderColor,
+            },
           },
           scales: {
             x: {
@@ -616,6 +652,11 @@ export default function OverviewPage() {
                 padding: 15,
               },
             },
+            datalabels: {
+              color: '#fff',
+              formatter: (value) => value + '%',
+              font: { weight: 'bold' }
+            }
           },
         },
       });
@@ -647,7 +688,15 @@ export default function OverviewPage() {
           indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: { 
+            legend: { display: false },
+            datalabels: {
+              align: 'end',
+              anchor: 'end',
+              color: '#6366f1',
+              font: { weight: 'bold' }
+            }
+          },
           scales: {
             x: {
               beginAtZero: true,
@@ -695,6 +744,11 @@ export default function OverviewPage() {
               position: "bottom",
               labels: { padding: 15 },
             },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: (val) => val > 0 ? val : ''
+            }
           },
         },
       });
@@ -744,7 +798,15 @@ export default function OverviewPage() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: { 
+            legend: { display: false },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              align: 'top',
+              anchor: 'center'
+            }
+          },
           scales: {
             y: {
               beginAtZero: true,
@@ -780,6 +842,11 @@ export default function OverviewPage() {
               position: "bottom",
               labels: { font: { size: 12 }, padding: 15 },
             },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: (val) => val + '%'
+            }
           },
         },
       });
@@ -827,6 +894,13 @@ export default function OverviewPage() {
               position: "bottom",
               labels: { padding: 15 },
             },
+            datalabels: {
+              align: 'end',
+              anchor: 'end',
+              color: (context) => context.dataset.backgroundColor,
+              font: { weight: 'bold', size: 10 },
+              formatter: formatNumber
+            }
           },
         },
       });
@@ -865,6 +939,11 @@ export default function OverviewPage() {
               position: "bottom",
               labels: { padding: 15 },
             },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold', size: 10 },
+              formatter: formatNumber
+            }
           },
         },
       });
@@ -971,9 +1050,13 @@ export default function OverviewPage() {
             {tableType === "daily" &&
             dailyReportsData &&
             Array.isArray(dailyReportsData) ? (
-              [...dailyReportsData]
-                .sort((a, b) => b.date.localeCompare(a.date))
-                .map((item, index) => {
+              (() => {
+                const sortedData = [...dailyReportsData].sort((a, b) => b.date.localeCompare(a.date));
+                const indexOfLastRow = currentPage * rowsPerPage;
+                const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+                const currentRows = sortedData.slice(indexOfFirstRow, indexOfLastRow);
+
+                return currentRows.map((item, index) => {
                   const impressions = parseInt(item.impressions) || 0;
                   const completeViews = parseInt(item.completeViewsVideo) || 0;
                   const vcr =
@@ -1021,13 +1104,18 @@ export default function OverviewPage() {
                       </td>
                     </tr>
                   );
-                })
+                });
+              })()
             ) : tableType === "monthly" &&
               monthlyReportsData &&
               Array.isArray(monthlyReportsData) ? (
-              [...monthlyReportsData]
-                .sort((a, b) => b.month.localeCompare(a.month))
-                .map((item, index) => {
+              (() => {
+                const sortedData = [...monthlyReportsData].sort((a, b) => b.month.localeCompare(a.month));
+                const indexOfLastRow = currentPage * rowsPerPage;
+                const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+                const currentRows = sortedData.slice(indexOfFirstRow, indexOfLastRow);
+
+                return currentRows.map((item, index) => {
                   const impressions = parseInt(item.impressions) || 0;
                   const completeViews = parseInt(item.completeViewsVideo) || 0;
                   const vcr =
@@ -1074,11 +1162,12 @@ export default function OverviewPage() {
                       </td>
                     </tr>
                   );
-                })
+                });
+              })()
             ) : (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="11"
                   style={{
                     textAlign: "center",
                     padding: "2rem",
@@ -1094,6 +1183,78 @@ export default function OverviewPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination UI */}
+      {(tableType === "daily" ? dailyReportsData : monthlyReportsData)?.length > 0 && (
+        <div className="pagination-wrapper">
+          <div className="rows-per-page">
+            <span>Rows per page:</span>
+            <select 
+              value={rowsPerPage} 
+              onChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="rows-select"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+
+          <div className="pagination-controls">
+            <span className="pagination-info">
+              Showing {((currentPage - 1) * rowsPerPage) + 1} to {Math.min(currentPage * rowsPerPage, (tableType === "daily" ? dailyReportsData : monthlyReportsData).length)} of {(tableType === "daily" ? dailyReportsData : monthlyReportsData).length}
+            </span>
+            <div className="pagination-buttons">
+              <button 
+                className="btn btn-sm btn-ghost" 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <i className="fas fa-chevron-left" />
+              </button>
+              
+              {/* Simple page numbers */}
+              {(() => {
+                const totalPages = Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage);
+                const pages = [];
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                
+                if (endPage - startPage < 4) {
+                  startPage = Math.max(1, endPage - 4);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(
+                    <button
+                      key={i}
+                      className={`btn btn-sm ${currentPage === i ? 'btn-primary' : 'btn-ghost'}`}
+                      onClick={() => setCurrentPage(i)}
+                    >
+                      {i}
+                    </button>
+                  );
+                }
+                return pages;
+              })()}
+
+              <button 
+                className="btn btn-sm btn-ghost" 
+                onClick={() => {
+                  const totalPages = Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage);
+                  setCurrentPage(p => Math.min(totalPages, p + 1));
+                }}
+                disabled={currentPage === Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage)}
+              >
+                <i className="fas fa-chevron-right" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Sections */}
     </main>

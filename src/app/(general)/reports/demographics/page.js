@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "./styles.css";
+
+Chart.register(ChartDataLabels);
 import {
   createReportsDataAge,
   getDailyReportsByFilter,
@@ -93,7 +96,7 @@ const groupDemographicsData = (data) => {
 };
 
 export default function OverviewPage() {
-  const [activeMetric, setActiveMetric] = useState("CTR");
+  const [activeMetric, setActiveMetric] = useState("Impressions");
   const [expandedAgeRow, setExpandedAgeRow] = useState(null);
   const [dateRange, setDateRange] = useState("");
   const [campaign, setCampaign] = useState("all");
@@ -390,6 +393,13 @@ export default function OverviewPage() {
               callbacks: {
                 label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y.toFixed(2) + '%'}`
               }
+            },
+            datalabels: {
+              align: 'top',
+              anchor: 'center',
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v.toFixed(2) + '%'
             }
           },
           scales: { 
@@ -432,6 +442,13 @@ export default function OverviewPage() {
               callbacks: {
                 label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y + '%'}`
               }
+            },
+            datalabels: {
+              align: 'top',
+              anchor: 'center',
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%'
             }
           },
           scales: {
@@ -461,7 +478,18 @@ export default function OverviewPage() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: "bottom" } }
+          plugins: { 
+            legend: { position: "bottom" },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' },
+              formatter: (value, ctx) => {
+                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '';
+                return percentage;
+              }
+            }
+          }
         }
       });
     }

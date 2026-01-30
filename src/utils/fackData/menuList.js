@@ -36,7 +36,7 @@ export const menuList = [
     dropdownMenu: [
       {
         id: 1,
-        name: "Dashboard",
+        name: "Overview",
         path: "/reports/overview",
         subdropdownMenu: false,
       },

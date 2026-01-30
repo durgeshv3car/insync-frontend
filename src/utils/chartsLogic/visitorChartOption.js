@@ -34,7 +34,31 @@ export const visitorChartOption = (dailyReportsData = []) => {
     chart: { height: 350, type: "area", toolbar: { show: false } },
     stroke: { curve: "smooth", width: 2 },
     colors: ["#3454D1", "#FFA21D"],
-    dataLabels: { enabled: false },
+    dataLabels: {
+      enabled: true,
+      formatter: function (val, { seriesIndex }) {
+        if (seriesIndex === 0) { // Impressions
+          if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+          if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+          return val;
+        }
+        return val.toFixed(2) + "%"; // CTR
+      },
+      offsetY: -5,
+      style: {
+        fontSize: '10px',
+        colors: ["#3454D1", "#FFA21D"]
+      },
+      background: {
+        enabled: true,
+        foreColor: '#fff',
+        padding: 4,
+        borderRadius: 2,
+        borderWidth: 1,
+        borderColor: '#fff',
+        opacity: 0.9,
+      },
+    },
     xaxis: {
       categories,
       axisBorder: { show: false },

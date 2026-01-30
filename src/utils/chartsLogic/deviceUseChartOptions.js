@@ -4,7 +4,12 @@ export const deviceUseChartOptions = () => {
             width: 270,
             type: "donut"
         },
-        dataLabels: { enabled: !1 },
+        dataLabels: {
+            enabled: true,
+            formatter: function (val, opts) {
+                return opts.w.config.series[opts.seriesIndex]
+            },
+        },
         stroke: { width: 0, lineCap: "round" },
         // labels: ["Desktop", "Tablet", "Mobile", "Others"],
         // series: [64, 25, 45, 15],

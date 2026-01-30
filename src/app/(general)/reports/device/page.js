@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "./styles.css";
+
+Chart.register(ChartDataLabels);
 import {
   createReportsDataDevice,
   getDailyReportsByFilter,
@@ -623,6 +626,13 @@ export default function OverviewPage() {
                   `Impressions: ${context.parsed.y.toLocaleString()}`,
               },
             },
+            datalabels: {
+              align: 'top',
+              anchor: 'end',
+              color: '#333',
+              font: { weight: 'bold' },
+              formatter: formatNumber
+            }
           },
           scales: {
             y: {
