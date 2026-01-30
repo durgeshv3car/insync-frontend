@@ -21,6 +21,7 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
     }
   };
 
+
   return (
     <div className="dropdown">
       {/* Dropdown Toggle Button */}

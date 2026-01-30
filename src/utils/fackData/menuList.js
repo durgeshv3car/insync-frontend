@@ -58,12 +58,12 @@ export const menuList = [
       //   path: "/reports/creative",
       //   subdropdownMenu: false,
       // },
-      {
-        id: 1,
-        name: "Category",
-        path: "/reports/category",
-        subdropdownMenu: false,
-      },
+      // {
+      //   id: 1,
+      //   name: "Category",
+      //   path: "/reports/category",
+      //   subdropdownMenu: false,
+      // },
     ],
   },
 

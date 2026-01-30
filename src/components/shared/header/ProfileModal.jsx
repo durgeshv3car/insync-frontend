@@ -28,10 +28,14 @@ const ProfileModal = () => {
 
 
 
-  const handleLogout = async () => {
-    await signOut({ redirect: false });
-    router.push("/");
-  };
+ const handleLogout = async () => {
+  localStorage.clear();
+  sessionStorage.clear();
+
+  await signOut({ redirect: false });
+  router.push("/");
+};
+
 
   return (
     <div className="dropdown nxl-h-item" style={{ marginLeft: "50px" }}>
