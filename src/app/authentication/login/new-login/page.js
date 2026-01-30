@@ -82,7 +82,7 @@ const Page = () => {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      router.push("/");
+      router.push("/reports/overview");
     }
   }, [status, session, router]);
 

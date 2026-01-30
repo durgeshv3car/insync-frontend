@@ -1,8 +1,25 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const Home = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/reports/overview");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "authenticated") {
+    return <div className="p-5">Redirecting to Reports...</div>;
+  }
+
   return (
     <>
       <PageHeader>

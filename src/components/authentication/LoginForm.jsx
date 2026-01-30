@@ -8,9 +8,11 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 
 const LoginForm = ({ registerPath, resetPath }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const formik = useFormik({
     initialValues: {
@@ -34,7 +36,7 @@ const LoginForm = ({ registerPath, resetPath }) => {
         });
         if (res.ok) {
           toast.success(res.message || "Login successful");
-          localStorage.clear();
+          router.push("/reports/overview");
         } else {
           toast.error(res.error || "Login failed");
         }
