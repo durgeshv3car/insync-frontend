@@ -15,6 +15,7 @@ import {
 import { getYouTubeResults } from "@/services/youtube";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
+import Image from "next/image";
 
 const YouTubeTable = () => {
   const [videos, setVideos] = useState([]);
@@ -62,7 +63,18 @@ const YouTubeTable = () => {
  if (loading) {
   return (
     <div className="d-flex justify-content-center align-items-center vh-100">
-      <h4>Processing...</h4>
+      {/* <h4>Processing...</h4> */}
+      {/* <Image src="/loader/loading.gif" alt="Loading..." width={100} height={100} /> */}
+
+        <div className="box">
+    <div className="bars">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
     </div>
   );
 }

@@ -405,3 +405,58 @@ html.minimenu .sidebar {
 .navbar-content {
   z-index: 10;
 }
+
+
+
+
+
+/* Loader box */
+.box {
+  display: grid;
+  place-items: center;
+  gap: 14px;
+  min-height: 185px;
+  padding: 25px 10px;
+  border-radius: 16px;
+}
+
+
+/* ===== Bars Wave ===== */
+.bars {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.bars span {
+  width: 8px;
+  height: 40px;
+  background: #000;
+  border-radius: 6px;
+  animation: wave 0.8s infinite ease-in-out;
+}
+
+.bars span:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.bars span:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.bars span:nth-child(4) {
+  animation-delay: 0.3s;
+}
+.bars span:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1.2);
+    opacity: 1;
+  }
+}

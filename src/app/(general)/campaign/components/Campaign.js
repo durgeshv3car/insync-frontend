@@ -10,6 +10,7 @@ import {
 import { createReportsDataAge } from "@/services/demographics";
 import { createReportsDataDevice } from "@/services/device";
 import { createReportsData } from "@/services/reports";
+import Image from "next/image";
 
 import React, { useState, useEffect } from "react";
 
@@ -166,7 +167,17 @@ const Campaign = () => {
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
-        <h4>Processing...</h4>
+        {/* <h4>Processing...</h4> */}
+        {/* <img src="/loader/loading.gif" alt="Loading..." width={100} height={100} /> */}
+           <div className="box">
+    <div className="bars">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
       </div>
     );
   }
