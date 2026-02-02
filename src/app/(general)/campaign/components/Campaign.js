@@ -1,5 +1,5 @@
 "use client";
-import { createReportsDataContext } from "@/services/context";
+// import { createReportsDataContext } from "@/services/context";
 import {
   addAudienceToUser,
   createAudience,
@@ -99,7 +99,7 @@ const Campaign = () => {
           await createReportsData(params);
           await createReportsDataDevice(params);
           await createReportsDataAge(params);
-          await createReportsDataContext(params);
+          // await createReportsDataContext(params);
         }
       } else {
         const res = await createAudience(campaignData);
@@ -112,7 +112,7 @@ const Campaign = () => {
           await createReportsData(params);
           await createReportsDataDevice(params);
           await createReportsDataAge(params);
-          await createReportsDataContext(params);
+          // await createReportsDataContext(params);
         }
       }
 

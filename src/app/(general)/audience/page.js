@@ -11,7 +11,11 @@ import {
   updateAudienceData,
 } from "@/services/audience";
 import { useRouter } from "next/navigation";
-import { getCampaignData, getCampaignList } from "@/services/campaignData";
+import {
+  DownloadCsvCampaignId,
+  getCampaignData,
+  getCampaignList,
+} from "@/services/campaignData";
 import CampaignTitleTable from "./components/CampaignTitleTable";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
@@ -46,8 +50,8 @@ function page() {
   };
   const handleDeleteAudience = async (audienceId) => {
     console.log("Delete Audience ID:", audienceId);
-    const res=await deleteAudienceData(audienceId);
-    fetchCampaignList()
+    const res = await deleteAudienceData(audienceId);
+    fetchCampaignList();
   };
   const handleEditAudience = async (data) => {
     console.log("Edit Audience ID:", data);
@@ -88,7 +92,7 @@ function page() {
     Router.push(
       `/Youtube-links?audienceId=${
         selectedAudience ? selectedAudience.value : ""
-      }`
+      }`,
     );
   };
 
@@ -117,54 +121,61 @@ function page() {
     }
   };
 
+  const handleCsvDownload = async () => {
+    const res = await DownloadCsvCampaignId(selectedAudience.value);
+  };
+
   return (
     <div>
-
-
-<PageHeader>
-      </PageHeader>
+      <PageHeader></PageHeader>
 
       <div className="container mt-3">
+        <div className="row mb-4">
+          <div className="col-md-3">
+            <Select
+              options={audienceOptions}
+              value={selectedAudience}
+              onChange={setSelectedAudience}
+              isClearable
+              isSearchable
+              placeholder="Search or select audience..."
+            />
+          </div>
 
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <Select
-            options={audienceOptions}
-            value={selectedAudience}
-            onChange={setSelectedAudience}
-            isClearable
-            isSearchable
-            placeholder="Search or select audience..."
-          />
-        </div>
-
-        <div className="col-md-9 d-flex justify-content-end gap-2">
-          {selectedAudience && (
-            <Button variant="primary" onClick={handleAddVideos}>
-              Add Videos
+          <div className="col-md-9 d-flex justify-content-end gap-2">
+            {campaignData.length > 0 && selectedAudience && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  handleCsvDownload();
+                }}
+              >
+                CSV Download
+              </Button>
+            )}
+            {selectedAudience && (
+              <Button variant="primary" onClick={handleAddVideos}>
+                Add Videos
+              </Button>
+            )}
+            <Button
+              variant="success"
+              onClick={() => setShowCreateCampaignModal(true)}
+            >
+              Create Audiences
             </Button>
-          )}
-          <Button
-            variant="success"
-            onClick={() => setShowCreateCampaignModal(true)}
-          >
-            Create Audiences
-          </Button>
+          </div>
         </div>
-      </div>
-      
-      {selectedAudience ? (
-        <CampaignTable campaignData={campaignData} />
-      ) : (
-        <CampaignTitleTable
-          campaignData={campaignList}
-          onEdit={handleEditAudience}
-          onDelete={handleDeleteAudience}
-        />
-      )}
 
-
-        
+        {selectedAudience ? (
+          <CampaignTable campaignData={campaignData} />
+        ) : (
+          <CampaignTitleTable
+            campaignData={campaignList}
+            onEdit={handleEditAudience}
+            onDelete={handleDeleteAudience}
+          />
+        )}
       </div>
 
       <Modal
