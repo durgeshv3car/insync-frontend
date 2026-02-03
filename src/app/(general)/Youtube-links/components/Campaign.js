@@ -71,7 +71,7 @@ const YouTubeTable = () => {
     videoType: "all",
     sortBy: "relevance",
     page: currentPage,
-    limit: 20,
+    limit: 50,
     csvResults: "all",
   });
 
@@ -82,7 +82,7 @@ const YouTubeTable = () => {
     setAudienceId(searchParams.get("audienceId"));
   }, [searchParams]);
 
-  const startIndex = (currentPage - 1) * 10;
+  const startIndex = (currentPage - 1) * filters.limit;
   const endIndex = startIndex + videos.length;
 
   const fetchVideos = async () => {
@@ -149,6 +149,7 @@ const YouTubeTable = () => {
     fetchVideos();
     fetchCsvResults();
     fetchRegions();
+    setSelectedVideos(new Set()); // Reset selection on filter/page change
   }, [filters]);
 
   const handlePageChange = (page) => {
@@ -243,33 +244,41 @@ const YouTubeTable = () => {
     link.click();
   };
 
-  const handleVideoSelect = (videoId) => {
+  const handleVideoSelect = (id) => {
+    if (!id) return;
     setSelectedVideos((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(videoId)) {
-        newSet.delete(videoId);
+      if (newSet.has(id)) {
+        newSet.delete(id);
       } else {
-        newSet.add(videoId);
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (!videos || videos.length === 0) return;
+    
+    const allIdsOnPage = videos.map(v => v._id).filter(Boolean);
+    if (allIdsOnPage.length === 0) return;
+
+    const areAllSelected = allIdsOnPage.every(id => selectedVideos.has(id));
+
+    setSelectedVideos(prev => {
+      const newSet = new Set(prev);
+      if (areAllSelected) {
+        allIdsOnPage.forEach(id => newSet.delete(id));
+      } else {
+        allIdsOnPage.forEach(id => newSet.add(id));
       }
       return newSet;
     });
   };
 
   useEffect(() => {
-    if (selectedVideos.size > 0) {
-      const selectedData = videos.filter((v) => selectedVideos.has(v.videoId));
-
-      // Only extract _id values
-      const youtubeIds = selectedData.map((v) => v._id);
-
-      const payload = {
-        audienceId,
-        youtubeQueryId: youtubeIds,
-      };
-
-      setSelectedData(youtubeIds);
-    }
-  }, [selectedVideos, videos]);
+    setSelectedData(Array.from(selectedVideos));
+  }, [selectedVideos]);
 
   return (
     <div
@@ -703,7 +712,16 @@ const YouTubeTable = () => {
                       width: "5%",
                     }}
                   >
-                    Select
+                    <input
+                      type="checkbox"
+                      checked={videos.length > 0 && videos.map(v => v._id).filter(Boolean).every(id => selectedVideos.has(id))}
+                      onChange={handleSelectAll}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        cursor: "pointer",
+                      }}
+                    />
                   </th>
                   <th
                     style={{
@@ -878,10 +896,11 @@ const YouTubeTable = () => {
                 {videos.map((v, idx) => (
                   <tr
                     key={v.videoId}
+                    onClick={() => handleVideoSelect(v._id)}
                     style={{
                       borderBottom: "1px solid #e9ecef",
                       transition: "background-color 0.2s ease",
-                      backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
+                      backgroundColor: selectedVideos.has(v._id) ? "#f0f4ff" : (idx % 2 === 0 ? "#ffffff" : "#f8f9fa"),
                       cursor: "pointer",
                     }}
                     onMouseEnter={(e) =>
@@ -904,10 +923,10 @@ const YouTubeTable = () => {
                     >
                       <input
                         type="checkbox"
-                        checked={selectedVideos.has(v.videoId)}
+                        checked={selectedVideos.has(v._id)}
                         onChange={(e) => {
                           e.stopPropagation();
-                          handleVideoSelect(v.videoId);
+                          handleVideoSelect(v._id);
                         }}
                         style={{
                           width: "18px",
@@ -1343,15 +1362,15 @@ const YouTubeTable = () => {
                     }}
                     value={filters.limit}
                     onChange={(e) => {
+                      const newLimit = Number(e.target.value);
+                      handlePageChange(1);
                       setFilters((prev) => ({
                         ...prev,
-                        limit: Number(e.target.value),
+                        limit: newLimit,
+                        page: 1,
                       }));
-                      setCurrentPage(1);
-                      fetchVideos();
                     }}
                   >
-                    <option value={20}>20</option>
                     <option value={50}>50</option>
                     <option value={100}>100</option>
                     <option value={200}>200</option>
@@ -1372,10 +1391,7 @@ const YouTubeTable = () => {
                     >
                       <button
                         className="page-link"
-                        onClick={() => {
-                          setCurrentPage(1);
-                          fetchVideos();
-                        }}
+                        onClick={() => handlePageChange(1)}
                         disabled={currentPage === 1}
                         title="First page"
                       >
@@ -1390,10 +1406,7 @@ const YouTubeTable = () => {
                     >
                       <button
                         className="page-link"
-                        onClick={() => {
-                          setCurrentPage((prev) => Math.max(prev - 1, 1));
-                          fetchVideos();
-                        }}
+                        onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                         disabled={currentPage === 1}
                         title="Previous page"
                       >

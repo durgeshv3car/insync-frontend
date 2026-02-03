@@ -25,7 +25,7 @@ const YouTubeTable = () => {
     regionCode: "IN",
     minViews: "",
     minSubscribers: "",
-    maxResults: "",
+    maxResults: "200",
     sortBy: "relevance",
     startDate: "",
     endDate: "",
@@ -48,6 +48,15 @@ const YouTubeTable = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Constraint for maxResults
+    if (name === "maxResults") {
+      const numericValue = value.replace(/\D/g, ""); // Remove non-digits
+      if (numericValue !== "" && Number(numericValue) > 1000) return;
+      setFilters((prev) => ({ ...prev, [name]: numericValue }));
+      return;
+    }
+    
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -290,14 +299,12 @@ const YouTubeTable = () => {
                   <BookOpen size={16} style={{ color: "#6c757d" }} />
                 </span>
                 <input
-                  type="number"
+                  type="text"
                   name="maxResults"
-                  value={filters.maxResults || "50"}
+                  value={filters.maxResults}
                   onChange={handleChange}
                   className="form-control"
-                  min="1"
-                  max="200"
-                  placeholder="50"
+                  placeholder="200"
                   style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px" }}
                 />
               </div>
