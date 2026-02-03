@@ -13,6 +13,9 @@ import {
 } from "@/services/demographics";
 import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChartGender";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import { getDailyReportsByFilterCity, getDailyReportsByRangeCity, createReportsDataCity } from "@/services/city";
+
+
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -87,12 +90,50 @@ const groupDemographicsData = (data) => {
           type: g.type,
           impressions: g.impressions,
           clicks: g.clicks,
+          completeViews: g.completeViews,
           ctr: parseFloat(gCtr.toFixed(3)),
           vcr: parseFloat(gVcr.toFixed(2))
         };
       })
     };
   });
+};
+
+const groupCityData = (data) => {
+  if (!data || !Array.isArray(data)) return [];
+
+  const cityGroups = data.reduce((acc, curr) => {
+    const city = curr.city || "Unknown";
+
+    if (!acc[city]) {
+      acc[city] = {
+        city,
+        impressions: 0,
+        clicks: 0,
+        completeViews: 0,
+      };
+    }
+
+    const group = acc[city];
+    const imps = parseInt(curr.impressions) || 0;
+    // CTR = (clicks / impressions) * 100 => clicks = (CTR / 100) * impressions
+    const ctrValue = parseFloat(curr.ctr?.replace("%", "")) || 0;
+    const clks = (ctrValue / 100) * imps;
+    const views = parseInt(curr.completeViewsVideo) || 0;
+
+    group.impressions += imps;
+    group.clicks += clks;
+    group.completeViews += views;
+
+    return acc;
+  }, {});
+
+  return Object.values(cityGroups)
+    .filter(city => city.city && city.city.toLowerCase() !== "unknown")
+    .map(city => ({
+      city: city.city,
+      impressions: city.impressions
+    }));
 };
 
 export default function OverviewPage() {
@@ -164,11 +205,13 @@ export default function OverviewPage() {
 
   // State for storing fetched data
   const [dailyReportsData, setDailyReportsData] = useState(null);
+  const [dailyReportsDataCity, setDailyReportsDataCity] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
   const sentReportsData = async () => {
     try {
       const res = await createReportsDataAge(params);
+      await createReportsDataCity(params);
       console.log("Reports data sent successfully:", res);
       return true;
     } catch (error) {
@@ -205,24 +248,34 @@ export default function OverviewPage() {
             startDate,
             endDate
           );
-          return { dailyData };
+          const dailyDataCity = await getDailyReportsByRangeCity(
+            INSERTION_ORDER_ID,
+            startDate,
+            endDate
+          );
+          return { dailyData,dailyDataCity };
         } else {
           const dailyData = await getDailyReportsByFilter(
             INSERTION_ORDER_ID,
             dateRange
           );
-          return { dailyData };
+           const dailyDataCity = await getDailyReportsByFilterCity(
+            INSERTION_ORDER_ID,
+            dateRange
+          );
+          return { dailyData,dailyDataCity };
         }
       };
 
       let dailyData = null;
-      let monthlyData = null;
+      let dailyDataCity = null;
       let fetchErrorOccurred = false;
 
       // 2. Try fetching existing data first
       try {
         const initialResult = await performFetch();
         dailyData = initialResult.dailyData;
+        dailyDataCity = initialResult.dailyDataCity;
       } catch (error) {
         console.log("Initial fetch failed or data not found:", error.message);
         fetchErrorOccurred = true;
@@ -231,19 +284,24 @@ export default function OverviewPage() {
       // 3. Check if we have data. If not (or if fetch failed), trigger sync and fetch again.
       const hasData =
         dailyData && Array.isArray(dailyData) && dailyData.length > 0;
+      
+      const hasCityData = dailyDataCity && Array.isArray(dailyDataCity) && dailyDataCity.length > 0;
 
-      if (!hasData || fetchErrorOccurred) {
+      if (!hasData || !hasCityData || fetchErrorOccurred) {
         console.log("Data not found in DB or error occurred, triggering sync...");
         setDailyReportsData(null);
+        setDailyReportsDataCity(null);
         const isSent = await sentReportsData();
 
         if (isSent) {
           console.log("Sync complete, fetching refreshed data...");
           const refreshed = await performFetch();
           dailyData = refreshed.dailyData;
+          dailyDataCity = refreshed.dailyDataCity;
         }
       }
       setDailyReportsData(dailyData);
+      setDailyReportsDataCity(dailyDataCity);
       console.log("Report data updated successfully.");
     } catch (error) {
       console.error("Error in fetchReportsData workflow:", error);
@@ -320,7 +378,8 @@ export default function OverviewPage() {
     fetchReportsData();
   }, [isInitialized, dateRange, startDate, endDate]); // Re-fetch when dates change
 
-  const aggregatedData = groupDemographicsData(dailyReportsData);
+  const aggregatedData = React.useMemo(() => groupDemographicsData(dailyReportsData), [dailyReportsData]);
+  const cityData = React.useMemo(() => groupCityData(dailyReportsDataCity), [dailyReportsDataCity]);
 
   const [campaigns, setCampaigns] = useState([]);
   const [activities, setActivities] = useState([]);
@@ -331,163 +390,237 @@ export default function OverviewPage() {
   const genderChartRef = useRef(null);
   const ageLevelChartRef = useRef(null);
   const ageBreakdownChartRef = useRef(null);
+  const cityChartRef = useRef(null);
 
   // Store chart instances
   const chartsRef = useRef({});
 
   useEffect(() => {
-    if (!aggregatedData || aggregatedData.length === 0) return;
-
     // Destroy existing charts
     Object.values(chartsRef.current).forEach(chart => chart?.destroy());
     chartsRef.current = {};
 
-    // Gender Level Performance (Bar)
-    if (genderChartRef.current) {
-      const ctx = genderChartRef.current.getContext("2d");
-      const metricKey = activeMetric.toLowerCase();
-      
-      // We need to sum metrics across ALL data to get true distribution
-      const genderTotals = {};
-      aggregatedData.forEach(age => {
-        age.gender.forEach(g => {
-          if (!genderTotals[g.type]) {
-            genderTotals[g.type] = {
-              impressions: 0,
-              clicks: 0,
-              completeViews: 0
-            };
-          }
-          genderTotals[g.type].impressions += g.impressions;
+    if (aggregatedData && aggregatedData.length > 0) {
+      // Gender Level Performance (Bar)
+      if (genderChartRef.current) {
+        const ctx = genderChartRef.current.getContext("2d");
+        const metricKey = activeMetric.toLowerCase();
+        
+        // We need to sum metrics across ALL data to get true distribution
+        const genderTotals = {};
+        aggregatedData.forEach(age => {
+          age.gender.forEach(g => {
+            if (!genderTotals[g.type]) {
+              genderTotals[g.type] = {
+                impressions: 0,
+                clicks: 0,
+                completeViews: 0
+              };
+            }
+            genderTotals[g.type].impressions += g.impressions;
           genderTotals[g.type].clicks += g.clicks;
-          genderTotals[g.type].completeViews += g.completeViews || (g.impressions * g.vcr / 100);
+          genderTotals[g.type].completeViews += g.completeViews || 0;
         });
-      });
+        });
 
-      const labels = ["Male", "Female", "Unknown"].filter(l => genderTotals[l]);
-      const dataValues = labels.map(l => {
-        const g = genderTotals[l];
-        if (activeMetric === "Impressions") return g.impressions;
-        if (activeMetric === "CTR") return g.impressions > 0 ? (g.clicks / g.impressions) * 100 : 0;
-        if (activeMetric === "VCR") return g.impressions > 0 ? (g.completeViews / g.impressions) * 100 : 0;
-        return 0;
-      });
+        const labels = ["Male", "Female", "Unknown"].filter(l => genderTotals[l]);
+        const dataValues = labels.map(l => {
+          const g = genderTotals[l];
+          if (activeMetric === "Impressions") return g.impressions;
+          if (activeMetric === "CTR") return g.impressions > 0 ? (g.clicks / g.impressions) * 100 : 0;
+          if (activeMetric === "VCR") return g.impressions > 0 ? (g.completeViews / g.impressions) * 100 : 0;
+          return 0;
+        });
 
-      chartsRef.current.gender = new Chart(ctx, {
-        type: "bar",
+        chartsRef.current.gender = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: activeMetric,
+              data: dataValues,
+              backgroundColor: labels.map(l => l === "Male" ? "#6366f1" : l === "Female" ? "#ec4899" : "#94a3b8"),
+              borderRadius: 6,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y.toFixed(2) + '%'}`
+                }
+              },
+              datalabels: {
+                align: 'top',
+                anchor: 'center',
+                color: '#fff',
+                font: { weight: 'bold' },
+                formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v.toFixed(2) + '%'
+              }
+            },
+            scales: { 
+              y: { 
+                beginAtZero: true, 
+                ticks: { 
+                  callback: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%' 
+                } 
+              } 
+            }
+          }
+        });
+      }
+
+      // Age Level Performance (Bar)
+      if (ageLevelChartRef.current) {
+        const ctx = ageLevelChartRef.current.getContext("2d");
+        const metricKey = activeMetric.toLowerCase();
+        
+        chartsRef.current.ageLevel = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: aggregatedData.map(d => d.range),
+            datasets: [
+              {
+                label: activeMetric,
+                data: aggregatedData.map(d => d[metricKey]),
+                backgroundColor: "rgba(99, 102, 241, 0.6)",
+                hoverBackgroundColor: "#6366f1",
+                borderRadius: 6,
+                barPercentage: 0.8,
+                categoryPercentage: 0.9,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y + '%'}`
+                }
+              },
+              datalabels: {
+                align: 'top',
+                anchor: 'center',
+                color: '#fff',
+                font: { weight: 'bold' },
+                formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%'
+              }
+            },
+            scales: {
+              y: { 
+                beginAtZero: true, 
+                ticks: { 
+                  callback: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%' 
+                } 
+              }
+            }
+          }
+        });
+      }
+
+      // Age Breakdown (Doughnut)
+      if (ageBreakdownChartRef.current) {
+        const ctx = ageBreakdownChartRef.current.getContext("2d");
+        chartsRef.current.ageBreakdown = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: aggregatedData.map(d => d.range),
+            datasets: [{
+              data: aggregatedData.map(d => d.impressions),
+              backgroundColor: ["#6366f1", "#ec4899", "#06b6d4", "#10b981", "#f59e0b", "#8b5cf6"]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+              padding: 5
+            },
+            cutout: '60%',
+            plugins: { 
+              legend: { 
+                position: "right",
+                labels: {
+                  boxWidth: 12,
+                  padding: 15,
+                  usePointStyle: true,
+                  font: { size: 11 }
+                }
+              },
+              datalabels: {
+                color: '#fff',
+                font: { weight: 'bold', size: 10 },
+                formatter: (value, ctx) => {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '';
+                  return percentage;
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // City Chart logic
+    if (cityChartRef.current && cityData && cityData.length > 0) {
+      const ctx = cityChartRef.current.getContext("2d");
+      
+      // Always sort by Impressions and take TOP 25
+      const processedCityData = [...cityData]
+        .sort((a, b) => b.impressions - a.impressions)
+        .slice(0, 25);
+
+      const labels = processedCityData.map(d => d.city);
+      const dataValues = processedCityData.map(d => d.impressions);
+
+      chartsRef.current.city = new Chart(ctx, {
+        type: 'bar',
         data: {
           labels: labels,
           datasets: [{
-            label: activeMetric,
+            label: "Impressions",
             data: dataValues,
-            backgroundColor: labels.map(l => l === "Male" ? "#6366f1" : l === "Female" ? "#ec4899" : "#94a3b8"),
-            borderRadius: 6,
+            backgroundColor: "#8b5cf6", // Indigo/Purple shade
+            borderRadius: 4,
+            barPercentage: 0.7,
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { 
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y.toFixed(2) + '%'}`
-              }
-            },
-            datalabels: {
-              align: 'top',
-              anchor: 'center',
-              color: '#fff',
-              font: { weight: 'bold' },
-              formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v.toFixed(2) + '%'
-            }
-          },
-          scales: { 
-            y: { 
-              beginAtZero: true, 
-              ticks: { 
-                callback: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%' 
-              } 
-            } 
-          }
-        }
-      });
-    }
-
-    // Age Level Performance (Bar)
-    if (ageLevelChartRef.current) {
-      const ctx = ageLevelChartRef.current.getContext("2d");
-      const metricKey = activeMetric.toLowerCase();
-      
-      chartsRef.current.ageLevel = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: aggregatedData.map(d => d.range),
-          datasets: [
-            {
-              label: activeMetric,
-              data: aggregatedData.map(d => d[metricKey]),
-              backgroundColor: "rgba(99, 102, 241, 0.6)",
-              hoverBackgroundColor: "#6366f1",
-              borderRadius: 6,
-            }
-          ]
-        },
-        options: {
+          indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y + '%'}`
-              }
-            },
-            datalabels: {
-              align: 'top',
-              anchor: 'center',
-              color: '#fff',
-              font: { weight: 'bold' },
-              formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%'
-            }
+             legend: { display: false },
+             tooltip: {
+                callbacks: {
+                    label: (ctx) => `Impressions: ${ctx.parsed.x.toLocaleString()}`
+                }
+             },
+             datalabels: {
+               anchor: 'end',
+               align: 'end',
+               color: '#64748b', // Slate-500
+               font: { weight: 'bold', size: 10 },
+               formatter: v => formatNumber(v)
+             }
           },
           scales: {
-            y: { 
-              beginAtZero: true, 
-              ticks: { 
-                callback: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%' 
-              } 
-            }
-          }
-        }
-      });
-    }
-
-    // Age Breakdown (Doughnut)
-    if (ageBreakdownChartRef.current) {
-      const ctx = ageBreakdownChartRef.current.getContext("2d");
-      chartsRef.current.ageBreakdown = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-          labels: aggregatedData.map(d => d.range),
-          datasets: [{
-            data: aggregatedData.map(d => d.impressions),
-            backgroundColor: ["#6366f1", "#ec4899", "#06b6d4", "#10b981", "#f59e0b", "#8b5cf6"]
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { 
-            legend: { position: "bottom" },
-            datalabels: {
-              color: '#fff',
-              font: { weight: 'bold' },
-              formatter: (value, ctx) => {
-                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '';
-                return percentage;
-              }
+            x: {
+              beginAtZero: true,
+              ticks: {
+                 callback: v => formatNumber(v)
+              },
+              grid: { display: false }
+            },
+            y: {
+              grid: { display: false }
             }
           }
         }
@@ -498,7 +631,7 @@ export default function OverviewPage() {
       Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
       chartsRef.current = {};
     };
-  }, [aggregatedData, activeMetric]); 
+  }, [aggregatedData, cityData, activeMetric]); 
 // Re-render charts when data changes
 
   return (
@@ -530,14 +663,21 @@ export default function OverviewPage() {
             </button>
           ))}
         </div>
-        <div className="charts-grid">
-          <TopCountryBarChart dailyReportsData={dailyReportsData} activeMetric={activeMetric} />
+        <div className="charts-grid top-charts">
+          <div className="chart-item equal-height">
+            <TopCountryBarChart dailyReportsData={dailyReportsData} activeMetric={activeMetric} />
+          </div>
          
-          <ChartCard title="Age Level Performance" style={{ height: "420px !important" }}>
+          <ChartCard title="Age Level Performance" className="equal-height">
             <canvas ref={ageLevelChartRef} id="ageLevelChart" />
           </ChartCard>
-          <ChartCard title="Age Breakdown (Impression Distribution)">
+
+          <ChartCard title="Age Breakdown (Impression Distribution)" className="equal-height">
             <canvas ref={ageBreakdownChartRef} id="ageBreakdownChart" />
+          </ChartCard>
+
+          <ChartCard title="Top 25 Cities Performance" className="equal-height">
+             <canvas ref={cityChartRef} id="cityChart" />
           </ChartCard>
         </div>
       </section>
@@ -670,7 +810,7 @@ function StatCard({ title, value, icon, change }) {
   );
 }
 
-function ChartCard({ title, children, subtitle, className = "" }) {
+function ChartCard({ title, children, subtitle, className = "", style = {} }) {
   return (
     <div className={`chart-card ${className}`}>
       <div className="chart-header">
@@ -682,7 +822,7 @@ function ChartCard({ title, children, subtitle, className = "" }) {
           <i className="fas fa-ellipsis-h" />
         </button>
       </div>
-      <div className="chart-container">{children}</div>
+      <div className="chart-container" style={Object.keys(style).length ? style : undefined}>{children}</div>
     </div>
   );
 }

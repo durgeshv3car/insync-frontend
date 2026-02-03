@@ -26,7 +26,7 @@ const TopCountryBarChart = ({dailyReportsData,activeMetric}) => {
                         type='bar'
                         options={chartOptions}
                         series={chartOptions.series}
-                        height={400}
+                        height={"100%"}
                     />
                 </div>
 
