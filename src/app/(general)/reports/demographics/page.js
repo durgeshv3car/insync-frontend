@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { downloadDashboardPDF } from "@/utils/pdfExport";
 import "./styles.css";
 
 Chart.register(ChartDataLabels);
@@ -394,6 +395,7 @@ export default function OverviewPage() {
 
   // Store chart instances
   const chartsRef = useRef({});
+  const mainContentRef = useRef(null);
 
   useEffect(() => {
     // Destroy existing charts
@@ -632,11 +634,18 @@ export default function OverviewPage() {
       chartsRef.current = {};
     };
   }, [aggregatedData, cityData, activeMetric]); 
-// Re-render charts when data changes
+
+  const downloadPDF = () => {
+    const dateText = dateRange === "CUSTOM" 
+      ? `${startDate} to ${endDate}`
+      : `${dateRange || 'All Time'}`;
+      
+    downloadDashboardPDF(mainContentRef, "Demographics_Report", dateText);
+  };
 
   return (
     <><PageHeader></PageHeader>
-    <main className="main-content">
+    <main className="main-content" ref={mainContentRef}>
       
       
 
@@ -686,11 +695,11 @@ export default function OverviewPage() {
       <div className="data-table-card">
         <div className="table-header">
           <h3>Demographics Summary</h3>
-          {/* <div className="table-actions">
-            <button className="btn btn-sm btn-ghost">
-              <i className="fas fa-download" /> Export
+          <div className="table-actions">
+            <button className="btn btn-sm btn-ghost" onClick={downloadPDF} title="Download Data as PDF">
+              <i className="fas fa-download" style={{ marginRight: "8px" }} /> Export PDF
             </button>
-          </div> */}
+          </div>
         </div>
 
         <table className="data-table">

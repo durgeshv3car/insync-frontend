@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { downloadDashboardPDF } from "@/utils/pdfExport";
 import "./styles.css";
 
 Chart.register(ChartDataLabels);
@@ -296,6 +297,15 @@ export default function OverviewPage() {
 
   // Store chart instances
   const chartsRef = useRef({});
+  const mainContentRef = useRef(null);
+
+  const downloadPDF = () => {
+    const dateText = dateRange === "CUSTOM" 
+      ? `${startDate} to ${endDate}`
+      : `${dateRange || 'All Time'}`;
+      
+    downloadDashboardPDF(mainContentRef, "Overview_Report", dateText);
+  };
 
   useEffect(() => {
     // Destroy existing charts if they exist
@@ -958,7 +968,7 @@ export default function OverviewPage() {
 
   return (
     <> <PageHeader></PageHeader>
-    <main className="main-content">
+    <main className="main-content" ref={mainContentRef}>
       {/* Filters Section */}
      
 
@@ -993,40 +1003,31 @@ export default function OverviewPage() {
         <div className="charts-grid">
           <VisitorsChart dailyReportsData={dailyReportsData} />
           <VisitorsChartVcr dailyReportsData={dailyReportsData} />
-          {/* 
-          <ChartCard title="Performance Daily">
-            <canvas ref={performanceDailyChartRef} id="performanceDailyChart" />
-          </ChartCard> */}
-          {/* <ChartCard title="Performance Monthly">
-            <canvas
-              ref={performanceMonthlyChartRef}
-              id="performanceMonthlyChart"
-            />
-          </ChartCard> */}
         </div>
       </section>
 
       {/* Table */}
       <div className="data-table-card">
         <div className="table-header">
-          <h3>Campaign Performance</h3>
+          <h3>Campaign Performance Summary</h3>
           <div className="table-actions">
-            <button
-              className={`btn btn-sm ${tableType === "daily" ? "btn-primary" : "btn-ghost"}`}
-              onClick={() => setTableType("daily")}
-            >
-              Daily
+            <div className="btn-group">
+              <button 
+                className={`btn btn-sm ${tableType === 'daily' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setTableType('daily')}
+              >
+                Daily
+              </button>
+              <button 
+                className={`btn btn-sm ${tableType === 'monthly' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setTableType('monthly')}
+              >
+                Monthly
+              </button>
+            </div>
+            <button className="btn btn-sm btn-ghost" onClick={downloadPDF} title="Download Data as PDF" style={{ marginLeft: "10px" }}>
+              <i className="fas fa-download" style={{ marginRight: "8px" }} /> Export PDF
             </button>
-            <button
-              className={`btn btn-sm ${tableType === "monthly" ? "btn-primary" : "btn-ghost"}`}
-              onClick={() => setTableType("monthly")}
-              style={{ marginLeft: "8px" }}
-            >
-              Monthly
-            </button>
-            {/* <button className="btn btn-sm btn-ghost">
-              <i className="fas fa-download" /> Export
-            </button> */}
           </div>
         </div>
 
