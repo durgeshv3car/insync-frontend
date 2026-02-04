@@ -8,8 +8,8 @@ import ClientLayout from "./ClientLayout";
 import "./globals.css";
 
 export const metadata = {
-  title: "Duralux | Dashboard",
-  description: "Duralux is a admin Dashboard create for multipurpose,",
+  title: "Automate | Dashboard",
+  description: "Automate is a admin Dashboard create for multipurpose,",
 };
 
 export default function RootLayout({ children }) {

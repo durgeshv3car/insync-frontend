@@ -6,8 +6,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export const metadata = {
-  title: "Duralux | Dashboard",
-  description: "Duralux is a admin Dashboard create for multipurpose,",
+  title: "Automate | Dashboard",
+  description: "Automate is a admin Dashboard create for multipurpose,",
 };
 
 export default function ClientLayout({ children }) {
