@@ -168,7 +168,7 @@ function page() {
         </div>
 
         {selectedAudience ? (
-          <CampaignTable campaignData={campaignData} />
+          <CampaignTable selectedAudience={selectedAudience} campaignData={campaignData} />
         ) : (
           <CampaignTitleTable
             campaignData={campaignList}

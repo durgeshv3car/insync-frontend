@@ -99,3 +99,23 @@ export const createCampaignData = async (audienceId, videos) => {
     throw error;
   }
 };
+
+export const deleteCampaignData = async (audienceId, videoId) => {
+  const token = await getToken();
+
+  const res = await axios.delete(
+    `${API_URL}/data/campaign`,
+    {
+      headers: {
+        Authorization: token,
+      },
+      data: {
+        campaignId: audienceId,
+        youtubeQueryId: videoId,
+      },
+    }
+  );
+
+  return res.data;
+};
+
