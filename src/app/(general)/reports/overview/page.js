@@ -56,7 +56,14 @@ export default function OverviewPage() {
     }
     return "";
   });
+  const [audienceName, setAudienceName] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("audienceName") || "";
+    }
+    return "";
+  });
   const [isCountReady, setIsCountReady] = useState(true);
+
 
   useEffect(() => {
     // Load initial values from localStorage
@@ -80,8 +87,10 @@ export default function OverviewPage() {
       if (key === "startDate") setStartDate(newValue || "");
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
+      if (key === "audienceName") setAudienceName(newValue || "");
       if (key === "insertionId") setInsertionOrderId(newValue || "");
       if (key === "count") setCount(newValue ? Number(newValue) : 0);
+
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -1020,7 +1029,7 @@ export default function OverviewPage() {
           <div className="realtime-card">
             <div className="realtime-header">
               <div className="realtime-title">
-                <h3>Performance Summary</h3>
+                <h3>Performance Summary ({audienceName})</h3>
               </div>
             </div>
 
@@ -1045,7 +1054,7 @@ export default function OverviewPage() {
 
         {/* Charts Section */}
         <section className="charts-section">
-          <h2 className="section-title">Analytics & Insights</h2>
+          <h2 className="section-title">Analytics & Insights ({audienceName})</h2>
           <div className="charts-grid">
             <VisitorsChart dailyReportsData={dailyReportsData} />
             <VisitorsChartVcr dailyReportsData={dailyReportsData} />
@@ -1055,7 +1064,8 @@ export default function OverviewPage() {
         {/* Table */}
         <div className="data-table-card">
           <div className="table-header">
-            <h3>Campaign Performance Summary</h3>
+            <h3>Campaign Performance Summary ({audienceName})</h3>
+
             <div className="table-actions">
               <div className="btn-group">
                 <button

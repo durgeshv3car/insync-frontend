@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic'
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 
-const TopCountryBarChart = ({dailyReportsData,activeMetric}) => {
+const TopCountryBarChart = ({dailyReportsData,activeMetric,audienceName}) => {
     const chartOptions = topCountryBarChartOptions(dailyReportsData,activeMetric)
     console.log("dailyReportsData in TopCountryBarChart:", activeMetric);
     const { refreshKey, isRemoved, isExpanded, handleRefresh, handleExpand, handleDelete } = useCardTitleActions();
@@ -19,7 +19,7 @@ const TopCountryBarChart = ({dailyReportsData,activeMetric}) => {
     return (
         <div>
             <div className={`card stretch stretch-full leads-overview ${isExpanded ? "card-expand" : ""} ${refreshKey ? "card-loading" : ""}`}>
-                <CardHeader title={"Gender Level Performance"} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
+                <CardHeader title={`Gender Level Performance (${audienceName})`} refresh={handleRefresh} remove={handleDelete} expanded={handleExpand} />
 
                 <div className="card-body custom-card-action p-0">
                     <ReactApexChart

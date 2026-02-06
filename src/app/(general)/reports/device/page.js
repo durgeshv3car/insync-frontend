@@ -69,6 +69,13 @@ export default function OverviewPage() {
     }
     return 0;
   });
+  const [audienceName, setAudienceName] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("audienceName") || "";
+    }
+    return "";
+  });
+
 
   const INSERTION_ORDER_ID = insertionOrderId;
 
@@ -95,8 +102,10 @@ export default function OverviewPage() {
       if (key === "startDate") setStartDate(newValue || "");
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
+      if (key === "audienceName") setAudienceName(newValue || "");
       if (key === "insertionId") setInsertionOrderId(newValue || "");
       if (key === "count") setCount(newValue ? Number(newValue) : 0);
+
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -705,14 +714,15 @@ export default function OverviewPage() {
         {/* Charts Section */}
         <section className="charts-section">
           <div className="grid">
-            <TopCountryBarChart dailyReportsData={dailyReportsData} />
+            <TopCountryBarChart dailyReportsData={dailyReportsData} audienceName={audienceName} />
           </div>
         </section>
 
         {/* Table */}
         <div className="data-table-card">
           <div className="table-header">
-            <h3>Device Performance Summary</h3>
+            <h3>Device Performance Summary ({audienceName})</h3>
+
             <div className="table-actions">
               <button
                 className="btn btn-sm btn-ghost"

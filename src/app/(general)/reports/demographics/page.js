@@ -173,6 +173,13 @@ export default function OverviewPage() {
     }
     return 0;
   });
+  const [audienceName, setAudienceName] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("audienceName") || "";
+    }
+    return "";
+  });
+
 
   // Global insertionOrderId - TODO: Make this dynamic later
   const INSERTION_ORDER_ID = insertionOrderId;
@@ -200,8 +207,10 @@ export default function OverviewPage() {
       if (key === "startDate") setStartDate(newValue || "");
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
+      if (key === "audienceName") setAudienceName(newValue || "");
       if (key === "insertionId") setInsertionOrderId(newValue || "");
       if (key === "count") setCount(newValue ? Number(newValue) : 0);
+
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -772,22 +781,23 @@ export default function OverviewPage() {
               <TopCountryBarChart
                 dailyReportsData={dailyReportsData}
                 activeMetric={activeMetric}
+                audienceName={audienceName}
               />
             </div>
 
-            <ChartCard title="Age Level Performance" className="equal-height">
+            <ChartCard title={`Age Level Performance (${audienceName})`} className="equal-height">
               <canvas ref={ageLevelChartRef} id="ageLevelChart" />
             </ChartCard>
 
             <ChartCard
-              title="Age Breakdown (Impression Distribution)"
+              title={`Age Breakdown (${audienceName})`}
               className="equal-height"
             >
               <canvas ref={ageBreakdownChartRef} id="ageBreakdownChart" />
             </ChartCard>
 
             <ChartCard
-              title="Top 25 Cities Performance"
+              title={`Top 25 Cities Performance (${audienceName})`}
               className="equal-height"
             >
               <canvas ref={cityChartRef} id="cityChart" />
@@ -798,7 +808,8 @@ export default function OverviewPage() {
         {/* Table */}
         <div className="data-table-card">
           <div className="table-header">
-            <h3>Demographics Summary</h3>
+            <h3>Demographics Performance Summary ({audienceName})</h3>
+
             <div className="table-actions">
               <button
                 className="btn btn-sm btn-ghost"

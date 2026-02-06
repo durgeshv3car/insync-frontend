@@ -27,9 +27,43 @@ const Menus = () => {
 
   // ✅ Filter by role
   const filteredMenu = useMemo(() => {
-    if (role === "super_admin") return menuList.filter((menu) => menu.name !== "preview");
-    return menuList.filter((menu) => ["dashboards", "Reports"].includes(menu.name));
-  }, [role]);
+    let baseMenu = [];
+    if (role === "super_admin") {
+      baseMenu = menuList.filter((menu) => menu.name !== "preview");
+    } else {
+      baseMenu = menuList.filter((menu) => ["dashboards", "Reports"].includes(menu.name));
+    }
+
+    // Role-based flattening for 'user' role
+    if (role === "user") {
+      const flattened = [];
+      const iconMap = {
+        "Overview": "feather-pie-chart",
+        "Device": "feather-smartphone",
+        "Demographics": "feather-users"
+      };
+
+      baseMenu.forEach((menu) => {
+        if (menu.name === "Reports" && menu.dropdownMenu) {
+          // Promote children to parents
+          menu.dropdownMenu.forEach((sub) => {
+            flattened.push({
+              ...sub,
+              icon: iconMap[sub.name] || "feather-bar-chart-2", // Map specific icon or fallback
+              id: `report-${sub.name.toLowerCase()}` // Ensure unique ID
+            });
+          });
+        } else {
+          flattened.push(menu);
+        }
+      });
+      return flattened;
+    }
+
+
+    return baseMenu;
+  }, [role, menuList]);
+
 
   const handleMainMenu = (name) => {
     setOpenDropdown((prev) => (prev === name ? null : name));
