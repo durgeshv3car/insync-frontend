@@ -31,17 +31,6 @@ const Menus = () => {
     return menuList.filter((menu) => ["dashboards", "Reports"].includes(menu.name));
   }, [role]);
 
-  // ✅ Auto open dropdown when child is active and close when not
-  useEffect(() => {
-    let activeDropdown = null;
-    filteredMenu.forEach((menu) => {
-      if (menu.dropdownMenu?.some((d) => isActive(d.path))) {
-        activeDropdown = menu.name;
-      }
-    });
-    setOpenDropdown(activeDropdown);
-  }, [pathName, filteredMenu]);
-
   const handleMainMenu = (name) => {
     setOpenDropdown((prev) => (prev === name ? null : name));
   };
@@ -60,7 +49,10 @@ const Menus = () => {
               key={id}
               className={`nxl-item ${isActive(path) ? "active" : ""}`}
             >
-              <Link href={path} className="nxl-link">
+              <Link
+                href={path}
+                className={`nxl-link ${isActive(path) ? "active" : ""}`}
+              >
                 <span className="nxl-micon">{getIcon(icon)}</span>
                 <span className="nxl-mtext">{name}</span>
               </Link>
@@ -69,19 +61,21 @@ const Menus = () => {
         }
 
         // ✅ DROPDOWN MENU (Reports)
-        const isParentActive =
-          dropdownMenu.some((d) => isActive(d.path));
+        const isParentActive = dropdownMenu.some((d) => isActive(d.path));
+        const isOpen = openDropdown === name;
 
         return (
           <li
             key={id}
-            className={`nxl-item nxl-hasmenu ${
-              isParentActive ? "active nxl-trigger" : ""
+            className={`nxl-item nxl-hasmenu ${isOpen ? "nxl-trigger" : ""} ${
+              isParentActive && !isOpen ? "active" : ""
             }`}
           >
-          <a
+            <a
               href="#"
-              className="nxl-link"
+              className={`nxl-link ${
+                isParentActive && !isOpen ? "active" : ""
+              }`}
               onClick={(e) => {
                 e.preventDefault();
                 handleMainMenu(name);
@@ -96,21 +90,19 @@ const Menus = () => {
 
             <ul
               className={`nxl-submenu ${
-                openDropdown === name
-                  ? "nxl-menu-visible"
-                  : "nxl-menu-hidden"
+                isOpen ? "nxl-menu-visible" : "nxl-menu-hidden"
               }`}
             >
               {dropdownMenu.map(({ id, name, path }) => (
                 <li
-                  key={id}
-                  className={`nxl-item ${
-                    isActive(path) ? "active" : ""
-                  }`}
+                  key={path || id}
+                  className={`nxl-item ${isActive(path) ? "active" : ""}`}
                 >
                   <Link
                     href={path}
-                    className="nxl-link text-capitalize"
+                    className={`nxl-link text-capitalize ${
+                      isActive(path) ? "active" : ""
+                    }`}
                   >
                     {name}
                   </Link>

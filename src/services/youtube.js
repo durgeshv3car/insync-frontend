@@ -188,3 +188,25 @@ export const getcsvResults = async (filters) => {
   }
 
 }
+
+export const getLatestQueryResults = async () => {
+  try {
+    const token = await getToken();
+
+    const res = await axios.get(`${API_URL}/latest-query`, {
+      headers: {
+        Authorization: token,
+      },
+    });
+
+    return res.data.query;
+
+  } catch (error) {
+    console.error(
+      "Error fetching latest query:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+

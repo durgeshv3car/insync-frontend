@@ -17,6 +17,109 @@ import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 import Image from "next/image";
 
+const AILoader = () => {
+  const [progress, setProgress] = useState(0);
+  const [statusIndex, setStatusIndex] = useState(0);
+  
+  const statuses = [
+    "Initializing AI engine...",
+    "Analyzing search patterns...",
+    "Fetching viral keywords...",
+    "Filtering high-potential videos...",
+    "Optimizing data presentation...",
+    "Finalizing results..."
+  ];
+
+  useEffect(() => {
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 98) return prev;
+        // Faster at start, slower at end
+        const increment = prev < 30 ? 2 : prev < 70 ? 1 : 0.5;
+        return Math.min(prev + increment, 98);
+      });
+    }, 100);
+
+    const statusInterval = setInterval(() => {
+      setStatusIndex((prev) => (prev + 1) % statuses.length);
+    }, 2000);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(statusInterval);
+    };
+  }, []);
+
+  return (
+    <div className="d-flex flex-column justify-content-center align-items-center vh-100" style={{ background: "#f8f9fa" }}>
+      <div style={{ width: "100%", maxWidth: "450px", padding: "40px", textAlign: "center" }}>
+        {/* Animated AI Brain Icon */}
+        <div style={{ marginBottom: "30px", position: "relative" }}>
+           <div className="ai-loader-pulse" style={{
+             width: "80px",
+             height: "80px",
+             borderRadius: "20px",
+             background: "linear-gradient(135deg, #031035 0%, #081947 100%)",
+             display: "flex",
+             alignItems: "center",
+             justifyContent: "center",
+             margin: "0 auto",
+             boxShadow: "0 10px 25px rgba(3, 16, 53, 0.2)"
+           }}>
+             <Search color="white" size={32} />
+           </div>
+        </div>
+
+        <h4 style={{ fontWeight: "700", color: "#031035", marginBottom: "10px" }}>
+          AI Search in Progress
+        </h4>
+        <p style={{ color: "#64748b", fontSize: "0.95rem", marginBottom: "25px", height: "1.5rem" }}>
+          {statuses[statusIndex]}
+        </p>
+
+        {/* Progress Bar Container */}
+        <div style={{
+          width: "100%",
+          height: "10px",
+          backgroundColor: "#e9ecef",
+          borderRadius: "10px",
+          overflow: "hidden",
+          marginBottom: "15px",
+          position: "relative"
+        }}>
+          {/* Progress Bar Fill */}
+          <div style={{
+            width: `${progress}%`,
+            height: "100%",
+            background: "linear-gradient(90deg, #031035, #081947)",
+            borderRadius: "10px",
+            transition: "width 0.3s ease-out",
+            position: "relative"
+          }}>
+            {/* Shimmer effect */}
+            <div className="ai-loader-shimmer" style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)"
+            }} />
+          </div>
+        </div>
+
+        <div className="d-flex justify-content-between" style={{ fontSize: "0.85rem", fontWeight: "600", color: "#6c757d" }}>
+          <span>{Math.round(progress)}% Complete</span>
+          <span>Please wait...</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+
 const YouTubeTable = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,24 +172,12 @@ const YouTubeTable = () => {
     return Number(num).toLocaleString();
   };
 
- if (loading) {
-  return (
-    <div className="d-flex justify-content-center align-items-center vh-100">
-      {/* <h4>Processing...</h4> */}
-      {/* <Image src="/loader/loading.gif" alt="Loading..." width={100} height={100} /> */}
 
-        <div className="box">
-    <div className="bars">
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
-  </div>
-    </div>
-  );
+
+ if (loading) {
+  return <AILoader />;
 }
+
 
 
   return (
@@ -125,7 +216,7 @@ const YouTubeTable = () => {
                 letterSpacing: "0.5px",
               }}
             >
-              Youtube Channel video Search 
+              Youtube Video Search 
             </h6>
           </div>
 

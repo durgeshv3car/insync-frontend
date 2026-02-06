@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import { downloadDashboardPDF } from "@/utils/pdfExport";
 import "./styles.css";
 
@@ -14,9 +14,12 @@ import {
 } from "@/services/demographics";
 import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChartGender";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
-import { getDailyReportsByFilterCity, getDailyReportsByRangeCity, createReportsDataCity } from "@/services/city";
-
-
+import {
+  getDailyReportsByFilterCity,
+  getDailyReportsByRangeCity,
+  createReportsDataCity,
+  downloadAllDailyCityCSV,
+} from "@/services/city";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -43,7 +46,8 @@ const groupDemographicsData = (data) => {
         impressions: 0,
         clicks: 0,
         completeViews: 0,
-        genderMap: {}
+        mediaCost: 0,
+        genderMap: {},
       };
     }
 
@@ -51,17 +55,20 @@ const groupDemographicsData = (data) => {
     const imps = parseInt(curr.impressions) || 0;
     const clks = parseInt(curr.clicks) || 0;
     const views = parseInt(curr.completeViewsVideo) || 0;
+    const cost = parseFloat(curr.mediaCostAdvertiserCurrency) || 0;
 
     aGroup.impressions += imps;
     aGroup.clicks += clks;
     aGroup.completeViews += views;
+    aGroup.mediaCost += cost;
 
     if (!aGroup.genderMap[gender]) {
       aGroup.genderMap[gender] = {
         type: gender,
         impressions: 0,
         clicks: 0,
-        completeViews: 0
+        completeViews: 0,
+        mediaCost: 0,
       };
     }
 
@@ -69,33 +76,38 @@ const groupDemographicsData = (data) => {
     gGroup.impressions += imps;
     gGroup.clicks += clks;
     gGroup.completeViews += views;
+    gGroup.mediaCost += cost;
 
     return acc;
   }, {});
 
   // Convert map to array and calculate rates
-  return Object.values(ageGroups).map(age => {
+  return Object.values(ageGroups).map((age) => {
     const ctr = age.impressions > 0 ? (age.clicks / age.impressions) * 100 : 0;
-    const vcr = age.impressions > 0 ? (age.completeViews / age.impressions) * 100 : 0;
+    const vcr =
+      age.impressions > 0 ? (age.completeViews / age.impressions) * 100 : 0;
 
     return {
       range: age.range,
       impressions: age.impressions,
       clicks: age.clicks,
+      mediaCost: age.mediaCost,
       ctr: parseFloat(ctr.toFixed(3)),
       vcr: parseFloat(vcr.toFixed(2)),
-      gender: Object.values(age.genderMap).map(g => {
+      gender: Object.values(age.genderMap).map((g) => {
         const gCtr = g.impressions > 0 ? (g.clicks / g.impressions) * 100 : 0;
-        const gVcr = g.impressions > 0 ? (g.completeViews / g.impressions) * 100 : 0;
+        const gVcr =
+          g.impressions > 0 ? (g.completeViews / g.impressions) * 100 : 0;
         return {
           type: g.type,
           impressions: g.impressions,
           clicks: g.clicks,
           completeViews: g.completeViews,
+          mediaCost: g.mediaCost,
           ctr: parseFloat(gCtr.toFixed(3)),
-          vcr: parseFloat(gVcr.toFixed(2))
+          vcr: parseFloat(gVcr.toFixed(2)),
         };
-      })
+      }),
     };
   });
 };
@@ -130,10 +142,10 @@ const groupCityData = (data) => {
   }, {});
 
   return Object.values(cityGroups)
-    .filter(city => city.city && city.city.toLowerCase() !== "unknown")
-    .map(city => ({
+    .filter((city) => city.city && city.city.toLowerCase() !== "unknown")
+    .map((city) => ({
       city: city.city,
-      impressions: city.impressions
+      impressions: city.impressions,
     }));
 };
 
@@ -148,7 +160,19 @@ export default function OverviewPage() {
   const [audienceId, setAudienceId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
-  const [insertionOrderId, setInsertionOrderId] = useState("");
+  const [insertionOrderId, setInsertionOrderId] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("insertionId") || "";
+    }
+    return "";
+  });
+  const [count, setCount] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedCount = localStorage.getItem("count");
+      return storedCount ? Number(storedCount) : 0;
+    }
+    return 0;
+  });
 
   // Global insertionOrderId - TODO: Make this dynamic later
   const INSERTION_ORDER_ID = insertionOrderId;
@@ -165,7 +189,6 @@ export default function OverviewPage() {
     if (storedStart) setStartDate(storedStart);
     if (storedEnd) setEndDate(storedEnd);
     if (storedAudienceId) setAudienceId(storedAudienceId);
-    if (insertionOrderId) setInsertionOrderId(insertionOrderId);
 
     setIsInitialized(true);
 
@@ -178,6 +201,7 @@ export default function OverviewPage() {
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
       if (key === "insertionId") setInsertionOrderId(newValue || "");
+      if (key === "count") setCount(newValue ? Number(newValue) : 0);
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -194,8 +218,17 @@ export default function OverviewPage() {
     localStorage.setItem("startDate", startDate);
     localStorage.setItem("endDate", endDate);
     localStorage.setItem("audienceId", audienceId);
+    localStorage.setItem("count", count);
     localStorage.setItem("insertionId", insertionOrderId);
-  }, [dateRange, startDate, endDate, audienceId, isInitialized]);
+  }, [
+    dateRange,
+    startDate,
+    endDate,
+    audienceId,
+    isInitialized,
+    count,
+    insertionOrderId,
+  ]);
 
   const params = {
     audienceId: audienceId,
@@ -225,7 +258,7 @@ export default function OverviewPage() {
     // Validation: Check if dateRange is selected
     if (!dateRange) {
       console.log(
-        "Date range is not selected. Please select a date range to fetch data."
+        "Date range is not selected. Please select a date range to fetch data.",
       );
       return;
     }
@@ -233,7 +266,7 @@ export default function OverviewPage() {
     // Validation: If dateRange is CUSTOM, both startDate and endDate must be selected
     if (dateRange === "CUSTOM" && (!startDate || !endDate)) {
       console.log(
-        "Custom date range selected. Please select both start and end dates."
+        "Custom date range selected. Please select both start and end dates.",
       );
       return;
     }
@@ -247,24 +280,24 @@ export default function OverviewPage() {
           const dailyData = await getDailyReportsByRange(
             INSERTION_ORDER_ID,
             startDate,
-            endDate
+            endDate,
           );
           const dailyDataCity = await getDailyReportsByRangeCity(
             INSERTION_ORDER_ID,
             startDate,
-            endDate
+            endDate,
           );
-          return { dailyData,dailyDataCity };
+          return { dailyData, dailyDataCity };
         } else {
           const dailyData = await getDailyReportsByFilter(
             INSERTION_ORDER_ID,
-            dateRange
+            dateRange,
           );
-           const dailyDataCity = await getDailyReportsByFilterCity(
+          const dailyDataCity = await getDailyReportsByFilterCity(
             INSERTION_ORDER_ID,
-            dateRange
+            dateRange,
           );
-          return { dailyData,dailyDataCity };
+          return { dailyData, dailyDataCity };
         }
       };
 
@@ -285,11 +318,16 @@ export default function OverviewPage() {
       // 3. Check if we have data. If not (or if fetch failed), trigger sync and fetch again.
       const hasData =
         dailyData && Array.isArray(dailyData) && dailyData.length > 0;
-      
-      const hasCityData = dailyDataCity && Array.isArray(dailyDataCity) && dailyDataCity.length > 0;
+
+      const hasCityData =
+        dailyDataCity &&
+        Array.isArray(dailyDataCity) &&
+        dailyDataCity.length > 0;
 
       if (!hasData || !hasCityData || fetchErrorOccurred) {
-        console.log("Data not found in DB or error occurred, triggering sync...");
+        console.log(
+          "Data not found in DB or error occurred, triggering sync...",
+        );
         setDailyReportsData(null);
         setDailyReportsDataCity(null);
         const isSent = await sentReportsData();
@@ -345,7 +383,7 @@ export default function OverviewPage() {
         acc.completeViews += parseInt(curr.completeViewsVideo) || 0;
         return acc;
       },
-      { impressions: 0, clicks: 0, completeViews: 0 }
+      { impressions: 0, clicks: 0, completeViews: 0 },
     );
 
     const ctr =
@@ -377,10 +415,16 @@ export default function OverviewPage() {
     if (!isInitialized) return; // Wait until localStorage is loaded
 
     fetchReportsData();
-  }, [isInitialized, dateRange, startDate, endDate]); // Re-fetch when dates change
+  }, [isInitialized, dateRange, startDate, endDate, insertionOrderId]); // Re-fetch when dates or audience change
 
-  const aggregatedData = React.useMemo(() => groupDemographicsData(dailyReportsData), [dailyReportsData]);
-  const cityData = React.useMemo(() => groupCityData(dailyReportsDataCity), [dailyReportsDataCity]);
+  const aggregatedData = React.useMemo(
+    () => groupDemographicsData(dailyReportsData),
+    [dailyReportsData],
+  );
+  const cityData = React.useMemo(
+    () => groupCityData(dailyReportsDataCity),
+    [dailyReportsDataCity],
+  );
 
   const [campaigns, setCampaigns] = useState([]);
   const [activities, setActivities] = useState([]);
@@ -399,7 +443,7 @@ export default function OverviewPage() {
 
   useEffect(() => {
     // Destroy existing charts
-    Object.values(chartsRef.current).forEach(chart => chart?.destroy());
+    Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
     chartsRef.current = {};
 
     if (aggregatedData && aggregatedData.length > 0) {
@@ -407,30 +451,36 @@ export default function OverviewPage() {
       if (genderChartRef.current) {
         const ctx = genderChartRef.current.getContext("2d");
         const metricKey = activeMetric.toLowerCase();
-        
+
         // We need to sum metrics across ALL data to get true distribution
         const genderTotals = {};
-        aggregatedData.forEach(age => {
-          age.gender.forEach(g => {
+        aggregatedData.forEach((age) => {
+          age.gender.forEach((g) => {
             if (!genderTotals[g.type]) {
               genderTotals[g.type] = {
                 impressions: 0,
                 clicks: 0,
-                completeViews: 0
+                completeViews: 0,
               };
             }
             genderTotals[g.type].impressions += g.impressions;
-          genderTotals[g.type].clicks += g.clicks;
-          genderTotals[g.type].completeViews += g.completeViews || 0;
-        });
+            genderTotals[g.type].clicks += g.clicks;
+            genderTotals[g.type].completeViews += g.completeViews || 0;
+          });
         });
 
-        const labels = ["Male", "Female", "Unknown"].filter(l => genderTotals[l]);
-        const dataValues = labels.map(l => {
+        const labels = ["Male", "Female", "Unknown"].filter(
+          (l) => genderTotals[l],
+        );
+        const dataValues = labels.map((l) => {
           const g = genderTotals[l];
           if (activeMetric === "Impressions") return g.impressions;
-          if (activeMetric === "CTR") return g.impressions > 0 ? (g.clicks / g.impressions) * 100 : 0;
-          if (activeMetric === "VCR") return g.impressions > 0 ? (g.completeViews / g.impressions) * 100 : 0;
+          if (activeMetric === "CTR")
+            return g.impressions > 0 ? (g.clicks / g.impressions) * 100 : 0;
+          if (activeMetric === "VCR")
+            return g.impressions > 0
+              ? (g.completeViews / g.impressions) * 100
+              : 0;
           return 0;
         });
 
@@ -438,63 +488,20 @@ export default function OverviewPage() {
           type: "bar",
           data: {
             labels: labels,
-            datasets: [{
-              label: activeMetric,
-              data: dataValues,
-              backgroundColor: labels.map(l => l === "Male" ? "#6366f1" : l === "Female" ? "#ec4899" : "#94a3b8"),
-              borderRadius: 6,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y.toFixed(2) + '%'}`
-                }
-              },
-              datalabels: {
-                align: 'top',
-                anchor: 'center',
-                color: '#fff',
-                font: { weight: 'bold' },
-                formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v.toFixed(2) + '%'
-              }
-            },
-            scales: { 
-              y: { 
-                beginAtZero: true, 
-                ticks: { 
-                  callback: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%' 
-                } 
-              } 
-            }
-          }
-        });
-      }
-
-      // Age Level Performance (Bar)
-      if (ageLevelChartRef.current) {
-        const ctx = ageLevelChartRef.current.getContext("2d");
-        const metricKey = activeMetric.toLowerCase();
-        
-        chartsRef.current.ageLevel = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: aggregatedData.map(d => d.range),
             datasets: [
               {
                 label: activeMetric,
-                data: aggregatedData.map(d => d[metricKey]),
-                backgroundColor: "rgba(99, 102, 241, 0.6)",
-                hoverBackgroundColor: "#6366f1",
+                data: dataValues,
+                backgroundColor: labels.map((l) =>
+                  l === "Male"
+                    ? "#6366f1"
+                    : l === "Female"
+                      ? "#ec4899"
+                      : "#94a3b8",
+                ),
                 borderRadius: 6,
-                barPercentage: 0.8,
-                categoryPercentage: 0.9,
-              }
-            ]
+              },
+            ],
           },
           options: {
             responsive: true,
@@ -503,26 +510,85 @@ export default function OverviewPage() {
               legend: { display: false },
               tooltip: {
                 callbacks: {
-                  label: (ctx) => `${activeMetric}: ${activeMetric === 'Impressions' ? ctx.parsed.y.toLocaleString() : ctx.parsed.y + '%'}`
-                }
+                  label: (ctx) =>
+                    `${activeMetric}: ${activeMetric === "Impressions" ? ctx.parsed.y.toLocaleString() : ctx.parsed.y.toFixed(2) + "%"}`,
+                },
               },
               datalabels: {
-                align: 'top',
-                anchor: 'center',
-                color: '#fff',
-                font: { weight: 'bold' },
-                formatter: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%'
-              }
+                align: "top",
+                anchor: "center",
+                color: "#fff",
+                font: { weight: "bold" },
+                formatter: (v) =>
+                  activeMetric === "Impressions"
+                    ? formatNumber(v)
+                    : v.toFixed(2) + "%",
+              },
             },
             scales: {
-              y: { 
-                beginAtZero: true, 
-                ticks: { 
-                  callback: v => activeMetric === 'Impressions' ? formatNumber(v) : v + '%' 
-                } 
-              }
-            }
-          }
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: (v) =>
+                    activeMetric === "Impressions" ? formatNumber(v) : v + "%",
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // Age Level Performance (Bar)
+      if (ageLevelChartRef.current) {
+        const ctx = ageLevelChartRef.current.getContext("2d");
+        const metricKey = activeMetric.toLowerCase();
+
+        chartsRef.current.ageLevel = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: aggregatedData.map((d) => d.range),
+            datasets: [
+              {
+                label: activeMetric,
+                data: aggregatedData.map((d) => d[metricKey]),
+                backgroundColor: "rgba(99, 102, 241, 0.6)",
+                hoverBackgroundColor: "#6366f1",
+                borderRadius: 6,
+                barPercentage: 0.8,
+                categoryPercentage: 0.9,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) =>
+                    `${activeMetric}: ${activeMetric === "Impressions" ? ctx.parsed.y.toLocaleString() : ctx.parsed.y + "%"}`,
+                },
+              },
+              datalabels: {
+                align: "top",
+                anchor: "center",
+                color: "#fff",
+                font: { weight: "bold" },
+                formatter: (v) =>
+                  activeMetric === "Impressions" ? formatNumber(v) : v + "%",
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: (v) =>
+                    activeMetric === "Impressions" ? formatNumber(v) : v + "%",
+                },
+              },
+            },
+          },
         });
       }
 
@@ -532,40 +598,50 @@ export default function OverviewPage() {
         chartsRef.current.ageBreakdown = new Chart(ctx, {
           type: "doughnut",
           data: {
-            labels: aggregatedData.map(d => d.range),
-            datasets: [{
-              data: aggregatedData.map(d => d.impressions),
-              backgroundColor: ["#6366f1", "#ec4899", "#06b6d4", "#10b981", "#f59e0b", "#8b5cf6"]
-            }]
+            labels: aggregatedData.map((d) => d.range),
+            datasets: [
+              {
+                data: aggregatedData.map((d) => d.impressions),
+                backgroundColor: [
+                  "#6366f1",
+                  "#ec4899",
+                  "#06b6d4",
+                  "#10b981",
+                  "#f59e0b",
+                  "#8b5cf6",
+                ],
+              },
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-              padding: 5
+              padding: 5,
             },
-            cutout: '60%',
-            plugins: { 
-              legend: { 
+            cutout: "60%",
+            plugins: {
+              legend: {
                 position: "right",
                 labels: {
                   boxWidth: 12,
                   padding: 15,
                   usePointStyle: true,
-                  font: { size: 11 }
-                }
+                  font: { size: 11 },
+                },
               },
               datalabels: {
-                color: '#fff',
-                font: { weight: 'bold', size: 10 },
+                color: "#fff",
+                font: { weight: "bold", size: 10 },
                 formatter: (value, ctx) => {
                   const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '';
+                  const percentage =
+                    total > 0 ? ((value / total) * 100).toFixed(1) + "%" : "";
                   return percentage;
-                }
-              }
-            }
-          }
+                },
+              },
+            },
+          },
         });
       }
     }
@@ -573,59 +649,61 @@ export default function OverviewPage() {
     // City Chart logic
     if (cityChartRef.current && cityData && cityData.length > 0) {
       const ctx = cityChartRef.current.getContext("2d");
-      
+
       // Always sort by Impressions and take TOP 25
       const processedCityData = [...cityData]
         .sort((a, b) => b.impressions - a.impressions)
         .slice(0, 25);
 
-      const labels = processedCityData.map(d => d.city);
-      const dataValues = processedCityData.map(d => d.impressions);
+      const labels = processedCityData.map((d) => d.city);
+      const dataValues = processedCityData.map((d) => d.impressions);
 
       chartsRef.current.city = new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels: labels,
-          datasets: [{
-            label: "Impressions",
-            data: dataValues,
-            backgroundColor: "#8b5cf6", // Indigo/Purple shade
-            borderRadius: 4,
-            barPercentage: 0.7,
-          }]
+          datasets: [
+            {
+              label: "Impressions",
+              data: dataValues,
+              backgroundColor: "#8b5cf6", // Indigo/Purple shade
+              borderRadius: 4,
+              barPercentage: 0.7,
+            },
+          ],
         },
         options: {
-          indexAxis: 'y',
+          indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-             legend: { display: false },
-             tooltip: {
-                callbacks: {
-                    label: (ctx) => `Impressions: ${ctx.parsed.x.toLocaleString()}`
-                }
-             },
-             datalabels: {
-               anchor: 'end',
-               align: 'end',
-               color: '#64748b', // Slate-500
-               font: { weight: 'bold', size: 10 },
-               formatter: v => formatNumber(v)
-             }
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `Impressions: ${ctx.parsed.x.toLocaleString()}`,
+              },
+            },
+            datalabels: {
+              anchor: "end",
+              align: "end",
+              color: "#64748b", // Slate-500
+              font: { weight: "bold", size: 10 },
+              formatter: (v) => formatNumber(v),
+            },
           },
           scales: {
             x: {
               beginAtZero: true,
               ticks: {
-                 callback: v => formatNumber(v)
+                callback: (v) => formatNumber(v),
               },
-              grid: { display: false }
+              grid: { display: false },
             },
             y: {
-              grid: { display: false }
-            }
-          }
-        }
+              grid: { display: false },
+            },
+          },
+        },
       });
     }
 
@@ -633,154 +711,236 @@ export default function OverviewPage() {
       Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
       chartsRef.current = {};
     };
-  }, [aggregatedData, cityData, activeMetric]); 
+  }, [aggregatedData, cityData, activeMetric]);
 
   const downloadPDF = () => {
-    const dateText = dateRange === "CUSTOM" 
-      ? `${startDate} to ${endDate}`
-      : `${dateRange || 'All Time'}`;
-      
+    const dateText =
+      dateRange === "CUSTOM"
+        ? `${startDate} to ${endDate}`
+        : `${dateRange || "All Time"}`;
+
     downloadDashboardPDF(mainContentRef, "Demographics_Report", dateText);
   };
 
   return (
-    <><PageHeader></PageHeader>
-    <main className="main-content" ref={mainContentRef}>
-      
-      
+    <>
+      <PageHeader>
+        {" "}
+        <button
+          className="btn btn-sm btn-ghost"
+          onClick={downloadPDF}
+          title="Download Data as PDF"
+        >
+          <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
+          Export PDF
+        </button>
+      </PageHeader>
+      <main className="main-content" ref={mainContentRef}>
+        {/* Charts Section */}
+        <section className="charts-section">
+          <div
+            className="metric-toggle-bar"
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "0.5rem",
+              marginBottom: "1.5rem",
+            }}
+          >
+            {["Impressions", "VCR", "CTR"].map((m) => (
+              <button
+                key={m}
+                className={`btn btn-sm ${activeMetric === m ? "btn-primary" : "btn-ghost"}`}
+                onClick={() => setActiveMetric(m)}
+                style={{
+                  borderRadius: "2rem",
+                  padding: "0.5rem 1.25rem",
+                  background: activeMetric === m ? "var(--primary)" : "white",
+                  color: activeMetric === m ? "white" : "var(--text)",
+                  border: "1px solid var(--border)",
+                  fontWeight: "600",
+                  fontSize: "0.85rem",
+                  transition: "all 0.2s",
+                }}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+          <div className="charts-grid top-charts">
+            <div className="chart-item equal-height">
+              <TopCountryBarChart
+                dailyReportsData={dailyReportsData}
+                activeMetric={activeMetric}
+              />
+            </div>
 
-      {/* Charts Section */}
-      <section className="charts-section">
-        <div className="metric-toggle-bar" style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: "1.5rem" }}>
-          {["Impressions", "VCR", "CTR"].map((m) => (
-            <button
-              key={m}
-              className={`btn btn-sm ${activeMetric === m ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setActiveMetric(m)}
-              style={{ 
-                borderRadius: "2rem", 
-                padding: "0.5rem 1.25rem",
-                background: activeMetric === m ? "var(--primary)" : "white",
-                color: activeMetric === m ? "white" : "var(--text)",
-                border: "1px solid var(--border)",
-                fontWeight: "600",
-                fontSize: "0.85rem",
-                transition: "all 0.2s"
-              }}
+            <ChartCard title="Age Level Performance" className="equal-height">
+              <canvas ref={ageLevelChartRef} id="ageLevelChart" />
+            </ChartCard>
+
+            <ChartCard
+              title="Age Breakdown (Impression Distribution)"
+              className="equal-height"
             >
-              {m}
-            </button>
-          ))}
-        </div>
-        <div className="charts-grid top-charts">
-          <div className="chart-item equal-height">
-            <TopCountryBarChart dailyReportsData={dailyReportsData} activeMetric={activeMetric} />
+              <canvas ref={ageBreakdownChartRef} id="ageBreakdownChart" />
+            </ChartCard>
+
+            <ChartCard
+              title="Top 25 Cities Performance"
+              className="equal-height"
+            >
+              <canvas ref={cityChartRef} id="cityChart" />
+            </ChartCard>
           </div>
-         
-          <ChartCard title="Age Level Performance" className="equal-height">
-            <canvas ref={ageLevelChartRef} id="ageLevelChart" />
-          </ChartCard>
+        </section>
 
-          <ChartCard title="Age Breakdown (Impression Distribution)" className="equal-height">
-            <canvas ref={ageBreakdownChartRef} id="ageBreakdownChart" />
-          </ChartCard>
-
-          <ChartCard title="Top 25 Cities Performance" className="equal-height">
-             <canvas ref={cityChartRef} id="cityChart" />
-          </ChartCard>
-        </div>
-      </section>
-
-      {/* Table */}
-      <div className="data-table-card">
-        <div className="table-header">
-          <h3>Demographics Summary</h3>
-          <div className="table-actions">
-            <button className="btn btn-sm btn-ghost" onClick={downloadPDF} title="Download Data as PDF">
-              <i className="fas fa-download" style={{ marginRight: "8px" }} /> Export PDF
-            </button>
+        {/* Table */}
+        <div className="data-table-card">
+          <div className="table-header">
+            <h3>Demographics Summary</h3>
+            <div className="table-actions">
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={() => downloadAllDailyCityCSV(insertionOrderId)}
+                title="Download Data as PDF"
+              >
+                <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
+                Export City CSV
+              </button>
+            </div>
           </div>
-        </div>
 
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th style={{ width: "50px" }}></th>
-              <th>Age Range</th>
-              <th>Impressions</th>
-              <th>CTR</th>
-              <th>VCR</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(aggregatedData && aggregatedData.length > 0) ? (
-              aggregatedData.map((item, index) => {
-                const metricKey = activeMetric.toLowerCase();
-                const isExpanded = expandedAgeRow === index;
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{ width: "50px" }}></th>
+                <th>Age Range</th>
+                <th>Impressions</th>
+                <th>CTR</th>
+                <th>VCR</th>
+                <th>Media Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aggregatedData && aggregatedData.length > 0 ? (
+                aggregatedData.map((item, index) => {
+                  const metricKey = activeMetric.toLowerCase();
+                  const isExpanded = expandedAgeRow === index;
 
-                return (
-                  <React.Fragment key={index}>
-                    <tr 
-                      onClick={() => setExpandedAgeRow(isExpanded ? null : index)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td>
-                        <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'}`} style={{ color: "var(--text-light)" }} />
-                      </td>
-                      <td>
-                        <div className="campaign-icon active" style={{ borderRadius: "50%", width: "1.5rem", height: "1.5rem" }} />
-                        {item.range}
-                      </td>
-                      <td>{item.impressions.toLocaleString()}</td>
-                      <td>{item.ctr}%</td>
-                      <td>{item.vcr}%</td>
-                    </tr>
-                    {isExpanded && (
-                      <tr className="expanded-row" style={{ background: "#f8fafc" }}>
-                        <td colSpan="5" style={{ padding: "0 1rem 1rem 3rem" }}>
-                          <div className="gender-breakdown-container" style={{ paddingTop: "1rem" }}>
-                            <table className="data-table" style={{ background: "white", borderRadius: "0.5rem", border: "1px solid var(--border)" }}>
-                              <thead style={{ background: "#f1f5f9" }}>
-                                <tr>
-                                  <th>Gender</th>
-                                  <th>Impressions</th>
-                                  <th>CTR</th>
-                                  <th>VCR</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {item.gender.map((g, gIdx) => (
-                                  <tr key={gIdx}>
-                                    <td>{g.type}</td>
-                                    <td>{g.impressions.toLocaleString()}</td>
-                                    <td>{g.ctr}%</td>
-                                    <td>{g.vcr}%</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                  return (
+                    <React.Fragment key={index}>
+                      <tr
+                        onClick={() =>
+                          setExpandedAgeRow(isExpanded ? null : index)
+                        }
+                        style={{ cursor: "pointer" }}
+                      >
+                        <td>
+                          <i
+                            className={`fas fa-chevron-${isExpanded ? "down" : "right"}`}
+                            style={{ color: "var(--text-light)" }}
+                          />
+                        </td>
+                        <td>
+                          <div
+                            className="campaign-icon active"
+                            style={{
+                              borderRadius: "50%",
+                              width: "1.5rem",
+                              height: "1.5rem",
+                            }}
+                          />
+                          {item.range}
+                        </td>
+                        <td>{item.impressions.toLocaleString()}</td>
+                        <td>{item.ctr}%</td>
+                        <td>{item.vcr}%</td>
+                        <td>
+                          ₹
+                          {(
+                            (Number(item?.mediaCost) || 0) *
+                            (Number(count) || 0)
+                          ).toFixed(2)}
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="5" style={{ textAlign: "center", padding: "2rem", color: "#6b7280" }}>
-                  {isLoadingData
-                    ? "Loading data..."
-                    : "No demographics data available. Please select a different date range to get data."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                      {isExpanded && (
+                        <tr
+                          className="expanded-row"
+                          style={{ background: "#f8fafc" }}
+                        >
+                          <td
+                            colSpan="6"
+                            style={{ padding: "0 1rem 1rem 3rem" }}
+                          >
+                            <div
+                              className="gender-breakdown-container"
+                              style={{ paddingTop: "1rem" }}
+                            >
+                              <table
+                                className="data-table"
+                                style={{
+                                  background: "white",
+                                  borderRadius: "0.5rem",
+                                  border: "1px solid var(--border)",
+                                }}
+                              >
+                                <thead style={{ background: "#f1f5f9" }}>
+                                  <tr>
+                                    <th>Gender</th>
+                                    <th>Impressions</th>
+                                    <th>CTR</th>
+                                    <th>VCR</th>
+                                    <th>Media Cost</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {item.gender.map((g, gIdx) => (
+                                    <tr key={gIdx}>
+                                      <td>{g.type}</td>
+                                      <td>{g.impressions.toLocaleString()}</td>
+                                      <td>{g.ctr}%</td>
+                                      <td>{g.vcr}%</td>
+                                      <td>
+                                        ₹
+                                        {(
+                                          (Number(g?.mediaCost) || 0) *
+                                          (Number(count) || 0)
+                                        ).toFixed(2)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan="5"
+                    style={{
+                      textAlign: "center",
+                      padding: "2rem",
+                      color: "#6b7280",
+                    }}
+                  >
+                    {isLoadingData
+                      ? "Loading data..."
+                      : "No demographics data available. Please select a different date range to get data."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Bottom Sections */}
-    </main>
+        {/* Bottom Sections */}
+      </main>
     </>
   );
 }
@@ -831,7 +991,12 @@ function ChartCard({ title, children, subtitle, className = "", style = {} }) {
           <i className="fas fa-ellipsis-h" />
         </button>
       </div>
-      <div className="chart-container" style={Object.keys(style).length ? style : undefined}>{children}</div>
+      <div
+        className="chart-container"
+        style={Object.keys(style).length ? style : undefined}
+      >
+        {children}
+      </div>
     </div>
   );
 }

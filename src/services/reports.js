@@ -140,3 +140,40 @@ export const getMonthlyReportsByRange = async (insertionOrderId, startDate, endD
     throw error;
   }
 };
+
+// Download ALL daily overview data as CSV
+export const downloadAllDailyOverviewCSV = async (insertionOrderId) => {
+  try {
+    const token = await getToken();
+
+    const res = await axios.post(
+      `${API_URL}/overview/download/daily-all`,
+      { insertionOrderId },
+      {
+        headers: {
+          Authorization: token,
+        },
+        responseType: "blob", // VERY IMPORTANT for CSV
+      }
+    );
+
+    // Create download link in browser
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `overview_daily_${insertionOrderId}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.log(
+      "Error downloading daily overview CSV:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+

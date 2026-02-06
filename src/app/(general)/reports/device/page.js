@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import { downloadDashboardPDF } from "@/utils/pdfExport";
 import "./styles.css";
 
 Chart.register(ChartDataLabels);
 import {
   createReportsDataDevice,
+  downloadAllDailyDeviceCSV,
   getDailyReportsByFilter,
   getDailyReportsByRange,
 } from "@/services/device";
@@ -35,8 +36,6 @@ const getDeviceIcon = (type) => {
   return null;
 };
 
-
-
 function formatNumber(num) {
   const rounded = Math.round(num);
 
@@ -57,7 +56,19 @@ export default function OverviewPage() {
   const [audienceId, setAudienceId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
-  const [insertionOrderId, setInsertionOrderId] = useState("");
+  const [insertionOrderId, setInsertionOrderId] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("insertionId") || "";
+    }
+    return "";
+  });
+  const [count, setCount] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedCount = localStorage.getItem("count");
+      return storedCount ? Number(storedCount) : 0;
+    }
+    return 0;
+  });
 
   const INSERTION_ORDER_ID = insertionOrderId;
 
@@ -73,7 +84,6 @@ export default function OverviewPage() {
     if (storedStart) setStartDate(storedStart);
     if (storedEnd) setEndDate(storedEnd);
     if (storedAudienceId) setAudienceId(storedAudienceId);
-    if (insertionOrderId) setInsertionOrderId(insertionOrderId);
 
     setIsInitialized(true);
 
@@ -86,6 +96,7 @@ export default function OverviewPage() {
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
       if (key === "insertionId") setInsertionOrderId(newValue || "");
+      if (key === "count") setCount(newValue ? Number(newValue) : 0);
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -102,8 +113,17 @@ export default function OverviewPage() {
     localStorage.setItem("startDate", startDate);
     localStorage.setItem("endDate", endDate);
     localStorage.setItem("audienceId", audienceId);
+    localStorage.setItem("count", count);
     localStorage.setItem("insertionId", insertionOrderId);
-  }, [dateRange, startDate, endDate, audienceId, isInitialized]);
+  }, [
+    dateRange,
+    startDate,
+    endDate,
+    audienceId,
+    isInitialized,
+    count,
+    insertionOrderId,
+  ]);
 
   const params = {
     audienceId: audienceId,
@@ -278,7 +298,7 @@ export default function OverviewPage() {
     if (!isInitialized) return; // Wait until localStorage is loaded
 
     fetchReportsData();
-  }, [isInitialized, dateRange, startDate, endDate]); // Re-fetch when dates change
+  }, [isInitialized, dateRange, startDate, endDate, insertionOrderId]); // Re-fetch when dates or audience change
 
   const groupDataByDevice = (data) => {
     if (!data || !Array.isArray(data)) return [];
@@ -326,10 +346,11 @@ export default function OverviewPage() {
   const mainContentRef = useRef(null);
 
   const downloadPDF = () => {
-    const dateText = dateRange === "CUSTOM" 
-      ? `${startDate} to ${endDate}`
-      : `${dateRange || 'All Time'}`;
-      
+    const dateText =
+      dateRange === "CUSTOM"
+        ? `${startDate} to ${endDate}`
+        : `${dateRange || "All Time"}`;
+
     downloadDashboardPDF(mainContentRef, "Device_Report", dateText);
   };
 
@@ -637,12 +658,12 @@ export default function OverviewPage() {
               },
             },
             datalabels: {
-              align: 'top',
-              anchor: 'end',
-              color: '#333',
-              font: { weight: 'bold' },
-              formatter: formatNumber
-            }
+              align: "top",
+              anchor: "end",
+              color: "#333",
+              font: { weight: "bold" },
+              formatter: formatNumber,
+            },
           },
           scales: {
             y: {
@@ -660,8 +681,6 @@ export default function OverviewPage() {
       });
     }
 
-
-
     return () => {
       // Cleanup charts on unmount
       Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
@@ -670,90 +689,114 @@ export default function OverviewPage() {
   }, [dailyReportsData, aggregatedData]); // Re-render charts when data changes
 
   return (
-    <><PageHeader></PageHeader>
-    <main className="main-content" ref={mainContentRef}>
-      
-      {/* Charts Section */}
-      <section className="charts-section">
-        <div className="grid">
-          <TopCountryBarChart dailyReportsData={dailyReportsData} />
-        </div>
-      </section>
-
-      {/* Table */}
-      <div className="data-table-card">
-        <div className="table-header">
-          <h3>Device Performance Summary</h3>
-          <div className="table-actions">
-            <button className="btn btn-sm btn-ghost" onClick={downloadPDF} title="Download Data as PDF">
-              <i className="fas fa-download" style={{ marginRight: "8px" }} /> Export PDF
-            </button>
+    <>
+      <PageHeader>
+        {" "}
+        <button
+          className="btn btn-sm btn-ghost"
+          onClick={downloadPDF}
+          title="Download Data as PDF"
+        >
+          <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
+          Export PDF
+        </button>
+      </PageHeader>
+      <main className="main-content" ref={mainContentRef}>
+        {/* Charts Section */}
+        <section className="charts-section">
+          <div className="grid">
+            <TopCountryBarChart dailyReportsData={dailyReportsData} />
           </div>
+        </section>
+
+        {/* Table */}
+        <div className="data-table-card">
+          <div className="table-header">
+            <h3>Device Performance Summary</h3>
+            <div className="table-actions">
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={() => downloadAllDailyDeviceCSV(insertionOrderId)}
+                title="Download Data as PDF"
+              >
+                <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
+                Export Device CSV
+              </button>
+            </div>
+          </div>
+
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Device Type</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>CTR</th>
+                <th>VCR</th>
+                <th>Complete Views</th>
+                <th>Media Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aggregatedData && aggregatedData.length > 0 ? (
+                aggregatedData.map((item, index) => {
+                  const ctr =
+                    item.impressions > 0
+                      ? ((item.clicks / item.impressions) * 100).toFixed(2)
+                      : "0.00";
+                  const vcr =
+                    item.impressions > 0
+                      ? ((item.completeViews / item.impressions) * 100).toFixed(
+                          2,
+                        )
+                      : "0.00";
+
+                  return (
+                    <tr key={index}>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <div className=" me-2" />
+                          {getDeviceIcon(item.deviceType)}
+                          {item.deviceType}
+                        </div>
+                      </td>
+
+                      <td>{item.impressions.toLocaleString()}</td>
+                      <td>{item.clicks.toLocaleString()}</td>
+                      <td>{ctr}%</td>
+                      <td>{vcr}%</td>
+                      <td>{item.completeViews.toLocaleString()}</td>
+                      <td>
+                        ₹
+                        {(
+                          (Number(item?.spend) || 0) * (Number(count) || 0)
+                        ).toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan="7"
+                    style={{
+                      textAlign: "center",
+                      padding: "2rem",
+                      color: "#6b7280",
+                    }}
+                  >
+                    {isLoadingData
+                      ? "Loading data..."
+                      : "No data available. Please select a different date range to get data."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Device Type</th>
-              <th>Impressions</th>
-              <th>Clicks</th>
-              <th>CTR</th>
-              <th>VCR</th>
-              <th>Complete Views</th>
-            </tr>
-          </thead>
-          <tbody>
-            {aggregatedData && aggregatedData.length > 0 ? (
-              aggregatedData.map((item, index) => {
-                const ctr =
-                  item.impressions > 0
-                    ? ((item.clicks / item.impressions) * 100).toFixed(2)
-                    : "0.00";
-                const vcr =
-                  item.impressions > 0
-                    ? ((item.completeViews / item.impressions) * 100).toFixed(2)
-                    : "0.00";
-
-                return (
-                  <tr key={index}>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className=" me-2" />
-                        {getDeviceIcon(item.deviceType)}
-                        {item.deviceType}
-                      </div>
-                    </td>
-
-                    <td>{item.impressions.toLocaleString()}</td>
-                    <td>{item.clicks.toLocaleString()}</td>
-                    <td>{ctr}%</td>
-                    <td>{vcr}%</td>
-                    <td>{item.completeViews.toLocaleString()}</td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td
-                  colSpan="7"
-                  style={{
-                    textAlign: "center",
-                    padding: "2rem",
-                    color: "#6b7280",
-                  }}
-                >
-                  {isLoadingData
-                    ? "Loading data..."
-                    : "No data available. Please select a different date range to get data."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Bottom Sections */}
-    </main>
+        {/* Bottom Sections */}
+      </main>
     </>
   );
 }

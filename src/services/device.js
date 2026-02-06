@@ -85,3 +85,39 @@ export const getDailyReportsByRange = async (insertionOrderId, startDate, endDat
     throw error;
   }
 };
+
+// Download ALL daily device data as CSV
+export const downloadAllDailyDeviceCSV = async (insertionOrderId) => {
+  try {
+    const token = await getToken();
+
+    const res = await axios.post(
+      `${API_URL}/device/download/daily-all`,
+      { insertionOrderId },
+      {
+        headers: {
+          Authorization: token,
+        },
+        responseType: "blob", // IMPORTANT
+      }
+    );
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `device_daily_${insertionOrderId}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.log(
+      "Error downloading daily device CSV:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+

@@ -85,3 +85,39 @@ export const getDailyReportsByRangeCity = async (insertionOrderId, startDate, en
     throw error;
   }
 };
+
+
+// Download ALL daily city data as CSV
+export const downloadAllDailyCityCSV = async (insertionOrderId) => {
+  try {
+    const token = await getToken();
+
+    const res = await axios.post(
+      `${API_URL}/city/download/daily-all`,
+      { insertionOrderId },
+      {
+        headers: {
+          Authorization: token,
+        },
+        responseType: "blob", // IMPORTANT for CSV
+      }
+    );
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `city_daily_${insertionOrderId}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.log(
+      "Error downloading daily city CSV:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};

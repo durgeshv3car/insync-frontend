@@ -11,7 +11,9 @@ import {
 import { createReportsDataAge } from "@/services/demographics";
 import { createReportsDataDevice } from "@/services/device";
 import { createReportsData } from "@/services/reports";
+import { getSearchJobStatus } from "@/services/youtube";
 import Image from "next/image";
+import { Search, Loader2, CheckCircle2, Layout, Database, BarChart3, PieChart, MapPin } from "lucide-react";
 
 import React, { useState, useEffect } from "react";
 
@@ -23,28 +25,103 @@ const emptyCampaign = {
   cpm: "",
 };
 
+const CampaignLoader = ({ progress, status }) => {
+  return (
+    <div className="d-flex flex-column justify-content-center align-items-center vh-100" style={{ background: "#f8f9fa" }}>
+      <div style={{ width: "100%", maxWidth: "450px", padding: "40px", textAlign: "center" }}>
+        {/* Animated Icon */}
+        <div style={{ marginBottom: "30px", position: "relative" }}>
+           <div className="ai-loader-pulse" style={{
+             width: "80px",
+             height: "80px",
+             borderRadius: "20px",
+             background: "linear-gradient(135deg, #031035 0%, #081947 100%)",
+             display: "flex",
+             alignItems: "center",
+             justifyContent: "center",
+             margin: "0 auto",
+             boxShadow: "0 10px 25px rgba(3, 16, 53, 0.2)"
+           }}>
+             <Database color="white" size={32} />
+           </div>
+        </div>
+
+        <h4 style={{ fontWeight: "700", color: "#031035", marginBottom: "10px" }}>
+          Creating Campaign Reports
+        </h4>
+        <p style={{ color: "#64748b", fontSize: "0.95rem", marginBottom: "25px", height: "1.5rem" }}>
+          {status}
+        </p>
+
+        {/* Progress Bar Container */}
+        <div style={{
+          width: "100%",
+          height: "10px",
+          backgroundColor: "#e9ecef",
+          borderRadius: "10px",
+          overflow: "hidden",
+          marginBottom: "15px",
+          position: "relative"
+        }}>
+          {/* Progress Bar Fill */}
+          <div style={{
+            width: `${progress}%`,
+            height: "100%",
+            background: "linear-gradient(90deg, #031035, #081947)",
+            borderRadius: "10px",
+            transition: "width 0.5s ease-in-out",
+            position: "relative"
+          }}>
+            {/* Shimmer effect */}
+            <div className="ai-loader-shimmer" style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)"
+            }} />
+          </div>
+        </div>
+
+        <div className="d-flex justify-content-between" style={{ fontSize: "0.85rem", fontWeight: "600", color: "#6c757d" }}>
+          <span>{Math.round(progress)}% Complete</span>
+          <span>Please wait...</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 const Campaign = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [campaignData, setCampaignData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [loadingStatus, setLoadingStatus] = useState("");
   const [search, setSearch] = useState("");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [audienceId, setAudienceId] = useState(null);
 
+
   useEffect(() => {
     const fetchAudiences = async () => {
       setLoading(true);
+      setProgress(10);
+      setLoadingStatus("Fetching campaigns...");
       try {
         const res = await getAudience(search);
         setCampaigns(res.data);
+        setProgress(100);
       } catch (error) {
         console.log("Error fetching audience:", error);
       } finally {
-        setLoading(false);
+        setTimeout(() => setLoading(false), 500);
       }
     };
 
@@ -78,6 +155,36 @@ const Campaign = () => {
     setSearch(e.target.value);
   };
 
+  const pollJob = async (jobId, type) => {
+    const POLLING_INTERVAL = 3000;
+    const MAX_ATTEMPTS = 200; // Total ~10 minutes
+
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+      try {
+        const statusData = await getSearchJobStatus(jobId);
+        const status = statusData.status || statusData.job?.status;
+
+        if (status === "completed") {
+          return statusData;
+        }
+
+        if (status === "failed") {
+          throw new Error(
+            `${type} job failed: ${statusData.error?.message || "Internal processing error"}`
+          );
+        }
+      } catch (err) {
+        console.warn(`Polling error for ${type}:`, err);
+        // Only throw if it's a structural failure, otherwise continue polling
+        if (err.message.includes("job failed")) throw err;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
+    }
+    throw new Error(`${type} job timed out after 10 minutes`);
+  };
+
+
   const handleSave = async (e) => {
     e.preventDefault();
     const isValid =
@@ -89,46 +196,67 @@ const Campaign = () => {
 
     if (!isValid) return;
     setLoading(true);
+    setProgress(5);
+    setLoadingStatus("Initializing campaign...");
     try {
+      let res;
       if (editingIndex !== null) {
         const id = campaignData._id || campaigns[editingIndex]?._id;
-        const res = await updateAudience(id, campaignData);
-        const params = {
-          audienceId: res.audience._id,
-          dataRange: "ALL_TIME",
-        };
-        if (res.audience._id) {
-          await createReportsData(params);
-          await createReportsDataDevice(params);
-          await createReportsDataAge(params);
-          await createReportsDataCity(params);
-          // await createReportsDataContext(params);
-        }
+        setLoadingStatus("Updating campaign details...");
+        res = await updateAudience(id, campaignData);
+        setProgress(20);
       } else {
-        const res = await createAudience(campaignData);
-        console.log("Create Audience Response:", res);
-        const params = {
-          audienceId: res.audience._id,
-          dataRange: "ALL_TIME",
-        };
-        if (res.audience._id) {
-          await createReportsData(params);
-          await createReportsDataDevice(params);
-          await createReportsDataAge(params);
-          await createReportsDataCity(params);
-          // await createReportsDataContext(params);
-        }
+        setLoadingStatus("Creating active audience...");
+        res = await createAudience(campaignData);
+        setProgress(20);
       }
 
-      // refresh list from backend
+      if (res.audience?._id) {
+        const params = {
+          audienceId: res.audience._id,
+          dataRange: "ALL_TIME",
+        };
+
+        setLoadingStatus("Generating Overview reports...");
+        const overviewRes = await createReportsData(params);
+        if (overviewRes.jobId) {
+          await pollJob(overviewRes.jobId, "Overview");
+        }
+        setProgress(40);
+
+        setLoadingStatus("Processing Device analytics...");
+        const deviceRes = await createReportsDataDevice(params);
+        if (deviceRes.jobId) {
+          await pollJob(deviceRes.jobId, "Device");
+        }
+        setProgress(60);
+
+        setLoadingStatus("Analyzing Demographics data...");
+        const ageRes = await createReportsDataAge(params);
+        if (ageRes.jobId) {
+          await pollJob(ageRes.jobId, "Demographics");
+        }
+        setProgress(80);
+
+        setLoadingStatus("Mapping Geographic performance...");
+        const cityRes = await createReportsDataCity(params);
+        if (cityRes.jobId) {
+          await pollJob(cityRes.jobId, "City");
+        }
+        setProgress(95);
+      }
+
+
+      setLoadingStatus("Refreshing campaign list...");
       const all = await getAudience();
       setCampaigns(all?.data || []);
-      closeModal();
+      setProgress(100);
+      setTimeout(() => closeModal(), 500);
     } catch (err) {
       console.error("Error saving campaign:", err);
       closeModal();
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 800);
     }
   };
 
@@ -168,21 +296,7 @@ const Campaign = () => {
   };
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        {/* <h4>Processing...</h4> */}
-        {/* <img src="/loader/loading.gif" alt="Loading..." width={100} height={100} /> */}
-           <div className="box">
-    <div className="bars">
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
-  </div>
-      </div>
-    );
+    return <CampaignLoader progress={progress} status={loadingStatus} />;
   }
 
   return (

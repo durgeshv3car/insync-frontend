@@ -1,18 +1,33 @@
-import React, { useState } from "react";
-import { FiChevronRight, FiChevronDown, FiSearch, FiUsers, FiX } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
 
-const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) => {
+import {
+  FiChevronRight,
+  FiChevronDown,
+  FiSearch,
+  FiUsers,
+  FiX,
+} from "react-icons/fi";
+
+const SearchModal = ({
+  audienceList,
+  setSelectedAudience,
+  selectedAudience,
+}) => {
+  const [tempAudience, setTempAudience] = useState(selectedAudience || null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter audience list based on search query
-  const filteredAudienceList = audienceList.filter((audience) =>
-    audience.reportName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    audience.insertionOrderId?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredAudienceList = audienceList.filter(
+    (audience) =>
+      audience.reportName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      audience.insertionOrderId
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()),
   );
 
   const handleCloseDropdown = () => {
     // Close the Bootstrap dropdown
-    const dropdownElement = document.querySelector('.dropdown-menu.show');
+    const dropdownElement = document.querySelector(".dropdown-menu.show");
     if (dropdownElement) {
       const button = dropdownElement.previousElementSibling;
       if (button) {
@@ -20,7 +35,6 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
       }
     }
   };
-
 
   return (
     <div className="dropdown">
@@ -55,7 +69,7 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
         }}
       >
         <FiUsers size={16} color="white" />
-        <span 
+        <span
           style={{
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -112,18 +126,20 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
+              e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.3)";
               e.currentTarget.style.transform = "rotate(90deg)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.2)";
               e.currentTarget.style.transform = "rotate(0deg)";
             }}
           >
             <FiX size={20} />
           </button>
 
-          <h6 
+          <h6
             style={{
               margin: 0,
               fontSize: "16px",
@@ -134,7 +150,7 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
           >
             Select Your Campaign
           </h6>
-          
+
           {/* Search Input */}
           <div className="position-relative">
             <FiSearch
@@ -167,11 +183,13 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
                 transition: "all 0.2s ease",
               }}
               onFocus={(e) => {
-                e.currentTarget.style.boxShadow = "0 8px 16px -4px rgba(0, 0, 0, 0.2)";
+                e.currentTarget.style.boxShadow =
+                  "0 8px 16px -4px rgba(0, 0, 0, 0.2)";
                 e.currentTarget.style.transform = "translateY(-1px)";
               }}
               onBlur={(e) => {
-                e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
                 e.currentTarget.style.transform = "translateY(0)";
               }}
             />
@@ -258,21 +276,19 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
           className="custom-scrollbar"
         >
           {filteredAudienceList.length > 0 ? (
-            filteredAudienceList.map(({ reportName, _id, insertionOrderId }) => (
-              <AudienceCard
-                key={_id}
-                title={reportName}
-                subTitle={insertionOrderId}
-                isSelected={selectedAudience?._id === _id}
-                onSelect={() => {
-                  setSelectedAudience({
-                    _id,
-                    reportName,
-                    insertionOrderId,
-                  });
-                }}
-              />
-            ))
+            filteredAudienceList.map(
+              (audience) => (
+                <AudienceCard
+                  key={audience._id}
+                  title={audience.reportName}
+                  subTitle={audience.insertionOrderId}
+                  isSelected={tempAudience?._id === audience._id}
+                  onSelect={() => {
+                    setTempAudience(audience);
+                  }}
+                />
+              ),
+            )
           ) : (
             <div
               style={{
@@ -287,7 +303,8 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
                   height: "80px",
                   margin: "0 auto 20px",
                   borderRadius: "50%",
-                  background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                  background:
+                    "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -295,14 +312,58 @@ const SearchModal = ({ audienceList, setSelectedAudience, selectedAudience }) =>
               >
                 <FiSearch size={36} style={{ opacity: 0.4 }} />
               </div>
-              <p style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: "#374151" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  color: "#374151",
+                }}
+              >
                 No audiences found
               </p>
-              <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#9ca3af" }}>
+              <p
+                style={{
+                  margin: "8px 0 0",
+                  fontSize: "13px",
+                  color: "#9ca3af",
+                }}
+              >
                 Try adjusting your search terms
               </p>
             </div>
           )}
+        </div>
+        {/* Footer OK Button */}
+        <div
+          style={{
+            padding: "16px",
+            borderTop: "1px solid #e5e7eb",
+            background: "white",
+            position: "sticky",
+            bottom: 0,
+          }}
+        >
+          <button
+            className="btn w-100"
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: "10px",
+              padding: "12px",
+              fontWeight: "600",
+              fontSize: "14px",
+            }}
+            disabled={!tempAudience}
+            onClick={() => {
+              setSelectedAudience(tempAudience);
+
+              handleCloseDropdown();
+            }}
+          >
+            OK
+          </button>
         </div>
       </div>
 
@@ -343,23 +404,24 @@ const AudienceCard = ({ title, subTitle, onSelect, isSelected }) => {
         borderRadius: "12px",
         marginBottom: "8px",
         cursor: "pointer",
-        backgroundColor: isSelected 
+        backgroundColor: isSelected
           ? "#f0f9ff"
-          : isHovered 
-          ? "#f9fafb" 
-          : "white",
+          : isHovered
+            ? "#f9fafb"
+            : "white",
         border: isSelected
           ? "2px solid #667eea"
           : isHovered
-          ? "2px solid #e5e7eb"
-          : "2px solid #f3f4f6",
+            ? "2px solid #e5e7eb"
+            : "2px solid #f3f4f6",
         transition: "all 0.2s ease",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        boxShadow: isHovered || isSelected
-          ? "0 4px 12px rgba(0, 0, 0, 0.08)"
-          : "0 1px 3px rgba(0, 0, 0, 0.05)",
+        boxShadow:
+          isHovered || isSelected
+            ? "0 4px 12px rgba(0, 0, 0, 0.08)"
+            : "0 1px 3px rgba(0, 0, 0, 0.05)",
         transform: isHovered ? "translateY(-2px)" : "translateY(0)",
       }}
     >
@@ -400,13 +462,15 @@ const AudienceCard = ({ title, subTitle, onSelect, isSelected }) => {
           background: isSelected
             ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
             : isHovered
-            ? "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)"
-            : "#f9fafb",
+              ? "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)"
+              : "#f9fafb",
           color: isSelected ? "white" : "#6b7280",
           transition: "all 0.2s ease",
           flexShrink: 0,
           marginLeft: "16px",
-          boxShadow: isSelected ? "0 4px 12px rgba(102, 126, 234, 0.3)" : "none",
+          boxShadow: isSelected
+            ? "0 4px 12px rgba(102, 126, 234, 0.3)"
+            : "none",
         }}
       >
         {isSelected ? (

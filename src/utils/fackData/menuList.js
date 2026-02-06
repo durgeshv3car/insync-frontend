@@ -3,19 +3,19 @@ export const menuList = [
   {
     id: 2,
     name: "Youtube Data",
-    path: "/Youtube-links",
+    path: "/youtube-data",
     icon: "feather-youtube",
   },
 {
   id: 3,
   name: "Channel Search",
-  path: "/Youtube-channel-filters",
+  path: "/channel-search",
   icon: "feather-monitor" , 
 },
   {
     id: 4,
     name: "Keyword Search",
-    path: "/Youtube-filters",
+    path: "/keyword-search",
     icon: "feather-search",
   },
   { 

@@ -51,11 +51,22 @@ function DateSection() {
 
   // Save to localStorage whenever state changes (only after initialization)
   useEffect(() => {
-    if (!isInitialized) return; // Don't save until we've loaded from localStorage
+    if (!isInitialized) return; 
     
-    localStorage.setItem("selectedRange", selectedRange);
-    localStorage.setItem("startDate", customStartDate);
-    localStorage.setItem("endDate", customEndDate);
+    const updates = [
+      { key: "selectedRange", value: selectedRange },
+      { key: "startDate", value: customStartDate },
+      { key: "endDate", value: customEndDate },
+    ];
+
+    updates.forEach(({ key, value }) => {
+      localStorage.setItem(key, value);
+      window.dispatchEvent(
+        new CustomEvent("storage", {
+          detail: { key, newValue: value },
+        }),
+      );
+    });
   }, [selectedRange, customStartDate, customEndDate, isInitialized]);
 
   useEffect(() => {
@@ -84,15 +95,9 @@ function DateSection() {
     setSelectedRange('CUSTOM');
   };
 
- const handleApply = () => {
-  const result = isCustom
-    ? { type: "CUSTOM_DATES", startDate: customStartDate, endDate: customEndDate }
-    : { type: selectedRange };
-
-  setShow(false);
-
-  window.location.reload(); 
-};
+  const handleApply = () => {
+    setShow(false);
+  };
 
 
   const handleReset = () => {
@@ -100,11 +105,18 @@ function DateSection() {
     setCustomStartDate('');
     setCustomEndDate('');
     setIsCustom(false);
-    localStorage.removeItem("selectedRange");
-    localStorage.removeItem("startDate");
-    localStorage.removeItem("endDate");
+    
+    const keys = ["selectedRange", "startDate", "endDate"];
+    keys.forEach(key => {
+      localStorage.removeItem(key);
+      window.dispatchEvent(
+        new CustomEvent("storage", {
+          detail: { key, newValue: null },
+        }),
+      );
+    });
+
     setShow(false);
-    window.location.reload();
   };
 
   const getSelectedLabel = () => {

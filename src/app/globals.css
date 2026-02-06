@@ -163,47 +163,75 @@ pre {
 }
 
 
-.navbar-content * {
-  color: #ffffff;
+/* Base link state in dark navbar */
+.nxl-link,
+.nxl-link * {
+  color: #ffffff !important;
+  transition: all 0.2s ease;
 }
 
-.navbar-content a:hover * {
+/* Hover and Active state for any menu link */
+.nxl-item.active>.nxl-link,
+.nxl-item:not(.nxl-hasmenu):hover>.nxl-link,
+.nxl-item.nxl-hasmenu:not(.nxl-trigger):hover>.nxl-link {
+  background: #ffffff !important;
   color: #081947 !important;
+  border-radius: 6px;
   font-weight: bold;
 }
 
-.navbar-content .active * {
+.nxl-item.active>.nxl-link *,
+.nxl-item:not(.nxl-hasmenu):hover>.nxl-link *,
+.nxl-item.nxl-hasmenu:not(.nxl-trigger):hover>.nxl-link * {
   color: #081947 !important;
-  font-weight: bold;
 }
 
-.nxl-menu-visible * {
+/* Fix: when parent menu is open, it should stay neutral (not blue, not white bg) */
+.nxl-item.nxl-hasmenu.nxl-trigger>.nxl-link,
+.nxl-item.nxl-hasmenu.nxl-trigger>.nxl-link:hover {
+  background: transparent !important;
   color: #ffffff !important;
 }
 
-
-.nxl-menu-visible .nxl-item:hover *,
-.nxl-item.nxl-hasmenu:hover>a:hover {
-  color: #081947 !important;
-  font-weight: bold;
+.nxl-item.nxl-hasmenu.nxl-trigger>.nxl-link *,
+.nxl-item.nxl-hasmenu.nxl-trigger>.nxl-link:hover * {
+  color: #ffffff !important;
+  font-weight: 500 !important;
 }
 
-.nxl-menu-visible .active * {
+/* Ensure sub-menu items also follow this if not already covered */
+.nxl-submenu .nxl-item.active>.nxl-link {
+  background: #ffffff !important;
   color: #081947 !important;
-  font-weight: bold;
 }
 
 .nxl-navigation,
+.nxl-navigation .m-header,
 html.minimenu .nxl-navigation:hover .navbar-content {
-  background: #0d1a3f;
+  background: #031035 !important;
+}
+
+.nxl-navigation .m-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nxl-navigation .navbar-content {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 
 
 
-/* =====================
-   HEADER WRAPPER
-===================== */
+
+.nxl-navigation .nxl-caption span {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.nxl-navigation .m-header .logo-lg {
+  filter: brightness(0) invert(1);
+}
+
 .header-wrapper {
   height: 100%;
   padding: 0 16px;
@@ -364,7 +392,7 @@ html.minimenu .sidebar {
 
 /* ===== ONLY ACTIVE CHILD = BLUE + WHITE BG ===== */
 .nxl-submenu .nxl-item.active>.nxl-link {
-  color: #0d6efd !important;
+  color: #283c50 !important;
   background: #ffffff !important;
   border-radius: 6px;
   padding-left: 10px;
@@ -377,6 +405,16 @@ html.minimenu .sidebar {
 }
 
 /* ===== HOVER (optional, nice effect) ===== */
+
+/* When sidebar is collapsed, mark parent menu active if any child is active */
+html.minimenu .nxl-navigation .navbar-content .nxl-item.nxl-hasmenu:has(.nxl-submenu .nxl-item.active)>.nxl-link {
+  color: #081947 !important;
+  font-weight: bold;
+}
+
+html.minimenu .nxl-navigation .navbar-content .nxl-item.nxl-hasmenu:has(.nxl-submenu .nxl-item.active)>.nxl-link .nxl-micon svg {
+  color: #081947 !important;
+}
 
 /* =========================
    NAVIGATION FIXES
@@ -439,24 +477,66 @@ html.minimenu .sidebar {
 .bars span:nth-child(2) {
   animation-delay: 0.1s;
 }
+
 .bars span:nth-child(3) {
   animation-delay: 0.2s;
 }
+
 .bars span:nth-child(4) {
   animation-delay: 0.3s;
 }
+
 .bars span:nth-child(5) {
   animation-delay: 0.4s;
 }
 
 @keyframes wave {
+
   0%,
   100% {
     transform: scaleY(0.4);
     opacity: 0.5;
   }
+
   50% {
     transform: scaleY(1.2);
     opacity: 1;
   }
+}
+
+/* AI Loader Animations */
+@keyframes ai-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(3, 16, 53, 0.4);
+  }
+
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(3, 16, 53, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(3, 16, 53, 0);
+  }
+}
+
+
+@keyframes ai-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.ai-loader-pulse {
+  animation: ai-pulse 2s infinite;
+}
+
+.ai-loader-shimmer {
+  animation: ai-shimmer 1.5s infinite;
 }

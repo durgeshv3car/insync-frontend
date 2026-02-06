@@ -33,6 +33,7 @@ import {
 import {
   getcsvResults,
   getFiltersResults,
+  getLatestQueryResults,
   getQueryResults,
 } from "@/services/youtube";
 import { useSearchParams } from "next/navigation";
@@ -69,7 +70,7 @@ const YouTubeTable = () => {
     startDate: "",
     endDate: "",
     videoType: "all",
-    sortBy: "relevance",
+    sortBy: "engagement",
     page: currentPage,
     limit: 50,
     csvResults: "all",
@@ -118,7 +119,7 @@ const YouTubeTable = () => {
     console.log("Complete video objects:", selectedData);
     const res = await createCampaignData(audienceId, selectedData);
     if (res.message) {
-      router.push("/audience")
+      router.push("/audience");
     }
   };
   const fetchCsvResults = async () => {
@@ -144,6 +145,16 @@ const YouTubeTable = () => {
     setCurrentPage(1);
     setFilters((prev) => ({ ...prev, [name]: value, page: 1 }));
   };
+  useEffect(() => {
+    const init = async () => {
+      const res = await getLatestQueryResults();
+      setFilters((prev) => ({
+        ...prev,
+        query: res,
+      }));
+    };
+    init();
+  }, []); // ✅ only once
 
   useEffect(() => {
     fetchVideos();
@@ -228,7 +239,7 @@ const YouTubeTable = () => {
               <td>${v.link}</td>
               <td>${v.erBySubscribers}</td>
             </tr>
-          `
+          `,
             )
             .join("")}
         </tbody>
@@ -259,18 +270,18 @@ const YouTubeTable = () => {
 
   const handleSelectAll = () => {
     if (!videos || videos.length === 0) return;
-    
-    const allIdsOnPage = videos.map(v => v._id).filter(Boolean);
+
+    const allIdsOnPage = videos.map((v) => v._id).filter(Boolean);
     if (allIdsOnPage.length === 0) return;
 
-    const areAllSelected = allIdsOnPage.every(id => selectedVideos.has(id));
+    const areAllSelected = allIdsOnPage.every((id) => selectedVideos.has(id));
 
-    setSelectedVideos(prev => {
+    setSelectedVideos((prev) => {
       const newSet = new Set(prev);
       if (areAllSelected) {
-        allIdsOnPage.forEach(id => newSet.delete(id));
+        allIdsOnPage.forEach((id) => newSet.delete(id));
       } else {
-        allIdsOnPage.forEach(id => newSet.add(id));
+        allIdsOnPage.forEach((id) => newSet.add(id));
       }
       return newSet;
     });
@@ -286,12 +297,8 @@ const YouTubeTable = () => {
         minHeight: "100vh",
       }}
     >
-
-      <PageHeader>
-        {/* <PageHeaderDate /> */}
-      </PageHeader>
+      <PageHeader>{/* <PageHeaderDate /> */}</PageHeader>
       <div className="container">
-       
         {/* Filters Card */}
         <div
           style={{
@@ -714,7 +721,13 @@ const YouTubeTable = () => {
                   >
                     <input
                       type="checkbox"
-                      checked={videos.length > 0 && videos.map(v => v._id).filter(Boolean).every(id => selectedVideos.has(id))}
+                      checked={
+                        videos.length > 0 &&
+                        videos
+                          .map((v) => v._id)
+                          .filter(Boolean)
+                          .every((id) => selectedVideos.has(id))
+                      }
                       onChange={handleSelectAll}
                       style={{
                         width: "18px",
@@ -900,7 +913,11 @@ const YouTubeTable = () => {
                     style={{
                       borderBottom: "1px solid #e9ecef",
                       transition: "background-color 0.2s ease",
-                      backgroundColor: selectedVideos.has(v._id) ? "#f0f4ff" : (idx % 2 === 0 ? "#ffffff" : "#f8f9fa"),
+                      backgroundColor: selectedVideos.has(v._id)
+                        ? "#f0f4ff"
+                        : idx % 2 === 0
+                          ? "#ffffff"
+                          : "#f8f9fa",
                       cursor: "pointer",
                     }}
                     onMouseEnter={(e) =>
@@ -939,7 +956,7 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                        maxWidth: "0", 
+                        maxWidth: "0",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -950,7 +967,7 @@ const YouTubeTable = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "10px",
-                          maxWidth: "100%", 
+                          maxWidth: "100%",
                         }}
                       >
                         <img
@@ -1141,7 +1158,7 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                         maxWidth: "0",
+                        maxWidth: "0",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -1177,7 +1194,7 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                         maxWidth: "0",
+                        maxWidth: "0",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -1213,7 +1230,7 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                         maxWidth: "0",
+                        maxWidth: "0",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -1249,7 +1266,7 @@ const YouTubeTable = () => {
                       style={{
                         padding: "12px",
                         verticalAlign: "middle",
-                         maxWidth: "0",
+                        maxWidth: "0",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -1273,46 +1290,37 @@ const YouTubeTable = () => {
                         padding: "12px",
                         verticalAlign: "middle",
                         textAlign: "center",
-                         maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
                       }}
                     >
                       <div
                         style={{
                           display: "flex",
-                          alignItems: "center",
                           justifyContent: "center",
-                          gap: "0px",
-                          maxWidth: "100%",
+                          gap: "2px",
                         }}
                       >
-                        {[
-                          ...Array(
-                            Math.max(0, Math.min(5, v.erBySubscribers || 0))
-                          ),
-                        ].map((_, i) => {
+                        {[1, 2, 3, 4, 5].map((i) => {
+                          const rating = v.erBySubscribers || 0;
+
                           const starColor =
-                            (v.erBySubscribers || 0) <= 0
-                              ? "#dee2e6"
-                              : (v.erBySubscribers || 0) === 1
-                              ? "#ff6b6b"
-                              : (v.erBySubscribers || 0) === 2
-                              ? "#fd7e14"
-                              : (v.erBySubscribers || 0) === 3
-                              ? "#a1e57b"
-                              : (v.erBySubscribers || 0) === 4
-                              ? "#28a745"
-                              : "#006400";
+                            rating >= i
+                              ? rating === 1
+                                ? "#ff6b6b"
+                                : rating === 2
+                                  ? "#fd7e14"
+                                  : rating === 3
+                                    ? "#a1e57b"
+                                    : rating === 4
+                                      ? "#28a745"
+                                      : "#006400"
+                              : "#dee2e6";
 
                           return (
                             <Star
                               key={i}
-                              size={(v.erBySubscribers || 0) >= 5 ? 12 : 16}
+                              size={16}
                               color={starColor}
                               fill={starColor}
-                              style={{ flexShrink: 0 }}
                             />
                           );
                         })}
@@ -1406,7 +1414,9 @@ const YouTubeTable = () => {
                     >
                       <button
                         className="page-link"
-                        onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                        onClick={() =>
+                          handlePageChange(Math.max(currentPage - 1, 1))
+                        }
                         disabled={currentPage === 1}
                         title="Previous page"
                       >
@@ -1484,7 +1494,7 @@ const YouTubeTable = () => {
                         className="page-link"
                         onClick={() =>
                           handlePageChange(
-                            Math.min(currentPage + 1, totalPages)
+                            Math.min(currentPage + 1, totalPages),
                           )
                         }
                         disabled={currentPage === totalPages}

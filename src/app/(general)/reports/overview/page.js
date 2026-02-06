@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import { downloadDashboardPDF } from "@/utils/pdfExport";
 import "./styles.css";
 
 Chart.register(ChartDataLabels);
 import {
+  downloadAllDailyOverviewCSV,
   getDailyReportsByFilter,
   getDailyReportsByRange,
   getMonthlyReportsByFilter,
@@ -39,11 +40,23 @@ export default function OverviewPage() {
   const [audienceId, setAudienceId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
-  const [count, setCount] = useState(0);
-  const [insertionOrderId, setInsertionOrderId] = useState("");
 
-  // Global insertionOrderId - TODO: Make this dynamic later
-  const INSERTION_ORDER_ID = insertionOrderId;
+  // Initialize count from localStorage immediately to prevent showing 0 on first render
+  const [count, setCount] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedCount = localStorage.getItem("count");
+      return storedCount ? Number(storedCount) : 0;
+    }
+    return 0;
+  });
+
+  const [insertionOrderId, setInsertionOrderId] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("insertionId") || "";
+    }
+    return "";
+  });
+  const [isCountReady, setIsCountReady] = useState(true);
 
   useEffect(() => {
     // Load initial values from localStorage
@@ -51,15 +64,11 @@ export default function OverviewPage() {
     const storedStart = localStorage.getItem("startDate");
     const storedEnd = localStorage.getItem("endDate");
     const storedAudienceId = localStorage.getItem("audienceId");
-    const storedCount = localStorage.getItem("count");
-    const storedInsertionId = localStorage.getItem("insertionId");
 
     if (storedRange) setDateRange(storedRange);
     if (storedStart) setStartDate(storedStart);
     if (storedEnd) setEndDate(storedEnd);
     if (storedAudienceId) setAudienceId(storedAudienceId);
-    if (storedCount) setCount(parseInt(storedCount));
-    if (storedInsertionId) setInsertionOrderId(storedInsertionId);
 
     setIsInitialized(true);
 
@@ -72,6 +81,7 @@ export default function OverviewPage() {
       if (key === "endDate") setEndDate(newValue || "");
       if (key === "audienceId") setAudienceId(newValue || "");
       if (key === "insertionId") setInsertionOrderId(newValue || "");
+      if (key === "count") setCount(newValue ? Number(newValue) : 0);
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -90,7 +100,15 @@ export default function OverviewPage() {
     localStorage.setItem("audienceId", audienceId);
     localStorage.setItem("count", count);
     localStorage.setItem("insertionId", insertionOrderId);
-  }, [dateRange, startDate, endDate, audienceId, isInitialized]);
+  }, [
+    dateRange,
+    startDate,
+    endDate,
+    audienceId,
+    isInitialized,
+    count,
+    insertionOrderId,
+  ]);
 
   const params = {
     audienceId: audienceId,
@@ -103,6 +121,8 @@ export default function OverviewPage() {
   const [dailyReportsData, setDailyReportsData] = useState(null);
   const [monthlyReportsData, setMonthlyReportsData] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
+
+  const downloadCsvOverview = () => {};
 
   const sentReportsData = async () => {
     try {
@@ -139,14 +159,14 @@ export default function OverviewPage() {
       const performFetch = async () => {
         if (dateRange === "CUSTOM") {
           const [dailyData, monthlyData] = await Promise.all([
-            getDailyReportsByRange(INSERTION_ORDER_ID, startDate, endDate),
-            getMonthlyReportsByRange(INSERTION_ORDER_ID, startDate, endDate),
+            getDailyReportsByRange(insertionOrderId, startDate, endDate),
+            getMonthlyReportsByRange(insertionOrderId, startDate, endDate),
           ]);
           return { dailyData, monthlyData };
         } else {
           const [dailyData, monthlyData] = await Promise.all([
-            getDailyReportsByFilter(INSERTION_ORDER_ID, dateRange),
-            getMonthlyReportsByFilter(INSERTION_ORDER_ID, dateRange),
+            getDailyReportsByFilter(insertionOrderId, dateRange),
+            getMonthlyReportsByFilter(insertionOrderId, dateRange),
           ]);
           return { dailyData, monthlyData };
         }
@@ -266,10 +286,17 @@ export default function OverviewPage() {
 
   // Fetch data after initialization and whenever date values change
   useEffect(() => {
-    if (!isInitialized) return; // Wait until localStorage is loaded
+    if (
+      !isInitialized ||
+      !dateRange ||
+      !insertionOrderId ||
+      (dateRange === "CUSTOM" && (!startDate || !endDate))
+    ) {
+      return;
+    }
 
     fetchReportsData();
-  }, [isInitialized, dateRange, startDate, endDate]); // Re-fetch when dates change
+  }, [isInitialized, dateRange, startDate, endDate, insertionOrderId]);
 
   const [campaigns, setCampaigns] = useState([]);
   const [activities, setActivities] = useState([]);
@@ -300,10 +327,11 @@ export default function OverviewPage() {
   const mainContentRef = useRef(null);
 
   const downloadPDF = () => {
-    const dateText = dateRange === "CUSTOM" 
-      ? `${startDate} to ${endDate}`
-      : `${dateRange || 'All Time'}`;
-      
+    const dateText =
+      dateRange === "CUSTOM"
+        ? `${startDate} to ${endDate}`
+        : `${dateRange || "All Time"}`;
+
     downloadDashboardPDF(mainContentRef, "Overview_Report", dateText);
   };
 
@@ -425,16 +453,16 @@ export default function OverviewPage() {
               },
             },
             datalabels: {
-              display: 'auto',
-              align: 'top',
-              anchor: 'end',
+              display: "auto",
+              align: "top",
+              anchor: "end",
               formatter: (value, context) => {
                 if (context.dataset.yAxisID === "y1") {
                   return value + "%";
                 }
                 return formatNumber(value);
               },
-              font: { size: 10, weight: 'bold' },
+              font: { size: 10, weight: "bold" },
               color: (context) => context.dataset.borderColor,
             },
           },
@@ -581,16 +609,16 @@ export default function OverviewPage() {
               },
             },
             datalabels: {
-              display: 'auto',
-              align: 'top',
-              anchor: 'end',
+              display: "auto",
+              align: "top",
+              anchor: "end",
               formatter: (value, context) => {
                 if (context.dataset.yAxisID === "y1") {
                   return value + "%";
                 }
                 return formatNumber(value);
               },
-              font: { size: 10, weight: 'bold' },
+              font: { size: 10, weight: "bold" },
               color: (context) => context.dataset.borderColor,
             },
           },
@@ -663,10 +691,10 @@ export default function OverviewPage() {
               },
             },
             datalabels: {
-              color: '#fff',
-              formatter: (value) => value + '%',
-              font: { weight: 'bold' }
-            }
+              color: "#fff",
+              formatter: (value) => value + "%",
+              font: { weight: "bold" },
+            },
           },
         },
       });
@@ -698,14 +726,14 @@ export default function OverviewPage() {
           indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { 
+          plugins: {
             legend: { display: false },
             datalabels: {
-              align: 'end',
-              anchor: 'end',
-              color: '#6366f1',
-              font: { weight: 'bold' }
-            }
+              align: "end",
+              anchor: "end",
+              color: "#6366f1",
+              font: { weight: "bold" },
+            },
           },
           scales: {
             x: {
@@ -755,10 +783,10 @@ export default function OverviewPage() {
               labels: { padding: 15 },
             },
             datalabels: {
-              color: '#fff',
-              font: { weight: 'bold' },
-              formatter: (val) => val > 0 ? val : ''
-            }
+              color: "#fff",
+              font: { weight: "bold" },
+              formatter: (val) => (val > 0 ? val : ""),
+            },
           },
         },
       });
@@ -808,14 +836,14 @@ export default function OverviewPage() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { 
+          plugins: {
             legend: { display: false },
             datalabels: {
-              color: '#fff',
-              font: { weight: 'bold' },
-              align: 'top',
-              anchor: 'center'
-            }
+              color: "#fff",
+              font: { weight: "bold" },
+              align: "top",
+              anchor: "center",
+            },
           },
           scales: {
             y: {
@@ -853,10 +881,10 @@ export default function OverviewPage() {
               labels: { font: { size: 12 }, padding: 15 },
             },
             datalabels: {
-              color: '#fff',
-              font: { weight: 'bold' },
-              formatter: (val) => val + '%'
-            }
+              color: "#fff",
+              font: { weight: "bold" },
+              formatter: (val) => val + "%",
+            },
           },
         },
       });
@@ -905,12 +933,12 @@ export default function OverviewPage() {
               labels: { padding: 15 },
             },
             datalabels: {
-              align: 'end',
-              anchor: 'end',
+              align: "end",
+              anchor: "end",
               color: (context) => context.dataset.backgroundColor,
-              font: { weight: 'bold', size: 10 },
-              formatter: formatNumber
-            }
+              font: { weight: "bold", size: 10 },
+              formatter: formatNumber,
+            },
           },
         },
       });
@@ -950,10 +978,10 @@ export default function OverviewPage() {
               labels: { padding: 15 },
             },
             datalabels: {
-              color: '#fff',
-              font: { weight: 'bold', size: 10 },
-              formatter: formatNumber
-            }
+              color: "#fff",
+              font: { weight: "bold", size: 10 },
+              formatter: formatNumber,
+            },
           },
         },
       });
@@ -966,299 +994,369 @@ export default function OverviewPage() {
     };
   }, [dailyReportsData, monthlyReportsData]); // Re-render charts when data changes
 
+  if (!isCountReady) {
+    return null; // or loader
+  }
+
   return (
-    <> <PageHeader></PageHeader>
-    <main className="main-content" ref={mainContentRef}>
-      {/* Filters Section */}
-     
+    <>
+      {" "}
+      <PageHeader>
+        {" "}
+        <button
+          className="btn btn-sm btn-ghost"
+          onClick={downloadPDF}
+          title="Download Data as PDF"
+        >
+          <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
+          Export PDF
+        </button>
+      </PageHeader>
+      <main className="main-content" ref={mainContentRef}>
+        {/* Filters Section */}
 
-      {/* Real-time Stats */}
-      <section className="realtime-section">
-        <div className="realtime-card">
-          <div className="realtime-header">
-            <div className="realtime-title">
-              <h3>Performance Summary</h3>
+        {/* Real-time Stats */}
+        <section className="realtime-section">
+          <div className="realtime-card">
+            <div className="realtime-header">
+              <div className="realtime-title">
+                <h3>Performance Summary</h3>
+              </div>
+            </div>
+
+            <div className="realtime-stats">
+              <Stat
+                value={formatNumber(summaryMetrics.impressions)}
+                label="Impressions"
+              />
+              <Stat
+                value={formatNumber(summaryMetrics.completeViews)}
+                label="Complete Views"
+              />
+              <Stat value={`${summaryMetrics.vcr}%`} label="VCR" />
+              <Stat
+                value={formatNumber(summaryMetrics.clicks)}
+                label="Clicks"
+              />
+              <Stat value={`${summaryMetrics.ctr}%`} label="CTR" />
             </div>
           </div>
+        </section>
 
-          <div className="realtime-stats">
-            <Stat
-              value={formatNumber(summaryMetrics.impressions)}
-              label="Impressions"
-            />
-            <Stat
-              value={formatNumber(summaryMetrics.completeViews)}
-              label="Complete Views"
-            />
-            <Stat value={`${summaryMetrics.vcr}%`} label="VCR" />
-            <Stat value={formatNumber(summaryMetrics.clicks)} label="Clicks" />
-            <Stat value={`${summaryMetrics.ctr}%`} label="CTR" />
+        {/* Charts Section */}
+        <section className="charts-section">
+          <h2 className="section-title">Analytics & Insights</h2>
+          <div className="charts-grid">
+            <VisitorsChart dailyReportsData={dailyReportsData} />
+            <VisitorsChartVcr dailyReportsData={dailyReportsData} />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Charts Section */}
-      <section className="charts-section">
-        <h2 className="section-title">Analytics & Insights</h2>
-        <div className="charts-grid">
-          <VisitorsChart dailyReportsData={dailyReportsData} />
-          <VisitorsChartVcr dailyReportsData={dailyReportsData} />
-        </div>
-      </section>
-
-      {/* Table */}
-      <div className="data-table-card">
-        <div className="table-header">
-          <h3>Campaign Performance Summary</h3>
-          <div className="table-actions">
-            <div className="btn-group">
-              <button 
-                className={`btn btn-sm ${tableType === 'daily' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setTableType('daily')}
-              >
-                Daily
-              </button>
-              <button 
-                className={`btn btn-sm ${tableType === 'monthly' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setTableType('monthly')}
-              >
-                Monthly
-              </button>
-            </div>
-            <button className="btn btn-sm btn-ghost" onClick={downloadPDF} title="Download Data as PDF" style={{ marginLeft: "10px" }}>
-              <i className="fas fa-download" style={{ marginRight: "8px" }} /> Export PDF
-            </button>
-          </div>
-        </div>
-
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>{tableType === "daily" ? "Date" : "Month"}</th>
-              <th>Impressions</th>
-              <th>Clicks</th>
-              <th>CTR</th>
-              <th>VCR</th>
-              <th>1st Quartile Views</th>
-              <th>Midpoint Views</th>
-              <th>3rd Quartile Views</th>
-              <th>Complete Views</th>
-              <th>Media Cost</th>
-              <th>Unique Reach</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tableType === "daily" &&
-            dailyReportsData &&
-            Array.isArray(dailyReportsData) ? (
-              (() => {
-                const sortedData = [...dailyReportsData].sort((a, b) => b.date.localeCompare(a.date));
-                const indexOfLastRow = currentPage * rowsPerPage;
-                const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-                const currentRows = sortedData.slice(indexOfFirstRow, indexOfLastRow);
-
-                return currentRows.map((item, index) => {
-                  const impressions = parseInt(item.impressions) || 0;
-                  const completeViews = parseInt(item.completeViewsVideo) || 0;
-                  const vcr =
-                    impressions > 0
-                      ? ((completeViews / impressions) * 100).toFixed(2)
-                      : "0.00";
-
-                  return (
-                    <tr key={index}>
-                      <td>{item.date}</td>
-                      <td>{parseInt(item.impressions).toLocaleString()}</td>
-                      <td>{parseInt(item.clicks).toLocaleString()}</td>
-                      <td>{item.ctr}</td>
-                      <td>{vcr}%</td>
-                      <td>
-                        {parseInt(
-                          item.firstQuartileViewsVideo,
-                        ).toLocaleString()}
-                      </td>
-                      <td>
-                        {parseInt(item.midpointViewsVideo).toLocaleString()}
-                      </td>
-                      <td>
-                        {parseInt(
-                          item.thirdQuartileViewsVideo,
-                        ).toLocaleString()}
-                      </td>
-
-                      <td>
-                        {parseInt(item.completeViewsVideo).toLocaleString()}
-                      </td>
-                      <td>
-                        ₹
-                        {(
-                          parseFloat(item.mediaCostAdvertiserCurrency) * count
-                        ).toFixed(2)}
-                      </td>
-
-                      <td>
-                        {item.uniqueReachImpressionReach !== "-"
-                          ? parseInt(
-                              item.uniqueReachImpressionReach,
-                            ).toLocaleString()
-                          : "-"}
-                      </td>
-                    </tr>
-                  );
-                });
-              })()
-            ) : tableType === "monthly" &&
-              monthlyReportsData &&
-              Array.isArray(monthlyReportsData) ? (
-              (() => {
-                const sortedData = [...monthlyReportsData].sort((a, b) => b.month.localeCompare(a.month));
-                const indexOfLastRow = currentPage * rowsPerPage;
-                const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-                const currentRows = sortedData.slice(indexOfFirstRow, indexOfLastRow);
-
-                return currentRows.map((item, index) => {
-                  const impressions = parseInt(item.impressions) || 0;
-                  const completeViews = parseInt(item.completeViewsVideo) || 0;
-                  const vcr =
-                    impressions > 0
-                      ? ((completeViews / impressions) * 100).toFixed(2)
-                      : "0.00";
-
-                  return (
-                    <tr key={index}>
-                      <td>{item.month}</td>
-                      <td>{parseInt(item.impressions).toLocaleString()}</td>
-                      <td>{parseInt(item.clicks).toLocaleString()}</td>
-                      <td>{item.ctr}</td>
-                      <td>{vcr}%</td>
-                      <td>
-                        {parseInt(
-                          item.firstQuartileViewsVideo,
-                        ).toLocaleString()}
-                      </td>
-                      <td>
-                        {parseInt(item.midpointViewsVideo).toLocaleString()}
-                      </td>
-                      <td>
-                        {parseInt(
-                          item.thirdQuartileViewsVideo,
-                        ).toLocaleString()}
-                      </td>
-
-                      <td>
-                        {parseInt(item.completeViewsVideo).toLocaleString()}
-                      </td>
-                      <td>
-                        ₹
-                        {parseFloat(item.mediaCostAdvertiserCurrency).toFixed(
-                          2,
-                        )}
-                      </td>
-                      <td>
-                        {item.uniqueReachImpressionReach !== "-"
-                          ? parseInt(
-                              item.uniqueReachImpressionReach,
-                            ).toLocaleString()
-                          : "-"}
-                      </td>
-                    </tr>
-                  );
-                });
-              })()
-            ) : (
-              <tr>
-                <td
-                  colSpan="11"
-                  style={{
-                    textAlign: "center",
-                    padding: "2rem",
-                    color: "#6b7280",
-                  }}
+        {/* Table */}
+        <div className="data-table-card">
+          <div className="table-header">
+            <h3>Campaign Performance Summary</h3>
+            <div className="table-actions">
+              <div className="btn-group">
+                <button
+                  className={`btn btn-sm ${tableType === "daily" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => setTableType("daily")}
                 >
-                  {isLoadingData
-                    ? "Loading data..."
-                    : "No data available. Please select a different date range to get data."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination UI */}
-      {(tableType === "daily" ? dailyReportsData : monthlyReportsData)?.length > 0 && (
-        <div className="pagination-wrapper">
-          <div className="rows-per-page">
-            <span>Rows per page:</span>
-            <select 
-              value={rowsPerPage} 
-              onChange={(e) => {
-                setRowsPerPage(parseInt(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="rows-select"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
-
-          <div className="pagination-controls">
-            <span className="pagination-info">
-              Showing {((currentPage - 1) * rowsPerPage) + 1} to {Math.min(currentPage * rowsPerPage, (tableType === "daily" ? dailyReportsData : monthlyReportsData).length)} of {(tableType === "daily" ? dailyReportsData : monthlyReportsData).length}
-            </span>
-            <div className="pagination-buttons">
-              <button 
-                className="btn btn-sm btn-ghost" 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <i className="fas fa-chevron-left" />
-              </button>
-              
-              {/* Simple page numbers */}
-              {(() => {
-                const totalPages = Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage);
-                const pages = [];
-                let startPage = Math.max(1, currentPage - 2);
-                let endPage = Math.min(totalPages, startPage + 4);
-                
-                if (endPage - startPage < 4) {
-                  startPage = Math.max(1, endPage - 4);
-                }
-
-                for (let i = startPage; i <= endPage; i++) {
-                  pages.push(
-                    <button
-                      key={i}
-                      className={`btn btn-sm ${currentPage === i ? 'btn-primary' : 'btn-ghost'}`}
-                      onClick={() => setCurrentPage(i)}
-                    >
-                      {i}
-                    </button>
-                  );
-                }
-                return pages;
-              })()}
-
-              <button 
-                className="btn btn-sm btn-ghost" 
-                onClick={() => {
-                  const totalPages = Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage);
-                  setCurrentPage(p => Math.min(totalPages, p + 1));
-                }}
-                disabled={currentPage === Math.ceil((tableType === "daily" ? dailyReportsData : monthlyReportsData).length / rowsPerPage)}
-              >
-                <i className="fas fa-chevron-right" />
-              </button>
+                  Daily
+                </button>
+                <button
+                  className={`btn btn-sm ${tableType === "monthly" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => setTableType("monthly")}
+                >
+                  Monthly
+                </button>
+              </div>
+              <button
+          className="btn btn-sm btn-ghost"
+          onClick={() => downloadAllDailyOverviewCSV(insertionOrderId)}
+          title="Download Data as PDF"
+        >
+          <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
+          Export Overview CSV
+        </button>
+             
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Bottom Sections */}
-    </main>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>{tableType === "daily" ? "Date" : "Month"}</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>CTR</th>
+                <th>VCR</th>
+                <th>1st Quartile Views</th>
+                <th>Midpoint Views</th>
+                <th>3rd Quartile Views</th>
+                <th>Complete Views</th>
+                <th>Media Cost</th>
+                <th>Unique Reach</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableType === "daily" &&
+              dailyReportsData &&
+              Array.isArray(dailyReportsData) ? (
+                (() => {
+                  const sortedData = [...dailyReportsData].sort((a, b) =>
+                    b.date.localeCompare(a.date),
+                  );
+                  const indexOfLastRow = currentPage * rowsPerPage;
+                  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+                  const currentRows = sortedData.slice(
+                    indexOfFirstRow,
+                    indexOfLastRow,
+                  );
+
+                  return currentRows.map((item, index) => {
+                    const impressions = parseInt(item.impressions) || 0;
+                    const completeViews =
+                      parseInt(item.completeViewsVideo) || 0;
+                    const vcr =
+                      impressions > 0
+                        ? ((completeViews / impressions) * 100).toFixed(2)
+                        : "0.00";
+
+                    return (
+                      <tr key={index}>
+                        <td>{item.date}</td>
+                        <td>{parseInt(item.impressions).toLocaleString()}</td>
+                        <td>{parseInt(item.clicks).toLocaleString()}</td>
+                        <td>{item.ctr}</td>
+                        <td>{vcr}%</td>
+                        <td>
+                          {parseInt(
+                            item.firstQuartileViewsVideo,
+                          ).toLocaleString()}
+                        </td>
+                        <td>
+                          {parseInt(item.midpointViewsVideo).toLocaleString()}
+                        </td>
+                        <td>
+                          {parseInt(
+                            item.thirdQuartileViewsVideo,
+                          ).toLocaleString()}
+                        </td>
+
+                        <td>
+                          {parseInt(item.completeViewsVideo).toLocaleString()}
+                        </td>
+                        <td>
+                          ₹
+                          {(
+                            (Number(item?.mediaCostAdvertiserCurrency) || 0) *
+                            (Number(count) || 0)
+                          ).toFixed(2)}
+                        </td>
+
+                        <td>
+                          {item.uniqueReachImpressionReach !== "-"
+                            ? parseInt(
+                                item.uniqueReachImpressionReach,
+                              ).toLocaleString()
+                            : "-"}
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()
+              ) : tableType === "monthly" &&
+                monthlyReportsData &&
+                Array.isArray(monthlyReportsData) ? (
+                (() => {
+                  const sortedData = [...monthlyReportsData].sort((a, b) =>
+                    b.month.localeCompare(a.month),
+                  );
+                  const indexOfLastRow = currentPage * rowsPerPage;
+                  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+                  const currentRows = sortedData.slice(
+                    indexOfFirstRow,
+                    indexOfLastRow,
+                  );
+
+                  return currentRows.map((item, index) => {
+                    const impressions = parseInt(item.impressions) || 0;
+                    const completeViews =
+                      parseInt(item.completeViewsVideo) || 0;
+                    const vcr =
+                      impressions > 0
+                        ? ((completeViews / impressions) * 100).toFixed(2)
+                        : "0.00";
+
+                    return (
+                      <tr key={index}>
+                        <td>{item.month}</td>
+                        <td>{parseInt(item.impressions).toLocaleString()}</td>
+                        <td>{parseInt(item.clicks).toLocaleString()}</td>
+                        <td>{item.ctr}</td>
+                        <td>{vcr}%</td>
+                        <td>
+                          {parseInt(
+                            item.firstQuartileViewsVideo,
+                          ).toLocaleString()}
+                        </td>
+                        <td>
+                          {parseInt(item.midpointViewsVideo).toLocaleString()}
+                        </td>
+                        <td>
+                          {parseInt(
+                            item.thirdQuartileViewsVideo,
+                          ).toLocaleString()}
+                        </td>
+
+                        <td>
+                          {parseInt(item.completeViewsVideo).toLocaleString()}
+                        </td>
+                        <td>
+                          ₹
+                          {parseFloat(item.mediaCostAdvertiserCurrency).toFixed(
+                            2,
+                          )}
+                        </td>
+                        <td>
+                          {item.uniqueReachImpressionReach !== "-"
+                            ? parseInt(
+                                item.uniqueReachImpressionReach,
+                              ).toLocaleString()
+                            : "-"}
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()
+              ) : (
+                <tr>
+                  <td
+                    colSpan="11"
+                    style={{
+                      textAlign: "center",
+                      padding: "2rem",
+                      color: "#6b7280",
+                    }}
+                  >
+                    {isLoadingData
+                      ? "Loading data..."
+                      : "No data available. Please select a different date range to get data."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination UI */}
+        {(tableType === "daily" ? dailyReportsData : monthlyReportsData)
+          ?.length > 0 && (
+          <div className="pagination-wrapper">
+            <div className="rows-per-page">
+              <span>Rows per page:</span>
+              <select
+                value={rowsPerPage}
+                onChange={(e) => {
+                  setRowsPerPage(parseInt(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="rows-select"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="pagination-controls">
+              <span className="pagination-info">
+                Showing {(currentPage - 1) * rowsPerPage + 1} to{" "}
+                {Math.min(
+                  currentPage * rowsPerPage,
+                  (tableType === "daily"
+                    ? dailyReportsData
+                    : monthlyReportsData
+                  ).length,
+                )}{" "}
+                of{" "}
+                {
+                  (tableType === "daily"
+                    ? dailyReportsData
+                    : monthlyReportsData
+                  ).length
+                }
+              </span>
+              <div className="pagination-buttons">
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <i className="fas fa-chevron-left" />
+                </button>
+
+                {/* Simple page numbers */}
+                {(() => {
+                  const totalPages = Math.ceil(
+                    (tableType === "daily"
+                      ? dailyReportsData
+                      : monthlyReportsData
+                    ).length / rowsPerPage,
+                  );
+                  const pages = [];
+                  let startPage = Math.max(1, currentPage - 2);
+                  let endPage = Math.min(totalPages, startPage + 4);
+
+                  if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                  }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        className={`btn btn-sm ${currentPage === i ? "btn-primary" : "btn-ghost"}`}
+                        onClick={() => setCurrentPage(i)}
+                      >
+                        {i}
+                      </button>,
+                    );
+                  }
+                  return pages;
+                })()}
+
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => {
+                    const totalPages = Math.ceil(
+                      (tableType === "daily"
+                        ? dailyReportsData
+                        : monthlyReportsData
+                      ).length / rowsPerPage,
+                    );
+                    setCurrentPage((p) => Math.min(totalPages, p + 1));
+                  }}
+                  disabled={
+                    currentPage ===
+                    Math.ceil(
+                      (tableType === "daily"
+                        ? dailyReportsData
+                        : monthlyReportsData
+                      ).length / rowsPerPage,
+                    )
+                  }
+                >
+                  <i className="fas fa-chevron-right" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Sections */}
+      </main>
     </>
   );
 }

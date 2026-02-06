@@ -418,10 +418,21 @@ const Header = () => {
   useEffect(() => {
     if (!isInitialized || !selectedAudience) return;
 
-    localStorage.setItem("audienceId", selectedAudience._id);
-    localStorage.setItem("audienceName", selectedAudience.reportName);
-    localStorage.setItem("insertionId",selectedAudience.insertionOrderId); 
-    localStorage.setItem("count", selectedAudience.cpm);
+    const updates = [
+      { key: "audienceId", value: selectedAudience._id },
+      { key: "audienceName", value: selectedAudience.reportName },
+      { key: "insertionId", value: selectedAudience.insertionOrderId },
+      { key: "count", value: selectedAudience.cpm },
+    ];
+
+    updates.forEach(({ key, value }) => {
+      localStorage.setItem(key, value);
+      window.dispatchEvent(
+        new CustomEvent("storage", {
+          detail: { key, newValue: value },
+        }),
+      );
+    });
   }, [selectedAudience, isInitialized]);
 
   // Handle desktop navigation toggle class
