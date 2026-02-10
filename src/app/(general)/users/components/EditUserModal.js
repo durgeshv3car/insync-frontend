@@ -35,11 +35,11 @@ const EditUserModal = ({ show, onClose, user, onSave }) => {
       <div className="modal fade show d-block" tabIndex="-1" role="dialog">
         <div className="modal-dialog modal-dialog-centered" role="document">
           <div className="modal-content shadow-lg">
-            <div className="modal-header bg-primary text-white">
+            <div className="modal-header">
               <h5 className="modal-title">Edit User</h5>
               <button
                 type="button"
-                className="btn-close btn-close-white"
+                className="btn-close"
                 onClick={handleClose}
               >
 
@@ -96,7 +96,7 @@ const EditUserModal = ({ show, onClose, user, onSave }) => {
       {/* Custom backdrop */}
       <div
         className="position-fixed top-0 start-0 w-100 h-100"
-        style={{ background: "rgba(0,0,0,0.5)", zIndex: 1040 }}
+        style={{ background: "rgba(0,0,0,0.5)", zIndex: 9998, backdropFilter: "blur(4px)" }}
         onClick={onClose}
       />
     </>

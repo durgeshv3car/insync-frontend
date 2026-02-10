@@ -55,18 +55,6 @@ const SearchModal = ({
           maxWidth: "320px",
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.15)";
-          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
-          e.currentTarget.style.transform = "translateY(-1px)";
-          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
-        }}
       >
         <FiUsers size={16} color="white" />
         <span

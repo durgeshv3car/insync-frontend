@@ -132,7 +132,9 @@ $progress-bg: $body-bg;
 $progress-bar-bg: $primary;
 
 // Offcanvas
-$zindex-offcanvas: 1051;
+$zindex-offcanvas: 9999;
+$zindex-modal: 9999;
+$zindex-modal-backdrop: 9998;
 $offcanvas-horizontal-width: 400px;
 
 // Font
