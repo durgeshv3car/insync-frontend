@@ -476,7 +476,7 @@ const Header = () => {
             style={{ marginLeft: "10px", marginRight: "26px" }}
           >
             {navigationOpen ? (
-              <FiArrowLeft size={24} />
+              <FiArrowRight size={24} />
             ) : (
               <FiAlignLeft size={24} />
             )}
