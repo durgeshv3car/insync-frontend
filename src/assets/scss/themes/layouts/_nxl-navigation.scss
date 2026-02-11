@@ -70,13 +70,13 @@
 			margin-right: 12px;
 			display: inline-block;
 			vertical-align: middle;
-
+			color: inherit;
 
 			svg {
 				font-size: 18px;
 				stroke-width: 1.7px;
+				color: inherit;
 			}
-
 		}
 
 		.nxl-link {
@@ -95,8 +95,10 @@
 				transition: all 0.3s ease;
 
 				.nxl-micon {
-					i {
-						color: $brand-dark;
+
+					i,
+					svg {
+						color: inherit;
 						transition: all 0.3s ease;
 					}
 				}
@@ -150,8 +152,10 @@
 					transition: all 0.3s ease;
 
 					.nxl-micon {
-						i {
-							color: $darken;
+
+						i,
+						svg {
+							color: inherit;
 							transition: all 0.3s ease;
 						}
 					}
@@ -195,13 +199,14 @@
 		}
 	}
 
-	 .nxl-menu-hidden {
+	.nxl-menu-hidden {
 		opacity: 0;
 		visibility: hidden;
 		max-height: 0;
 		overflow: hidden;
 		transition: all 0.5s ease-in-out;
 	}
+
 	.nxl-menu-visible {
 		opacity: 1;
 		visibility: visible;

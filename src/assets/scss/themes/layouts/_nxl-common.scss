@@ -639,7 +639,8 @@ i {
 	opacity: 0;
 	transition: opacity 0.2s;
 	z-index: 9999;
-	&::after{
+
+	&::after {
 		content: '';
 		position: absolute;
 		bottom: -4px;

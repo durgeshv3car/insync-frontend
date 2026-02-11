@@ -1,33 +1,89 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Calendar, ChevronDown, RotateCcw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { Calendar, ChevronDown, RotateCcw  } from "lucide-react";
 
 function DateSection() {
   const [show, setShow] = useState(false);
-  const [selectedRange, setSelectedRange] = useState('LAST_30_DAYS');
-  const [customStartDate, setCustomStartDate] = useState('');
-  const [customEndDate, setCustomEndDate] = useState('');
+  const [selectedRange, setSelectedRange] = useState("LAST_30_DAYS");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
   const [isCustom, setIsCustom] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const dropdownRef = useRef(null);
 
   const dateRanges = [
-    { value: 'CURRENT_DAY', label: 'Current Day', description: 'Today' },
-    { value: 'PREVIOUS_DAY', label: 'Previous Day', description: 'Yesterday' },
-    { value: 'WEEK_TO_DATE', label: 'Week to Date', description: 'Since Sunday' },
-    { value: 'MONTH_TO_DATE', label: 'Month to Date', description: 'Since start of month' },
-    { value: 'QUARTER_TO_DATE', label: 'Quarter to Date', description: 'Since start of quarter' },
-    { value: 'YEAR_TO_DATE', label: 'Year to Date', description: 'Since start of year' },
-    { value: 'PREVIOUS_WEEK', label: 'Previous Week', description: 'Last completed week' },
-    { value: 'PREVIOUS_MONTH', label: 'Previous Month', description: 'Last completed month' },
-    { value: 'PREVIOUS_QUARTER', label: 'Previous Quarter', description: 'Last completed quarter' },
-    { value: 'PREVIOUS_YEAR', label: 'Previous Year', description: 'Last completed year' },
-    { value: 'LAST_7_DAYS', label: 'Last 7 Days', description: 'Excluding today' },
-    { value: 'LAST_14_DAYS', label: 'Last 14 Days', description: 'Excluding today' },
-    { value: 'LAST_30_DAYS', label: 'Last 30 Days', description: 'Excluding today' },
-    { value: 'LAST_60_DAYS', label: 'Last 60 Days', description: 'Excluding today' },
-    { value: 'LAST_90_DAYS', label: 'Last 90 Days', description: 'Excluding today' },
-    { value: 'LAST_365_DAYS', label: 'Last 365 Days', description: 'Excluding today' },
-    { value: 'ALL_TIME', label: 'All Time', description: 'All available data' },
+    { value: "CURRENT_DAY", label: "Current Day", description: "Today" },
+    { value: "PREVIOUS_DAY", label: "Previous Day", description: "Yesterday" },
+    {
+      value: "WEEK_TO_DATE",
+      label: "Week to Date",
+      description: "Since Sunday",
+    },
+    {
+      value: "MONTH_TO_DATE",
+      label: "Month to Date",
+      description: "Since start of month",
+    },
+    {
+      value: "QUARTER_TO_DATE",
+      label: "Quarter to Date",
+      description: "Since start of quarter",
+    },
+    {
+      value: "YEAR_TO_DATE",
+      label: "Year to Date",
+      description: "Since start of year",
+    },
+    {
+      value: "PREVIOUS_WEEK",
+      label: "Previous Week",
+      description: "Last completed week",
+    },
+    {
+      value: "PREVIOUS_MONTH",
+      label: "Previous Month",
+      description: "Last completed month",
+    },
+    {
+      value: "PREVIOUS_QUARTER",
+      label: "Previous Quarter",
+      description: "Last completed quarter",
+    },
+    {
+      value: "PREVIOUS_YEAR",
+      label: "Previous Year",
+      description: "Last completed year",
+    },
+    {
+      value: "LAST_7_DAYS",
+      label: "Last 7 Days",
+      description: "Excluding today",
+    },
+    {
+      value: "LAST_14_DAYS",
+      label: "Last 14 Days",
+      description: "Excluding today",
+    },
+    {
+      value: "LAST_30_DAYS",
+      label: "Last 30 Days",
+      description: "Excluding today",
+    },
+    {
+      value: "LAST_60_DAYS",
+      label: "Last 60 Days",
+      description: "Excluding today",
+    },
+    {
+      value: "LAST_90_DAYS",
+      label: "Last 90 Days",
+      description: "Excluding today",
+    },
+    {
+      value: "LAST_365_DAYS",
+      label: "Last 365 Days",
+      description: "Excluding today",
+    },
+    { value: "ALL_TIME", label: "All Time", description: "All available data" },
   ];
 
   // Load values from localStorage on mount
@@ -36,23 +92,23 @@ function DateSection() {
     const storedStart = localStorage.getItem("startDate");
     const storedEnd = localStorage.getItem("endDate");
 
-    if (storedRange && storedRange !== 'Select Date') {
+    if (storedRange && storedRange !== "Select Date") {
       setSelectedRange(storedRange);
-      if (storedRange === 'CUSTOM') {
+      if (storedRange === "CUSTOM") {
         setIsCustom(true);
       }
     }
     if (storedStart) setCustomStartDate(storedStart);
     if (storedEnd) setCustomEndDate(storedEnd);
-    
+
     // Mark as initialized after loading
     setIsInitialized(true);
   }, []);
 
   // Save to localStorage whenever state changes (only after initialization)
   useEffect(() => {
-    if (!isInitialized) return; 
-    
+    if (!isInitialized) return;
+
     const updates = [
       { key: "selectedRange", value: selectedRange },
       { key: "startDate", value: customStartDate },
@@ -77,11 +133,11 @@ function DateSection() {
     };
 
     if (show) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [show]);
 
@@ -92,22 +148,21 @@ function DateSection() {
 
   const handleCustomDate = () => {
     setIsCustom(true);
-    setSelectedRange('CUSTOM');
+    setSelectedRange("CUSTOM");
   };
 
   const handleApply = () => {
     setShow(false);
   };
 
-
   const handleReset = () => {
-    setSelectedRange('Select Date');
-    setCustomStartDate('');
-    setCustomEndDate('');
+    setSelectedRange("Select Date");
+    setCustomStartDate("");
+    setCustomEndDate("");
     setIsCustom(false);
-    
+
     const keys = ["selectedRange", "startDate", "endDate"];
-    keys.forEach(key => {
+    keys.forEach((key) => {
       localStorage.removeItem(key);
       window.dispatchEvent(
         new CustomEvent("storage", {
@@ -123,95 +178,132 @@ function DateSection() {
     if (isCustom && customStartDate && customEndDate) {
       return `${customStartDate} to ${customEndDate}`;
     }
-    const found = dateRanges.find(r => r.value === selectedRange);
-    return found?.label || 'Select Date Range';
+    const found = dateRanges.find((r) => r.value === selectedRange);
+    return found?.label || "Select Date Range";
   };
 
-  const hasSelection = selectedRange !== 'Select Date' || customStartDate || customEndDate;
+  const hasSelection =
+    selectedRange !== "Select Date" || customStartDate || customEndDate;
 
   return (
-    <div className="p-3">
+    <div className="date-section-wrapper">
       <div className="dropdown" ref={dropdownRef}>
-        <div className="d-flex gap-2">
-          <button 
-            className="btn btn-primary border d-flex align-items-center gap-2"
+        <div className="d-flex align-items-center gap-2">
+          <button
+            className="btn"
             type="button"
             onClick={() => setShow(!show)}
-            style={{ fontSize: '10px' }}
+            style={{ 
+              display: "flex",
+              alignItems: "center",
+              padding: "6px 10px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              border: "1px solid transparent",
+              background: "#3454d1",
+              transition: "all 0.2s ease",
+              fontSize: "10px",
+              fontWeight: 400,
+              color: "#ffffff",
+              outline: "none",
+              minWidth: "150px",
+              marginLeft: "26px"
+            }}
           >
-            <Calendar size={16} />
-            <span>{getSelectedLabel()}</span>
-            <ChevronDown 
-              size={16} 
+            <Calendar 
+              size={14} 
               style={{ 
-                transform: show ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s'
+                marginRight: "0px", 
+                color: "#ffffff",
+                flexShrink: 0 
               }} 
             />
-          </button>
 
-          {hasSelection && (
-            <button
-              className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
-              type="button"
-              onClick={handleReset}
-              title="Reset selection"
-              style={{ fontSize: '10px' }}
-            >
-              <RotateCcw size={14} />
-              Reset
-            </button>
-          )}
+            <div style={{ flex: 1, textAlign: "left", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <span style={{ color: "#ffffff" }}>
+                {getSelectedLabel()}
+              </span>
+            </div>
+
+            <ChevronDown
+              size={14}
+              style={{
+                marginLeft: "14px",
+                color: "rgba(255,255,255,0.8)",
+                flexShrink: 0,
+                transform: show ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "all 0.3s ease",
+              }}
+            />
+          </button>
         </div>
 
-        <div 
-          className={`dropdown-menu ${show ? 'show' : ''}`}
-          style={{ 
-            width: '600px', 
-            maxWidth: '90vw',
+        <div
+          className={`dropdown-menu ${show ? "show" : ""}`}
+            style={{
+            width: "612px",
+            maxWidth: "92vw",
             left: 0,
-            right: 'auto',
-            padding: 0,
+            right: "auto",
+            padding: "0",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            borderRadius: "14px",
+            marginTop: "12px",
+            background: "#ffffff !important",
+            zIndex: 1050
           }}
+          onClick={(e) => e.stopPropagation()}
         >
-          <div className="row g-0">
+          <div className="row g-0" style={{ background: "#ffffff", borderRadius: "14px", overflow: "hidden" }}>
             {/* Left Section - Preset Ranges */}
-            <div className="col-md-6 border-end">
-              <div className="p-2 bg-light border-bottom">
-                <small className="text-uppercase fw-semibold text-muted">Preset Ranges</small>
+            <div className="col-md-6 border-end" style={{ background: "#f8fafc" }}>
+              <div className="p-3 border-bottom">
+                <small className="text-uppercase fw-bold text-muted" style={{ letterSpacing: "1px", fontSize: "10px" }}>
+                  Quick Selection
+                </small>
               </div>
-              <div 
-                className="p-2" 
-                style={{ 
-                  maxHeight: '350px', 
-                  overflowY: 'auto' 
+              <div
+                className="p-2"
+                style={{
+                  maxHeight: "380px",
+                  overflowY: "auto",
                 }}
               >
                 {dateRanges.map((range) => (
                   <div
                     key={range.value}
                     onClick={() => handleRangeSelect(range.value)}
-                    className={`p-2 rounded mb-1 ${
-                      selectedRange === range.value && !isCustom
-                        ? 'bg-muted bg-muted-10 border border-muted menubg'
-                        : ''
-                    }`}
-                    style={{ cursor: 'pointer' }}
+                    className="p-3 rounded-3 mb-1"
+                    style={{ 
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      border: selectedRange === range.value && !isCustom ? "1.5px solid #3454d1" : "1.5px solid transparent",
+                      background: selectedRange === range.value && !isCustom ? "#eff6ff" : "transparent"
+                    }}
                     onMouseEnter={(e) => {
                       if (selectedRange !== range.value || isCustom) {
-                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                        e.currentTarget.style.background = "#ffffff";
+                        e.currentTarget.style.borderColor = "#e2e8f0";
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (selectedRange !== range.value || isCustom) {
-                        e.currentTarget.style.backgroundColor = '';
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "transparent";
                       }
                     }}
                   >
-                    <div className="text-muted" style={{ fontSize: '13px', fontWeight: '500' }}>
+                    <div
+                      style={{ 
+                        fontSize: "14px", 
+                        fontWeight: 700,
+                        color: selectedRange === range.value && !isCustom ? "#3454d1" : "#1e293b"
+                      }}
+                    >
                       {range.label}
                     </div>
-                    <div style={{ fontSize: '11px' }} className="text-muted">
+                    <div style={{ fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
                       {range.description}
                     </div>
                   </div>
@@ -220,18 +312,27 @@ function DateSection() {
             </div>
 
             {/* Right Section - Custom Range */}
-            <div className="col-md-6">
-              <div className="p-2 bg-light border-bottom">
-                <small className="text-uppercase fw-semibold text-muted">Custom Range</small>
+            <div className="col-md-6" style={{ background: "#ffffff" }}>
+              <div className="p-3 border-bottom">
+                <small className="text-uppercase fw-bold text-muted" style={{ letterSpacing: "1px", fontSize: "10px" }}>
+                  Custom Range
+                </small>
               </div>
-              <div className="p-3">
-                <div className="mb-3">
-                  <label className="form-label fw-medium" style={{ fontSize: '12px' }}>
-                    Start Date
+              <div className="p-4">
+                <div className="mb-4">
+                  <label className="form-label fw-bold text-dark" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                    START DATE
                   </label>
                   <input
                     type="date"
-                    className="form-control form-control-sm"
+                    className="form-control"
+                    style={{ 
+                      borderRadius: "10px", 
+                      border: "1.5px solid #e2e8f0", 
+                      padding: "10px",
+                      fontSize: "13px",
+                      fontWeight: 500
+                    }}
                     value={customStartDate}
                     onChange={(e) => {
                       setCustomStartDate(e.target.value);
@@ -240,13 +341,20 @@ function DateSection() {
                   />
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-medium" style={{ fontSize: '12px' }}>
-                    End Date
+                <div className="mb-4">
+                  <label className="form-label fw-bold text-dark" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                    END DATE
                   </label>
                   <input
                     type="date"
-                    className="form-control form-control-sm"
+                    className="form-control"
+                    style={{ 
+                      borderRadius: "10px", 
+                      border: "1.5px solid #e2e8f0", 
+                      padding: "10px",
+                      fontSize: "13px",
+                      fontWeight: 500
+                    }}
                     value={customEndDate}
                     onChange={(e) => {
                       setCustomEndDate(e.target.value);
@@ -255,45 +363,49 @@ function DateSection() {
                   />
                 </div>
 
-                {/* Selected Display */}
-                <div className="p-2 bg-light rounded border mb-3">
-                  <div style={{ fontSize: '11px' }} className="fw-semibold text-muted mb-1">
-                    SELECTED
-                  </div>
-                  {isCustom ? (
-                    <div style={{ fontSize: '12px' }}>
-                      {customStartDate && customEndDate ? (
-                        <span className="badge bg-primary">
-                          {customStartDate} to {customEndDate}
-                        </span>
+                {/* Status Display */}
+                <div className="p-3 rounded-3 mb-4" style={{ background: "#f8fafc", border: "1px dashed #cbd5e1" }}>
+                   <div className="d-flex align-items-center gap-2 mb-1">
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3454d1" }}></div>
+                      <small className="fw-bold text-muted" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>ACTIVE SELECTION</small>
+                   </div>
+                   <div style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b" }}>
+                      {isCustom ? (
+                        customStartDate && customEndDate ? `${customStartDate} ➔ ${customEndDate}` : 'Choose dates above'
                       ) : (
-                        <span className="text-muted">Select dates</span>
+                        dateRanges.find(r => r.value === selectedRange)?.label || 'None Selected'
                       )}
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '12px' }}>
-                      <span className="badge bg-primary">
-                        {dateRanges.find(r => r.value === selectedRange)?.label || 'None'}
-                      </span>
-                    </div>
-                  )}
+                   </div>
                 </div>
 
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 pt-2">
                   <button
-                    className="btn btn-primary btn-sm flex-grow-1"
+                    className="btn py-2 fw-bold text-white shadow-sm"
+                    style={{ 
+                      borderRadius: "10px", 
+                      background: "#3454d1", 
+                      border: "none",
+                      fontSize: "13px",
+                      flex: 1
+                    }}
                     onClick={handleApply}
                     disabled={isCustom && (!customStartDate || !customEndDate)}
                   >
-                    Apply
+                    Apply Selection
                   </button>
                   {hasSelection && (
                     <button
-                      className="btn btn-outline-secondary btn-sm"
+                      className="btn btn-outline-light d-flex align-items-center justify-content-center shadow-sm"
+                      style={{ 
+                        borderRadius: "10px", 
+                        border: "1.5px solid #e2e8f0", 
+                        color: "#64748b",
+                        padding: "0 15px"
+                      }}
                       onClick={handleReset}
-                      title="Reset"
+                      title="Reset To Default"
                     >
-                      <RotateCcw size={14} />
+                      <RotateCcw size={18} />
                     </button>
                   )}
                 </div>

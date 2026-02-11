@@ -139,6 +139,12 @@ function page() {
               isClearable
               isSearchable
               placeholder="Search or select audience..."
+              styles={{
+                menuList: (base) => ({
+                  ...base,
+                  maxHeight: "160px",
+                }),
+              }}
             />
           </div>
 

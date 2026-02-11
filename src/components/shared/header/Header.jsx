@@ -468,15 +468,15 @@ const Header = () => {
     <header className="nxl-header">
       <div className="header-wrapper">
         {/* LEFT */}
-        <div className="header-left d-flex align-items-center gap-3">
+        <div className="header-left d-flex align-items-center gap-2">
           {/* Single Navigation Toggle for All Screens */}
           <button
             className="btn p-0 border-0 bg-transparent"
             onClick={() => setNavigationOpen(!navigationOpen)}
-            style={{ marginRight: "8px" }}
+            style={{ marginLeft: "10px", marginRight: "26px" }}
           >
             {navigationOpen ? (
-              <FiArrowRight size={24} />
+              <FiArrowLeft size={24} />
             ) : (
               <FiAlignLeft size={24} />
             )}
@@ -494,7 +494,7 @@ const Header = () => {
         </div>
 
         {/* RIGHT */}
-        <div className="header-right ms-auto d-flex align-items-center">
+        <div className="header-right ms-auto d-flex align-items-center gap-2">
           {isPathPresent && selectedAudience && (
             <SearchModal
               audienceList={audienceList}

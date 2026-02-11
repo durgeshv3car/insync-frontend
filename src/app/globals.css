@@ -540,3 +540,45 @@ html.minimenu .nxl-navigation .navbar-content .nxl-item.nxl-hasmenu:has(.nxl-sub
 .ai-loader-shimmer {
   animation: ai-shimmer 1.5s infinite;
 }
+
+/* =====================
+   ICON COLOR FIXES
+   Ensures icons match text in buttons, links, etc.
+===================== */
+.btn svg,
+a svg,
+.dropdown-item svg,
+.dropdown-header svg,
+.nxl-head-link svg,
+.nxl-link svg,
+.lh-1 svg {
+  color: inherit !important;
+}
+
+i[class^="feather-"],
+i[class*=" feather-"] {
+  color: inherit;
+}
+
+
+.glass-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.glass-pill:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}

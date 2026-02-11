@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect, useRef } from "react";
 import {
   FiChevronRight,
   FiChevronDown,
   FiSearch,
   FiUsers,
   FiX,
+  FiTarget,
 } from "react-icons/fi";
 
 const SearchModal = ({
@@ -15,8 +15,20 @@ const SearchModal = ({
 }) => {
   const [tempAudience, setTempAudience] = useState(selectedAudience || null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef(null);
 
-  // Filter audience list based on search query
+  // Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const filteredAudienceList = audienceList.filter(
     (audience) =>
       audience.reportName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -25,453 +37,329 @@ const SearchModal = ({
         .includes(searchQuery.toLowerCase()),
   );
 
-  const handleCloseDropdown = () => {
-    // Close the Bootstrap dropdown
-    const dropdownElement = document.querySelector(".dropdown-menu.show");
-    if (dropdownElement) {
-      const button = dropdownElement.previousElementSibling;
-      if (button) {
-        button.click();
-      }
-    }
-  };
-
   return (
-    <div className="dropdown">
-      {/* Dropdown Toggle Button */}
+    <div
+      ref={wrapperRef}
+      style={{ position: "relative", display: "inline-block" }}
+    >
+      {/* Toggle Button */}
       <button
-        className="btn d-flex align-items-center gap-2"
-        data-bs-toggle="dropdown"
-        data-bs-auto-close="false"
+        onClick={() => setIsOpen((prev) => !prev)}
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-          color: "white",
-          padding: "10px 16px",
-          borderRadius: "10px",
-          fontSize: "14px",
-          fontWeight: "500",
-          transition: "all 0.3s ease",
-          maxWidth: "320px",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+          display: "flex",
+          alignItems: "center",
+          padding: "6px 10px",
+          borderRadius: "8px",
+          cursor: "pointer",
+          border: "1px solid transparent",
+          background: "#3454d1",
+          color: "#ffffff",
+          transition: "all 0.2s ease",
+          minWidth: "150px",
+          fontSize: "12px",
+          fontWeight: 400,
+          textDecoration: "none",
+          outline: "none",
+          marginRight: "26px",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "#2a42a8";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "#3454d1";
         }}
       >
-        <FiUsers size={16} color="white" />
-        <span
+        <FiTarget
+          size={14}
           style={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            flex: 1,
+            marginRight: "6px",
+            color: "#ffffff",
+            flexShrink: 0,
           }}
-        >
-          {selectedAudience?.reportName || "Select Campaign"}
-        </span>
-        <FiChevronDown size={16} color="white" />
+        />
+
+        <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+          <span
+            style={{
+              color: "#ffffff",
+              display: "block",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
+              width: "100%",
+            }}
+          >
+            {selectedAudience?.reportName || "Select Campaign"}
+          </span>
+        </div>
+
+        <FiChevronDown
+          size={14}
+          style={{
+            marginLeft: "10px",
+            color: "rgba(255,255,255,0.8)",
+            flexShrink: 0,
+            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.3s ease",
+          }}
+        />
       </button>
 
-      {/* Dropdown Menu */}
-      <div
-        className="dropdown-menu dropdown-menu-end shadow-lg"
-        style={{
-          minWidth: "420px",
-          maxWidth: "480px",
-          borderRadius: "16px",
-          border: "none",
-          padding: "0",
-          marginTop: "8px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          overflow: "hidden",
-          background: "linear-gradient(to bottom, #ffffff, #f9fafb)",
-        }}
-      >
-        {/* Header with Gradient */}
+      {/* Dropdown */}
+      {isOpen && (
         <div
           style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            padding: "20px 24px",
-            color: "white",
-            position: "relative",
+            position: "absolute",
+            right: 0,
+            top: "120%",
+            zIndex: 9999,
+            minWidth: "420px",
+            maxWidth: "480px",
+            borderRadius: "14px",
+            overflow: "hidden",
+            background: "#fff",
+            border: "1px solid #e2e8f0",
+            boxShadow:
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
           }}
         >
-          {/* Close Button */}
-          <button
-            onClick={handleCloseDropdown}
+          {/* Header */}
+          <div
             style={{
-              position: "absolute",
-              top: "16px",
-              right: "16px",
-              background: "rgba(255, 255, 255, 0.2)",
-              border: "none",
-              color: "white",
-              cursor: "pointer",
-              width: "32px",
-              height: "32px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "8px",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.3)";
-              e.currentTarget.style.transform = "rotate(90deg)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.2)";
-              e.currentTarget.style.transform = "rotate(0deg)";
+              background: "#f8fafc",
+              padding: "24px",
+              borderBottom: "1px solid #e2e8f0",
+              position: "relative",
             }}
           >
-            <FiX size={20} />
-          </button>
-
-          <h6
-            style={{
-              margin: 0,
-              fontSize: "16px",
-              fontWeight: "600",
-              marginBottom: "12px",
-              paddingRight: "40px",
-            }}
-          >
-            Select Your Campaign
-          </h6>
-
-          {/* Search Input */}
-          <div className="position-relative">
-            <FiSearch
-              size={18}
+            <button
+              onClick={() => setIsOpen(false)}
               style={{
                 position: "absolute",
-                left: "16px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "#9ca3af",
-                pointerEvents: "none",
-                zIndex: 1,
-              }}
-            />
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search Campaigns..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                paddingLeft: "48px",
-                paddingRight: searchQuery ? "48px" : "16px",
-                height: "48px",
+                top: "16px",
+                right: "16px",
+                background: "transparent",
                 border: "none",
-                borderRadius: "12px",
-                fontSize: "14px",
-                backgroundColor: "white",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                color: "#64748b",
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 transition: "all 0.2s ease",
               }}
-              onFocus={(e) => {
-                e.currentTarget.style.boxShadow =
-                  "0 8px 16px -4px rgba(0, 0, 0, 0.2)";
-                e.currentTarget.style.transform = "translateY(-1px)";
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "#fee2e2")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
+            >
+              <FiX size={18} />
+            </button>
+
+            <h6
+              style={{
+                marginBottom: "16px",
+                color: "#1e293b",
+                fontWeight: 800,
+                fontSize: "16px",
+                letterSpacing: "-0.2px",
               }}
-              onBlur={(e) => {
-                e.currentTarget.style.boxShadow =
-                  "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
+            >
+              Select Campaign
+            </h6>
+
+            {/* Search */}
+            <div style={{ position: "relative" }}>
+              <FiSearch
+                size={18}
                 style={{
                   position: "absolute",
-                  right: "14px",
+                  left: "16px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  background: "#f3f4f6",
-                  border: "none",
-                  color: "#6b7280",
-                  cursor: "pointer",
-                  width: "28px",
-                  height: "28px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "8px",
-                  transition: "all 0.2s ease",
+                  color: "#3454d1",
                   zIndex: 1,
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e5e7eb";
-                  e.currentTarget.style.color = "#374151";
+              />
+              <input
+                type="text"
+                placeholder="Search campaigns..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "14px 16px 14px 48px",
+                  borderRadius: "12px",
+                  border: "2px solid #e2e8f0",
+                  background: "#ffffff",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  outline: "none",
+                  transition: "all 0.2s ease",
+                  color: "#1e293b",
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                  e.currentTarget.style.color = "#6b7280";
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#3454d1";
+                  e.target.style.boxShadow = "0 0 0 4px rgba(52, 84, 209, 0.1)";
                 }}
-              >
-                <FiX size={16} />
-              </button>
-            )}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#e2e8f0";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Results Header */}
-        <div
-          style={{
-            padding: "16px 24px 12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            backgroundColor: "white",
-          }}
-        >
-          <span
+          {/* List */}
+          <div
             style={{
-              fontSize: "12px",
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              color: "#6b7280",
+              maxHeight:
+                searchQuery.length > 0
+                  ? filteredAudienceList.length > 3
+                    ? "210px"
+                    : "360px"
+                  : filteredAudienceList.length > 4
+                    ? "280px"
+                    : "360px",
+              overflowY: "auto",
+              padding: "16px",
+              background: "#fff",
             }}
           >
-            Available Campaigns
-          </span>
-          <span
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              color: "white",
-              fontSize: "11px",
-              fontWeight: "700",
-              padding: "6px 12px",
-              borderRadius: "20px",
-              boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
-            }}
-          >
-            {filteredAudienceList.length}
-          </span>
-        </div>
-
-        {/* Results List */}
-        <div
-          style={{
-            maxHeight: "380px",
-            overflowY: "auto",
-            padding: "0 16px 16px",
-            backgroundColor: "white",
-          }}
-          className="custom-scrollbar"
-        >
-          {filteredAudienceList.length > 0 ? (
-            filteredAudienceList.map(
-              (audience) => (
+            {filteredAudienceList.length > 0 ? (
+              filteredAudienceList.map((audience) => (
                 <AudienceCard
                   key={audience._id}
                   title={audience.reportName}
-                  subTitle={audience.insertionOrderId}
+                  subTitle={`ID: ${audience.insertionOrderId}`}
                   isSelected={tempAudience?._id === audience._id}
-                  onSelect={() => {
-                    setTempAudience(audience);
-                  }}
+                  onSelect={() => setTempAudience(audience)}
                 />
-              ),
-            )
-          ) : (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "60px 20px",
-                color: "#9ca3af",
-              }}
-            >
+              ))
+            ) : (
               <div
                 style={{
-                  width: "80px",
-                  height: "80px",
-                  margin: "0 auto 20px",
-                  borderRadius: "50%",
-                  background:
-                    "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  padding: "40px 20px",
+                  textAlign: "center",
+                  color: "#94a3b8",
                 }}
               >
-                <FiSearch size={36} style={{ opacity: 0.4 }} />
+                <FiSearch
+                  size={32}
+                  style={{ marginBottom: "12px", opacity: 0.5 }}
+                />
+                <p style={{ fontSize: "14px", fontWeight: 500 }}>
+                  No campaigns found
+                </p>
               </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  color: "#374151",
-                }}
-              >
-                No audiences found
-              </p>
-              <p
-                style={{
-                  margin: "8px 0 0",
-                  fontSize: "13px",
-                  color: "#9ca3af",
-                }}
-              >
-                Try adjusting your search terms
-              </p>
-            </div>
-          )}
-        </div>
-        {/* Footer OK Button */}
-        <div
-          style={{
-            padding: "16px",
-            borderTop: "1px solid #e5e7eb",
-            background: "white",
-            position: "sticky",
-            bottom: 0,
-          }}
-        >
-          <button
-            className="btn w-100"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              color: "white",
-              border: "none",
-              borderRadius: "10px",
-              padding: "12px",
-              fontWeight: "600",
-              fontSize: "14px",
-            }}
-            disabled={!tempAudience}
-            onClick={() => {
-              setSelectedAudience(tempAudience);
+            )}
+          </div>
 
-              handleCloseDropdown();
+          {/* Footer */}
+          <div
+            style={{
+              padding: "20px 24px",
+              borderTop: "1px solid #e2e8f0",
+              background: "#f8fafc",
             }}
           >
-            OK
-          </button>
+            <button
+              style={{
+                width: "100%",
+                padding: "12px",
+                background: "#3454d1",
+                color: "#fff",
+                borderRadius: "10px",
+                border: "none",
+                fontWeight: 700,
+                fontSize: "14px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                opacity: !tempAudience ? 0.6 : 1,
+              }}
+              disabled={!tempAudience}
+              onClick={() => {
+                setSelectedAudience(tempAudience);
+                setIsOpen(false);
+              }}
+            >
+              Confirm Selection
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Custom Scrollbar Styles */}
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f3f4f6;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
-        }
-      `}</style>
+      )}
     </div>
   );
 };
 
 export default SearchModal;
 
-// Audience Card Component
-const AudienceCard = ({ title, subTitle, onSelect, isSelected }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <div
-      onClick={onSelect}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        padding: "16px 18px",
-        borderRadius: "12px",
-        marginBottom: "8px",
-        cursor: "pointer",
-        backgroundColor: isSelected
-          ? "#f0f9ff"
-          : isHovered
-            ? "#f9fafb"
-            : "white",
-        border: isSelected
-          ? "2px solid #667eea"
-          : isHovered
-            ? "2px solid #e5e7eb"
-            : "2px solid #f3f4f6",
-        transition: "all 0.2s ease",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        boxShadow:
-          isHovered || isSelected
-            ? "0 4px 12px rgba(0, 0, 0, 0.08)"
-            : "0 1px 3px rgba(0, 0, 0, 0.05)",
-        transform: isHovered ? "translateY(-2px)" : "translateY(0)",
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: "15px",
-            fontWeight: "600",
-            color: isSelected ? "#667eea" : "#111827",
-            marginBottom: "6px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {title}
-        </div>
-        <div
-          style={{
-            fontSize: "13px",
-            color: "#6b7280",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {subTitle || "No ID"}
-        </div>
-      </div>
+// Card Component
+const AudienceCard = ({ title, subTitle, onSelect, isSelected }) => (
+  <div
+    onClick={onSelect}
+    style={{
+      padding: "14px 18px",
+      borderRadius: "12px",
+      border: isSelected ? "2px solid #3454d1" : "2px solid #f1f5f9",
+      marginBottom: "12px",
+      cursor: "pointer",
+      background: isSelected ? "#eff6ff" : "#ffffff",
+      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "2px",
+      position: "relative",
+      overflow: "hidden",
+    }}
+    onMouseEnter={(e) => {
+      if (!isSelected) {
+        e.currentTarget.style.borderColor = "#e2e8f0";
+        e.currentTarget.style.background = "#f8fafc";
+        e.currentTarget.style.transform = "translateX(4px)";
+      }
+    }}
+    onMouseLeave={(e) => {
+      if (!isSelected) {
+        e.currentTarget.style.borderColor = "#f1f5f9";
+        e.currentTarget.style.background = "#ffffff";
+        e.currentTarget.style.transform = "translateX(0)";
+      }
+    }}
+  >
+    {isSelected && (
       <div
         style={{
-          width: "40px",
-          height: "40px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "10px",
-          background: isSelected
-            ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-            : isHovered
-              ? "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)"
-              : "#f9fafb",
-          color: isSelected ? "white" : "#6b7280",
-          transition: "all 0.2s ease",
-          flexShrink: 0,
-          marginLeft: "16px",
-          boxShadow: isSelected
-            ? "0 4px 12px rgba(102, 126, 234, 0.3)"
-            : "none",
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: "4px",
+          background: "#3454d1",
         }}
-      >
-        {isSelected ? (
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              fill="currentColor"
-            />
-          </svg>
-        ) : (
-          <FiChevronRight size={18} />
-        )}
-      </div>
+      />
+    )}
+    <div
+      style={{
+        fontWeight: 700,
+        color: isSelected ? "#3454d1" : "#1e293b",
+        fontSize: "14px",
+      }}
+    >
+      {title}
     </div>
-  );
-};
+    <div
+      style={{
+        fontSize: "12px",
+        color: isSelected ? "#3b82f6" : "#64748b",
+        fontWeight: 500,
+      }}
+    >
+      {subTitle}
+    </div>
+  </div>
+);
