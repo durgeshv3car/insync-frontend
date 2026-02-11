@@ -90,7 +90,7 @@ function page() {
       return;
     }
     Router.push(
-      `/Youtube-links?audienceId=${
+      `/youtube-data?audienceId=${
         selectedAudience ? selectedAudience.value : ""
       }`,
     );

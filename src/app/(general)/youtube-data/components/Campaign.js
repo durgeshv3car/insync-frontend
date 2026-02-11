@@ -941,10 +941,8 @@ const YouTubeTable = () => {
                       <input
                         type="checkbox"
                         checked={selectedVideos.has(v._id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          handleVideoSelect(v._id);
-                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={() => handleVideoSelect(v._id)}
                         style={{
                           width: "18px",
                           height: "18px",
