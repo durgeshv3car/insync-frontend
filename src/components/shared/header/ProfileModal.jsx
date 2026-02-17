@@ -50,7 +50,7 @@ const ProfileModal = () => {
 
 
   return (
-    <div className="dropdown nxl-h-item" ref={wrapperRef}>
+    <div style={{ position: "relative" }} ref={wrapperRef}>
       <div
         style={{
           display: "flex",
@@ -70,14 +70,18 @@ const ProfileModal = () => {
         <FiChevronDown size={14} style={{ marginLeft: "6px" }} />
       </div>
       <div 
-        className={`dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown ${isOpen ? "show" : ""}`}
         style={{
+          display: isOpen ? "block" : "none",
+          position: "absolute",
+          right: 0,
           borderRadius: "14px",
           border: "1px solid #e2e8f0",
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
           padding: "8px",
           marginTop: "12px",
-          background: "#fff"
+          background: "#fff",
+          minWidth: "250px",
+          zIndex: 1050
         }}
       >
         <div className="p-3 mb-2 rounded-3" style={{ background: "#f8fafc", border: "1px solid #f1f5f9" }}>
@@ -98,15 +102,11 @@ const ProfileModal = () => {
             color: "#dc2626",
             fontWeight: 700,
             fontSize: "13.5px",
-            transition: "all 0.2s ease"
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#fef2f2";
-            e.currentTarget.style.color = "#b91c1c";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "#dc2626";
+            transition: "all 0.2s ease",
+            width: "100%",
+            border: "none",
+            background: "transparent",
+            cursor: "pointer"
           }}
         >
           <FiLogOut className="me-3" size={18} />

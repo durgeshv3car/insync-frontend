@@ -187,10 +187,9 @@ function DateSection() {
 
   return (
     <div className="date-section-wrapper">
-      <div className="dropdown" ref={dropdownRef}>
+      <div style={{ position: "relative" }} ref={dropdownRef}>
         <div className="d-flex align-items-center gap-2">
           <button
-            className="btn"
             type="button"
             onClick={() => setShow(!show)}
             style={{ 
@@ -213,7 +212,7 @@ function DateSection() {
             <Calendar 
               size={14} 
               style={{ 
-                marginRight: "0px", 
+                marginRight: "8px", 
                 color: "#ffffff",
                 flexShrink: 0 
               }} 
@@ -239,8 +238,9 @@ function DateSection() {
         </div>
 
         <div
-          className={`dropdown-menu ${show ? "show" : ""}`}
-            style={{
+          style={{
+            display: show ? "block" : "none",
+            position: "absolute",
             width: "612px",
             maxWidth: "92vw",
             left: 0,
@@ -250,7 +250,7 @@ function DateSection() {
             boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
             borderRadius: "14px",
             marginTop: "12px",
-            background: "#ffffff !important",
+            background: "#ffffff",
             zIndex: 1050
           }}
           onClick={(e) => e.stopPropagation()}
@@ -280,18 +280,6 @@ function DateSection() {
                       transition: "all 0.2s ease",
                       border: selectedRange === range.value && !isCustom ? "1.5px solid #3454d1" : "1.5px solid transparent",
                       background: selectedRange === range.value && !isCustom ? "#eff6ff" : "transparent"
-                    }}
-                    onMouseEnter={(e) => {
-                      if (selectedRange !== range.value || isCustom) {
-                        e.currentTarget.style.background = "#ffffff";
-                        e.currentTarget.style.borderColor = "#e2e8f0";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedRange !== range.value || isCustom) {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.borderColor = "transparent";
-                      }
                     }}
                   >
                     <div
@@ -328,7 +316,8 @@ function DateSection() {
                     className="form-control"
                     style={{ 
                       borderRadius: "10px", 
-                      border: "1.5px solid #e2e8f0", 
+                      border: "1.5px solid #e2e8f0",
+                      color: "#1e293b", 
                       padding: "10px",
                       fontSize: "13px",
                       fontWeight: 500
@@ -350,7 +339,8 @@ function DateSection() {
                     className="form-control"
                     style={{ 
                       borderRadius: "10px", 
-                      border: "1.5px solid #e2e8f0", 
+                      border: "1.5px solid #e2e8f0",
+                      color: "#1e293b", 
                       padding: "10px",
                       fontSize: "13px",
                       fontWeight: 500
@@ -399,13 +389,13 @@ function DateSection() {
                       style={{ 
                         borderRadius: "10px", 
                         border: "1.5px solid #e2e8f0", 
-                        color: "#64748b",
                         padding: "0 15px"
                       }}
                       onClick={handleReset}
                       title="Reset To Default"
                     >
-                      <RotateCcw size={18} />
+                      <RotateCcw size={18} color="#1e293b" />
+
                     </button>
                   )}
                 </div>
