@@ -4,14 +4,13 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { registerUser, resetPassword } from "@/services/users";
+import { resetPassword } from "@/services/users";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
-const PasswordForm = ({ path }) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const token = new URLSearchParams(window.location.search).get("token"); 
+const PasswordForm = ({ token,path }) => {
+  const [showPassword, setShowPassword]= useState(false);
   console.log("Token from URL:", token);
 
   const formik = useFormik({

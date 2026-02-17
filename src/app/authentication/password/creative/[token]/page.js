@@ -1,9 +1,9 @@
 import PasswordForm from '@/components/authentication/PasswordForm'
-import RegisterForm from '@/components/authentication/RegisterForm'
 import Image from 'next/image'
 import React from 'react'
 
-const page = () => {
+const page = ({params}) => {
+  const { token } = params;
   return (
      <main className="auth-creative-wrapper">
       <div className="auth-creative-inner">
@@ -38,7 +38,7 @@ const page = () => {
 
                 {/* Register Form */}
                 <div className="creative-card-body card-body px-4 pb-5">
-                  <PasswordForm path={"/authentication/login/creative"} />
+                  <PasswordForm token={token} path={"/authentication/login/creative"} />
                 </div>
               </div>
             </div>
