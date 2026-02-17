@@ -11,26 +11,23 @@ import {
   ChevronLeft,
   ChevronRight,
   Star,
-  Trash,          
+  Trash,
 } from "lucide-react";
 import { deleteCampaignData } from "@/services/campaignData";
 
-
-
-function CampaignTable({selectedAudience, campaignData }) {
+function CampaignTable({ selectedAudience, campaignData }) {
   const [selectedVideos, setSelectedVideos] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [videosPerPage] = useState(20);
 
   const [videos, setVideos] = useState([]);
 
-useEffect(() => {
-  const v = Array.isArray(campaignData)
-    ? campaignData.map((item) => item.youtubeQueryId).filter(Boolean)
-    : [];
-  setVideos(v);
-}, [campaignData]);
-
+  useEffect(() => {
+    const v = Array.isArray(campaignData)
+      ? campaignData.map((item) => item.youtubeQueryId).filter(Boolean)
+      : [];
+    setVideos(v);
+  }, [campaignData]);
 
   useEffect(() => {
     if (selectedVideos.size > 0) {
@@ -66,24 +63,17 @@ useEffect(() => {
     setCurrentPage(page);
   };
 
-  
+  const handleDelete = async (video) => {
+    try {
+      const res = await deleteCampaignData(selectedAudience.value, video._id);
 
-const handleDelete = async (video) => {
-  try {
-    const res = await deleteCampaignData(
-      selectedAudience.value,
-      video._id
-    );
-
-    if (res.message) {
-      setVideos((prev) => prev.filter((v) => v._id !== video._id));
+      if (res.message) {
+        setVideos((prev) => prev.filter((v) => v._id !== video._id));
+      }
+    } catch (err) {
+      console.error("Delete failed", err);
     }
-  } catch (err) {
-    console.error("Delete failed", err);
-  }
-};
-
-
+  };
 
   return (
     <div
@@ -113,7 +103,6 @@ const handleDelete = async (video) => {
                 borderBottom: "2px solid #dee2e6",
               }}
             >
-          
               <th
                 style={{
                   padding: "14px",
@@ -327,7 +316,6 @@ const handleDelete = async (video) => {
                     idx % 2 === 0 ? "#ffffff" : "#f8f9fa")
                 }
               >
-
                 <td
                   style={{
                     padding: "12px",
@@ -653,69 +641,64 @@ const handleDelete = async (video) => {
                   <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
                       justifyContent: "center",
-                      gap: "0px",
+                      gap: "2px",
                     }}
                   >
-                    {[
-                      ...Array(
-                        Math.max(0, Math.min(5, v.erBySubscribers || 0)),
-                      ),
-                    ].map((_, i) => {
+                    {[1, 2, 3, 4, 5].map((i) => {
+                      const rating = v.erBySubscribers || 0;
+
                       const starColor =
-                        (v.erBySubscribers || 0) <= 0
-                          ? "#dee2e6"
-                          : (v.erBySubscribers || 0) === 1
+                        rating >= i
+                          ? rating === 1
                             ? "#ff6b6b"
-                            : (v.erBySubscribers || 0) === 2
+                            : rating === 2
                               ? "#fd7e14"
-                              : (v.erBySubscribers || 0) === 3
+                              : rating === 3
                                 ? "#a1e57b"
-                                : (v.erBySubscribers || 0) === 4
+                                : rating === 4
                                   ? "#28a745"
-                                  : "#006400";
+                                  : "#006400"
+                          : "#dee2e6";
 
                       return (
                         <Star
                           key={i}
-                          size={(v.erBySubscribers || 0) >= 5 ? 12 : 16}
+                          size={16}
                           color={starColor}
                           fill={starColor}
-                          style={{ flexShrink: 0 }}
                         />
                       );
                     })}
                   </div>
                 </td>
-              <td style={{ textAlign: "center" }}>
-  <div
-    onClick={() => handleDelete(v)}
-    title="Remove from campaign"
-    style={{
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: "34px",
-      height: "34px",
-      borderRadius: "8px",
-      background: "#ffeaea",
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.background = "#ff4d4f";
-      e.currentTarget.style.transform = "scale(1.1)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.background = "#ffeaea";
-      e.currentTarget.style.transform = "scale(1)";
-    }}
-  >
-    <Trash size={16} color="#ff4d4f" />
-  </div>
-</td>
-
+                <td style={{ textAlign: "center" }}>
+                  <div
+                    onClick={() => handleDelete(v)}
+                    title="Remove from campaign"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "8px",
+                      background: "#ffeaea",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#ff4d4f";
+                      e.currentTarget.style.transform = "scale(1.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#ffeaea";
+                      e.currentTarget.style.transform = "scale(1)";
+                    }}
+                  >
+                    <Trash size={16} color="#ff4d4f" />
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

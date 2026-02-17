@@ -129,14 +129,6 @@ const LoginForm = ({ registerPath, resetPath }) => {
         </div>
       </form>
 
-      {/* Register */}
-      <div className="mt-5 text-muted">
-        <span>Don't have an account?</span>
-        <Link href={registerPath} className="fw-bold">
-          {" "}
-          Create an Account
-        </Link>
-      </div>
     </>
   );
 };
