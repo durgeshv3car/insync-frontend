@@ -42,7 +42,23 @@ const Layout = ({ children }) => {
              <div className="row flex-1 g-0">
                {/* Left Side - 70% White Background with Image */}
                   <div className="col-lg-7 d-md-block d-sm-none order-0 order-lg-0">
-                              <div className="d-flex align-items-center justify-content-center p-5">
+                              <div className="d-flex flex-column align-items-left justify-content-left p-5">
+                            
+                           <div>
+ 
+ 
+                            <Image
+                                  width={150}
+                                  height={399}
+                                  sizes="100vw"
+                                  src="/images/login_logo.png"
+              
+                                  alt="img"
+                                  className="img-fluid"
+                                />
+
+                           </div>
+
                                 <Image
                                   width={800}
                                   height={399}
@@ -60,8 +76,16 @@ const Layout = ({ children }) => {
                <div className="col-lg-5 h-100 my-auto order-1 order-lg-1 position-relative">
                  {/* Logo positioned at top center */}
                  <div className="text-center pt-4 pb-3">
+
+                     <p style={{
+    color: "rgb(0, 0, 0)",
+    fontSize: "12px",
+    width: "230px",
+    textAlign: "end",
+    margin: "auto",
+  }} className="buildby">Built by</p>
                     <img
-                     src="/images/login_logo.png"
+                     src="/images/automate360.png"
                      alt="logo"
                      className="img-fluid"
                      style={{ width: '240px', marginBottom: '30' }}

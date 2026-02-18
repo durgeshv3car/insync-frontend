@@ -473,7 +473,7 @@ const Header = () => {
           <button
             className="btn p-0 border-0 bg-transparent"
             onClick={() => setNavigationOpen(!navigationOpen)}
-            style={{ marginLeft: "10px", marginRight: "26px" }}
+            style={{ marginLeft: "10px", marginRight: "14px" }}
           >
             {navigationOpen ? (
               <FiArrowRight size={24} />
@@ -485,16 +485,20 @@ const Header = () => {
           <Image
             src="/images/logo360.png"
             alt="Logo"
-            width={120}
-            height={32}
+            width={180}
+            height={64}
             priority
+            style={{padding:"12px", borderRadius:"8px",  filter:
+      "brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(2670%) hue-rotate(100deg) brightness(112%) contrast(104%)",}}
           />
 
-          {isPathPresent && <DateSection />}
+        
         </div>
 
         {/* RIGHT */}
         <div className="header-right ms-auto d-flex align-items-center gap-2">
+
+            {isPathPresent && <DateSection />}
           {isPathPresent && selectedAudience && (
             <SearchModal
               audienceList={audienceList}

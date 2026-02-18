@@ -25,11 +25,37 @@ const NavigationManu = () => {
 
                 <div className={`navbar-content`}>
                     <PerfectScrollbar>
-                        <ul className="nxl-navbar">
+                        <div style={{
+    justifyContent: "space-between",
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+  }}>
+
+
+<ul className="nxl-navbar">
                            
                             <Menus />
                         </ul>
-                        <div style={{ height: "18px" }}></div>
+
+<div style={{width:"100%"}}>
+
+    <p style={{
+    marginLeft: "60px",
+    marginBottom: "-12px",
+    color: "#fff",
+    fontSize: "9px",
+  }}>Built by</p>
+                            <Image  width={500}
+  height={125}
+  style={{ width: "92px",height:"30px" }} src="/images/automate360.png" alt="logo" className="" />
+   
+</div>
+
+
+                        </div>
+
+                      
                     </PerfectScrollbar>
                 </div>
             </div>

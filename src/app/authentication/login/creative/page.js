@@ -48,7 +48,7 @@ const Page = () => {
                 {/* Logo positioned at top center */}
                 <div className="text-center pt-4 pb-3">
                    <img
-                    src="/images/login_logo.png"
+                    src="/images/automate360.png"
                     alt="logo"
                     className="img-fluid"
                     style={{ width: '240px', marginBottom: '30' }}

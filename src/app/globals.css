@@ -582,3 +582,7 @@ i[class*=" feather-"] {
   background: rgba(255, 255, 255, 0.14);
   transform: translateY(-1px);
 }
+
+.buildby {
+  margin-bottom: -33px !important;
+}

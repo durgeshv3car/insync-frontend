@@ -49,7 +49,7 @@ const LoginForm = ({ registerPath, resetPath }) => {
   return (
     <>
       <ToastContainer />
-      <h2 className="fs-20 fw-bolder mb-4">Login to your account</h2>
+      <h2 className="fs-20 fw-bolder mb-4 text-center">Login to your account</h2>
 
 
       <form onSubmit={formik.handleSubmit} className="w-100 mt-4 pt-2">
@@ -130,13 +130,13 @@ const LoginForm = ({ registerPath, resetPath }) => {
       </form>
 
       {/* Register */}
-      <div className="mt-5 text-muted">
+      {/* <div className="mt-5 text-muted">
         <span>Don't have an account?</span>
         <Link href={registerPath} className="fw-bold">
           {" "}
           Create an Account
         </Link>
-      </div>
+      </div> */}
     </>
   );
 };
