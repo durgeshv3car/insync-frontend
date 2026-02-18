@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Star } from "lucide-react";
 import {
   Search,
@@ -79,6 +79,12 @@ const YouTubeTable = () => {
   // Dummy data for analytics - Replace with your actual data
   const [analytics, setAnalytics] = useState({});
   const [selectedVideos, setSelectedVideos] = useState(new Set());
+
+  // Local text state for debounced inputs
+  const [channelNameInput, setChannelNameInput] = useState("");
+  const [queryInput, setQueryInput] = useState("");
+  const debounceRef = useRef(null);
+
   useEffect(() => {
     setAudienceId(searchParams.get("audienceId"));
   }, [searchParams]);
@@ -103,16 +109,13 @@ const YouTubeTable = () => {
   };
 
   const fetchRegions = async () => {
-    setLoading(true);
     try {
       const res = await getFiltersResults();
       console.log("Regions response:", res.regions);
-
       setRegions(res.regions);
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
     }
-    setLoading(false);
   };
   const AddToCampaign = async () => {
     console.log("Audience ID:", audienceId);
@@ -123,7 +126,6 @@ const YouTubeTable = () => {
     }
   };
   const fetchCsvResults = async () => {
-    setLoading(true);
     try {
       const payload = {
         query: filters.query,
@@ -132,19 +134,34 @@ const YouTubeTable = () => {
         csvResults: filters.csvResults,
       };
       const res = await getcsvResults(payload);
-
       setCsvVideos(res.results);
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
     }
-    setLoading(false);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCurrentPage(1);
-    setFilters((prev) => ({ ...prev, [name]: value, page: 1 }));
+
+    // Text inputs: show loader immediately, debounce the actual filter update
+    if (name === "channelName" || name === "query") {
+      if (name === "channelName") setChannelNameInput(value);
+      if (name === "query") setQueryInput(value);
+
+      setLoading(true); // show loader right away
+
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        setCurrentPage(1);
+        setFilters((prev) => ({ ...prev, [name]: value, page: 1 }));
+      }, 600);
+    } else {
+      // Dropdowns: update immediately
+      setCurrentPage(1);
+      setFilters((prev) => ({ ...prev, [name]: value, page: 1 }));
+    }
   };
+
   useEffect(() => {
     const init = async () => {
       const res = await getLatestQueryResults();
@@ -152,6 +169,7 @@ const YouTubeTable = () => {
         ...prev,
         query: res,
       }));
+      setQueryInput(res); // sync local input state
     };
     init();
   }, []); // ✅ only once
@@ -356,7 +374,7 @@ const YouTubeTable = () => {
                 <input
                   type="text"
                   name="channelName"
-                  value={filters.channelName}
+                  value={channelNameInput}
                   onChange={handleChange}
                   className="form-control"
                   placeholder="Search channel..."
@@ -399,7 +417,7 @@ const YouTubeTable = () => {
                 <input
                   type="text"
                   name="query"
-                  value={filters.query}
+                  value={queryInput}
                   onChange={handleChange}
                   className="form-control"
                   placeholder="Search query..."
@@ -865,6 +883,28 @@ const YouTubeTable = () => {
                 </tr>
               </thead>
               <tbody>
+                {/* Skeleton Loader Rows */}
+                {loading && (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={`skeleton-${i}`} style={{ borderBottom: "1px solid #e9ecef" }}>
+                      {["5%", "18%", "12%", "12%", "8%", "8%", "8%", "8%", "8%", "9%"].map((w, j) => (
+                        <td key={j} style={{ padding: "14px 12px", width: w }}>
+                          <div style={{
+                            height: j === 1 ? "36px" : "14px",
+                            borderRadius: "6px",
+                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                            backgroundSize: "200% 100%",
+                            animation: "shimmer 1.4s infinite",
+                            width: j === 0 ? "18px" : "85%",
+                            margin: j === 0 ? "0 auto" : "0",
+                          }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+
+                {/* Empty State */}
                 {videos.length === 0 && !loading && (
                   <tr>
                     <td
@@ -906,7 +946,7 @@ const YouTubeTable = () => {
                   </tr>
                 )}
 
-                {videos.map((v, idx) => (
+                {!loading && videos.map((v, idx) => (
                   <tr
                     key={v.videoId}
                     onClick={() => handleVideoSelect(v._id)}

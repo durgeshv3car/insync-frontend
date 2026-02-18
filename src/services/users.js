@@ -87,3 +87,41 @@ export const deleteUserAudience = async (email, audienceId) => {
     throw error;
   }
 };
+
+
+export const forgotPassword = async (email) => {
+  try {
+    const res = await axios.post(`${API_URL}/auth/forgot-password`, {
+      email,
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error(
+      "Error in forgot password:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data || error;
+  }
+};
+
+
+export const resetPassword = async (token, password,confirmPassword) => {
+  try {
+    const res = await axios.post(
+      `${API_URL}/auth/reset-password/${token}`,
+      {
+        password,
+        confirmPassword,
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error(
+      "Error in reset password:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data || error;
+  }
+};
