@@ -46,7 +46,7 @@ export const downloadDashboardPDF = async (
         10,      // left margin
         5,       // top margin
         25,      // width
-        12       // height
+        8       // height
       );
 
       // 🔥 Date (Top Right)

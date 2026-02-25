@@ -496,6 +496,7 @@ const YouTubeTable = () => {
                 <option value="popular">Popular</option>
                 <option value="subscribers">Subscribers</option>
                 <option value="engagement">Engagement</option>
+                <option value="erscore">ER SCORE</option>
               </select>
             </div>
 
