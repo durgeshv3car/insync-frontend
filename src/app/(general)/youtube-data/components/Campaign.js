@@ -79,6 +79,7 @@ const YouTubeTable = () => {
   // Dummy data for analytics - Replace with your actual data
   const [analytics, setAnalytics] = useState({});
   const [selectedVideos, setSelectedVideos] = useState(new Set());
+  const [idToVideoIdMap, setIdToVideoIdMap] = useState({});
 
   // Local text state for debounced inputs
   const [channelNameInput, setChannelNameInput] = useState("");
@@ -102,6 +103,19 @@ const YouTubeTable = () => {
       setCount(res.pagination.totalCount);
       setTotalPages(res.pagination.totalPages);
       setAnalytics(res.totals);
+
+      // Update ID to videoId map
+      if (res.results) {
+        setIdToVideoIdMap((prev) => {
+          const newMap = { ...prev };
+          res.results.forEach((v) => {
+            if (v._id && v.videoId) {
+              newMap[v._id] = v.videoId;
+            }
+          });
+          return newMap;
+        });
+      }
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
     }
@@ -127,12 +141,16 @@ const YouTubeTable = () => {
   };
   const fetchCsvResults = async () => {
     try {
+      const selectedIds = Array.from(selectedVideos)
+        .map((id) => idToVideoIdMap[id])
+        .filter(Boolean)
+        .join(",");
+
       const payload = {
-        query: filters.query,
-        sortBy: filters.sortBy,
-        videoType: filters.videoType,
-        csvResults: filters.csvResults,
+        ...filters,
+        selectedIds: selectedIds || undefined,
       };
+      
       const res = await getcsvResults(payload);
       setCsvVideos(res.results);
     } catch (error) {
@@ -176,10 +194,16 @@ const YouTubeTable = () => {
 
   useEffect(() => {
     fetchVideos();
-    fetchCsvResults();
     fetchRegions();
-    setSelectedVideos(new Set()); // Reset selection on filter/page change
+    setSelectedVideos(new Set()); // Reset selection on filter change
   }, [filters]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCsvResults();
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [filters, selectedVideos]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
