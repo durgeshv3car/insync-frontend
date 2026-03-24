@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { updateUser } from "@/services/users";
 
 const EditUserModal = ({ show, onClose, user, onSave }) => {
   const [formData, setFormData] = useState({ email: "", role: "" });
@@ -20,8 +21,9 @@ const EditUserModal = ({ show, onClose, user, onSave }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
+    await updateUser(user._id, formData)
     onSave(user._id, formData);
   };
 
@@ -69,6 +71,7 @@ const EditUserModal = ({ show, onClose, user, onSave }) => {
                     required
                   >
                     <option value="">Select Role</option>
+                    <option value="admin">admin</option>
                     <option value="super_admin">super_admin</option>
                     <option value="user">user</option>
               

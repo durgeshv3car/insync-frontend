@@ -27,6 +27,30 @@ export const registerUser = async ( name, role, email, password ) => {
 };
 
 /**
+ * update user
+ */
+
+export const updateUser = async (id, userData) => {
+  try {
+    const token = await getToken();
+    const res = await axios.put(
+      `${API_URL}/auth/user/${id}`,
+      userData,
+      {
+        headers: {
+          Authorization: token,
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error("Error updating user:", error.response?.data || error.message);
+    throw error;
+  }
+};
+   
+
+/**
  * Get all users
  */
 export const getAllUsers = async () => {

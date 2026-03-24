@@ -118,7 +118,7 @@ const RegisterForm = ({ path }) => {
             onBlur={formik.handleBlur}
           >
             <option value="user">User</option>
-            <option value="tester">Tester</option>
+            <option value="admin">Admin</option>
           </select>
           {formik.touched.role && formik.errors.role && (
             <div className="text-danger">{formik.errors.role}</div>
