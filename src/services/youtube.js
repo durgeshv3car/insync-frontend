@@ -13,6 +13,7 @@ export const getYouTubeResultsByChannel = async (filters) => {
         query: Array.isArray(filters.query) ? filters.query : [filters.query], 
         sortBy: filters.sortBy,
         maxResults: filters.maxResults,
+        userId: filters.userId,
       },
       {
         headers: {
@@ -21,9 +22,10 @@ export const getYouTubeResultsByChannel = async (filters) => {
       }
     );
 
-    if (res.status === 202 && res.data.jobId) {
+    if (res.status === 202 && (res.data.jobId || res.data.progressId)) {
       const { regionCode, ...pollingFilters } = filters;
-      return await pollSearchJob(res.data.jobId, pollingFilters);
+      // Use progressId if available, fallback to jobId
+      return await pollSearchJob(res.data.progressId || res.data.jobId, pollingFilters, filters.onProgress);
     }
 
     return res.data;
@@ -58,20 +60,40 @@ export const getSearchJobStatus = async (jobId) => {
   }
 };
 
-const pollSearchJob = async (jobId, filters) => {
-  const POLLING_INTERVAL = 2000;
-  const MAX_ATTEMPTS = 150;
+const pollSearchJob = async (progressId, filters, onProgress) => {
+  const POLLING_INTERVAL = 1500; // Faster updates since it's a dedicated API
+  const MAX_ATTEMPTS = 200;
 
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
-    const statusData = await getSearchJobStatus(jobId);
-    const status = statusData.status || statusData.job?.status;
+    try {
+      // Fetch from the new Progress API
+      const token = await getToken();
+      const res = await axios.get(`${API_URL}/progress/${progressId}`, {
+        headers: { Authorization: token },
+      });
+      
+      const data = res.data;
+      const status = data.status;
 
-    if (status === "completed") {
-      return await getQueryResults({ ...filters, limit: 10000 });
-    }
+      if (onProgress && typeof onProgress === "function") {
+        onProgress({
+          status,
+          processed: data.processedItems || 0,
+          total: data.totalItems || filters.maxResults || 20,
+          percent: Math.min(Math.floor(((data.processedItems || 0) / (data.totalItems || 20)) * 100), 99)
+        });
+      }
 
-    if (status === "failed") {
-      throw new Error(statusData.error?.message || "Search job failed");
+      if (status === "completed") {
+        // Final results from the results endpoint
+        return await getQueryResults({ ...filters, limit: 10000 });
+      }
+
+      if (status === "failed") {
+        throw new Error("Search job failed on server");
+      }
+    } catch (err) {
+      console.warn("Polling error:", err.message);
     }
 
     await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
@@ -94,6 +116,7 @@ export const getYouTubeResults = async (filters) => {
         maxResults: filters.maxResults,
         startDate: filters.startDate,
         endDate: filters.endDate,
+        userId: filters.userId,
       },
       {
         headers: {
@@ -102,8 +125,9 @@ export const getYouTubeResults = async (filters) => {
       }
     );
 
-    if (res.status === 202 && res.data.jobId) {
-      return await pollSearchJob(res.data.jobId, filters);
+    if (res.status === 202 && (res.data.jobId || res.data.progressId)) {
+      // Use progressId if available, fallback to jobId
+      return await pollSearchJob(res.data.progressId || res.data.jobId, filters, filters.onProgress);
     }
 
     return res.data;
@@ -189,23 +213,28 @@ export const getcsvResults = async (filters) => {
 
 }
 
-export const getLatestQueryResults = async () => {
+export const getLatestQueryByUserId = async (userId) => {
   try {
     const token = await getToken();
-
-    const res = await axios.get(`${API_URL}/latest-query`, {
-      headers: {
-        Authorization: token,
-      },
+    const res = await axios.get(`${API_URL}/recent-keywords/latest-query/${userId}`, {
+      headers: { Authorization: token },
     });
-
     return res.data.query;
-
   } catch (error) {
-    console.error(
-      "Error fetching latest query:",
-      error.response?.data || error.message
-    );
+    console.error("Error fetching latest query:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getRecentTenQueries = async (userId) => {
+  try {
+    const token = await getToken();
+    const res = await axios.get(`${API_URL}/recent-keywords/ten-list/${userId}`, {
+      headers: { Authorization: token },
+    });
+    return res.data.queries;
+  } catch (error) {
+    console.error("Error fetching ten list:", error.response?.data || error.message);
     throw error;
   }
 };

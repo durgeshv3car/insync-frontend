@@ -6,20 +6,14 @@ export const menuList = [
     path: "/youtube-data",
     icon: "feather-youtube",
   },
-{
-  id: 3,
-  name: "Channel Search",
-  path: "/channel-search",
-  icon: "feather-monitor" , 
-},
   {
-    id: 4,
-    name: "Keyword Search",
-    path: "/keyword-search",
+    id: 3,
+    name: "Keywords Search",
+    path: "/keywords-search",
     icon: "feather-search",
   },
   { 
-  id: 5, 
+  id: 4, 
   name: "Create Campaign", 
   path: "/campaign", 
   icon: "feather-activity"   

@@ -33,9 +33,11 @@ import {
 import {
   getcsvResults,
   getFiltersResults,
-  getLatestQueryResults,
+  getLatestQueryByUserId,
+  getRecentTenQueries,
   getQueryResults,
 } from "@/services/youtube";
+import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { createCampaignData } from "@/services/campaignData";
@@ -80,6 +82,20 @@ const YouTubeTable = () => {
   const [analytics, setAnalytics] = useState({});
   const [selectedVideos, setSelectedVideos] = useState(new Set());
   const [idToVideoIdMap, setIdToVideoIdMap] = useState({});
+  const { data: session, status } = useSession();
+  const [recentQueries, setRecentQueries] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const historyRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (historyRef.current && !historyRef.current.contains(event.target)) {
+        setShowHistory(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Local text state for debounced inputs
   const [channelNameInput, setChannelNameInput] = useState("");
@@ -181,16 +197,62 @@ const YouTubeTable = () => {
   };
 
   useEffect(() => {
+    if (status === "loading") return;
+    
+    if (!session?.user?.id) {
+      console.warn("YouTube Data: No session user ID available.", { session, status });
+      return;
+    }
+
     const init = async () => {
-      const res = await getLatestQueryResults();
-      setFilters((prev) => ({
-        ...prev,
-        query: res,
-      }));
-      setQueryInput(res); // sync local input state
+      try {
+        const uid = session.user.id;
+        console.log("YouTube Data: Initializing queries for UserID:", uid);
+        
+        const [latestRes, listRes] = await Promise.all([
+          getLatestQueryByUserId(uid).catch((err) => {
+             console.error("YouTube Data: Latest query API failed:", err.message);
+             return null;
+          }),
+          getRecentTenQueries(uid).catch((err) => {
+             console.error("YouTube Data: Ten list API failed:", err.message);
+             return [];
+          }),
+        ]);
+
+        console.log("YouTube Data: API Raw Response - Latest:", latestRes, "List:", listRes);
+
+        if (latestRes) {
+          const qStr = typeof latestRes === 'string' ? latestRes : (latestRes.query || latestRes.text || JSON.stringify(latestRes));
+          setFilters((prev) => ({
+            ...prev,
+            query: qStr,
+            userId: uid,
+          }));
+          setQueryInput(qStr);
+          console.log("YouTube Data: Successfully set initial query to:", qStr);
+        } else {
+          setFilters((prev) => ({ 
+            ...prev, 
+            query: "", // Explicitly clear query if none found
+            userId: uid 
+          }));
+          setQueryInput(""); // Clear input field
+          console.log("YouTube Data: No latest query found for user. Cleared fields.");
+        }
+
+        if (listRes && Array.isArray(listRes)) {
+          setRecentQueries(listRes);
+          console.log("YouTube Data: History list loaded with", listRes.length, "items.");
+        } else {
+          setRecentQueries([]); // Clear history list
+        }
+      } catch (err) {
+        console.error("YouTube Data: Critical error in init workflow:", err);
+      }
     };
     init();
-  }, []); // ✅ only once
+  }, [session, status]);
 
   useEffect(() => {
     fetchVideos();
@@ -425,16 +487,15 @@ const YouTubeTable = () => {
               >
                 Search Query
               </label>
-              <div
-                className="input-group"
-                style={{ borderRadius: "6px", overflow: "hidden" }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
+              <div className="input-group" style={{ borderRadius: "6px", overflow: "visible", position: "relative" }} ref={historyRef}>
+                <span 
+                  className="input-group-text" 
+                  style={{ 
+                    border: "1px solid #dee2e6", 
+                    backgroundColor: "#f8f9fa", 
+                    cursor: recentQueries.length > 0 ? "pointer" : "default" 
+                  }} 
+                  onClick={() => recentQueries.length > 0 && setShowHistory(!showHistory)}
                 >
                   <Search size={16} style={{ color: "#6c757d" }} />
                 </span>
@@ -442,6 +503,8 @@ const YouTubeTable = () => {
                   type="text"
                   name="query"
                   value={queryInput}
+                  autoComplete="off"
+                  onFocus={() => recentQueries.length > 0 && setShowHistory(true)}
                   onChange={handleChange}
                   className="form-control"
                   placeholder="Search query..."
@@ -451,6 +514,47 @@ const YouTubeTable = () => {
                     padding: "8px 12px",
                   }}
                 />
+                {showHistory && recentQueries.length > 0 && (
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    backgroundColor: "#fff",
+                    border: "1px solid #dee2e6",
+                    borderRadius: "6px",
+                    boxShadow: "0 8px 16px rgba(0,0,0,0.15)",
+                    zIndex: 2000,
+                    marginTop: "4px",
+                    maxHeight: "250px",
+                    overflowY: "auto"
+                  }}>
+                    {recentQueries.map((q, idx) => (
+                      <div
+                        key={idx}
+                        className="history-item"
+                        style={{
+                          padding: "10px 15px",
+                          fontSize: "0.85rem",
+                          cursor: "pointer",
+                          backgroundColor: "#fff",
+                          transition: "background-color 0.2s",
+                          borderBottom: idx === recentQueries.length - 1 ? "none" : "1px solid #f1f5f9",
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f8f9fa"}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
+                        onClick={() => {
+                          setFilters(prev => ({ ...prev, query: q, page: 1 }));
+                          setQueryInput(q);
+                          setShowHistory(false);
+                        }}
+                      >
+                        <i className="fa-solid fa-clock-rotate-left me-2 text-muted" style={{ fontSize: "0.75rem" }}></i>
+                        {q}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="col-lg-2">
