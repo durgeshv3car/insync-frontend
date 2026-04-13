@@ -446,7 +446,11 @@ const YouTubeTable = () => {
               </label>
               <div
                 className="input-group"
-                style={{ borderRadius: "6px", overflow: "hidden" }}
+                style={{ 
+                  borderRadius: "6px", 
+                  overflow: "hidden",
+                  transition: "box-shadow 0.3s ease, border-color 0.3s ease"
+                }}
               >
                 <span
                   className="input-group-text"
@@ -468,12 +472,15 @@ const YouTubeTable = () => {
                     border: "1px solid #dee2e6",
                     fontSize: "0.85rem",
                     padding: "8px 12px",
+                    transition: "all 0.2s ease"
                   }}
+                  onFocus={(e) => e.target.style.borderColor = "#0d6efd"}
+                  onBlur={(e) => e.target.style.borderColor = "#dee2e6"}
                 />
               </div>
             </div>
 
-            <div className="col-lg-3">
+            <div className="col-lg-3" style={{ transition: "all 0.3s ease" }}>
               <label
                 style={{
                   padding: "14px 0 10px 0",
@@ -483,11 +490,21 @@ const YouTubeTable = () => {
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
+                  transition: "color 0.2s"
                 }}
               >
                 Search Query
               </label>
-              <div className="input-group" style={{ borderRadius: "6px", overflow: "visible", position: "relative" }} ref={historyRef}>
+              <div 
+                className="input-group" 
+                style={{ 
+                  borderRadius: "6px", 
+                  overflow: "visible", 
+                  position: "relative",
+                  transition: "all 0.3s ease"
+                }} 
+                ref={historyRef}
+              >
                 <span 
                   className="input-group-text" 
                   style={{ 
@@ -687,24 +704,28 @@ const YouTubeTable = () => {
                   borderRadius: "6px",
                   border: "1px solid #dee2e6",
                   minHeight: "38px",
-                  alignItems: "center"
+                  alignItems: "center",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  opacity: filters.query ? 1 : 0.6,
                 }}
               >
                 {/* "All" Chip */}
                 <div
                   onClick={() => handleChange({ target: { name: "csvResults", value: "all" } })}
                   style={{
-                    padding: "2px 8px",
+                    padding: "2px 10px",
                     borderRadius: "16px",
                     fontSize: "0.7rem",
-                    fontWeight: "600",
+                    fontWeight: "650",
                     cursor: "pointer",
                     backgroundColor: (filters.csvResults === "all" || !filters.csvResults) ? "#0d6efd" : "#ffffff",
                     color: (filters.csvResults === "all" || !filters.csvResults) ? "#ffffff" : "#6c757d",
                     border: "1px solid",
                     borderColor: (filters.csvResults === "all" || !filters.csvResults) ? "#0d6efd" : "#dee2e6",
-                    transition: "all 0.1s ease",
-                    userSelect: "none"
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                    userSelect: "none",
+                    transform: (filters.csvResults === "all" || !filters.csvResults) ? "scale(1.05)" : "scale(1)",
+                    boxShadow: (filters.csvResults === "all" || !filters.csvResults) ? "0 2px 5px rgba(13, 110, 253, 0.2)" : "none"
                   }}
                 >
                   All
@@ -722,17 +743,20 @@ const YouTubeTable = () => {
                         key={idx}
                         onClick={() => handleChange({ target: { name: "csvResults", value: q.toLowerCase() } })}
                         style={{
-                          padding: "2px 8px",
+                          padding: "2px 10px",
                           borderRadius: "16px",
                           fontSize: "0.7rem",
-                          fontWeight: "600",
+                          fontWeight: "650",
                           cursor: "pointer",
                           backgroundColor: isActive ? "#0d6efd" : "#ffffff",
                           color: isActive ? "#ffffff" : "#6c757d",
                           border: "1px solid",
                           borderColor: isActive ? "#0d6efd" : "#dee2e6",
-                          transition: "all 0.1s ease",
-                          userSelect: "none"
+                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                          userSelect: "none",
+                          transform: isActive ? "scale(1.05)" : "scale(1)",
+                          boxShadow: isActive ? "0 2px 5px rgba(13, 110, 253, 0.2)" : "none",
+                          animation: "appear 0.3s ease-out"
                         }}
                       >
                         {q}

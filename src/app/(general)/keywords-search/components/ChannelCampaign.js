@@ -237,20 +237,31 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
               Channel Search Filters
             </h6>
             
-            <div style={{ display: "inline-flex", backgroundColor: "#f1f5f9", padding: "3px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+            <div 
+              style={{ 
+                display: "inline-flex", 
+                backgroundColor: "#f1f5f9", 
+                padding: "3px", 
+                borderRadius: "12px", 
+                border: "1px solid #e2e8f0",
+                height: "36px",
+                alignItems: "center"
+              }}
+            >
               <button 
                 onClick={() => setSearchType("keyword")}
                 className="btn-sm"
                 style={{
-                  padding: "4px 12px",
-                  borderRadius: "8px",
+                  padding: "4px 16px",
+                  borderRadius: "10px",
                   border: "none",
                   fontSize: "0.75rem",
-                  fontWeight: "700",
+                  fontWeight: "750",
                   backgroundColor: searchType === "keyword" ? "#ffffff" : "transparent",
                   color: searchType === "keyword" ? "#0d6efd" : "#64748b",
-                  boxShadow: searchType === "keyword" ? "0 2px 4px rgba(0,0,0,0.05)" : "none",
-                  transition: "all 0.2s ease"
+                  boxShadow: searchType === "keyword" ? "0 2px 6px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transform: searchType === "keyword" ? "scale(1.02)" : "scale(1)"
                 }}
               >
                 Keyword
@@ -259,15 +270,16 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                 onClick={() => setSearchType("channel")}
                 className="btn-sm"
                 style={{
-                  padding: "4px 12px",
-                  borderRadius: "8px",
+                  padding: "4px 16px",
+                  borderRadius: "10px",
                   border: "none",
                   fontSize: "0.75rem",
-                  fontWeight: "700",
+                  fontWeight: "750",
                   backgroundColor: searchType === "channel" ? "#ffffff" : "transparent",
                   color: searchType === "channel" ? "#0d6efd" : "#64748b",
-                  boxShadow: searchType === "channel" ? "0 2px 4px rgba(0,0,0,0.05)" : "none",
-                  transition: "all 0.2s ease"
+                  boxShadow: searchType === "channel" ? "0 2px 6px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transform: searchType === "channel" ? "scale(1.02)" : "scale(1)"
                 }}
               >
                 Channel
@@ -290,7 +302,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
               >
                 Channel Name
               </label>
-              <div className="input-group" style={{ borderRadius: "6px", overflow: "hidden" }}>
+              <div className="input-group" style={{ borderRadius: "8px", overflow: "hidden", transition: "all 0.3s ease" }}>
                 <span className="input-group-text" style={{ border: "1px solid #dee2e6", backgroundColor: "#f8f9fa" }}>
                   <Globe size={16} style={{ color: "#6c757d" }} />
                 </span>
@@ -301,7 +313,9 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   onChange={handleChange}
                   className="form-control"
                   placeholder="Enter channel name..."
-                  style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px" }}
+                  style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px", transition: "all 0.2s ease" }}
+                  onFocus={(e) => e.target.style.borderColor = "#0d6efd"}
+                  onBlur={(e) => e.target.style.borderColor = "#dee2e6"}
                 />
               </div>
             </div>
@@ -324,7 +338,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   </label>
                   <div
                     className="input-group"
-                    style={{ borderRadius: "6px", overflow: "hidden" }}
+                    style={{ borderRadius: "8px", overflow: "hidden", transition: "all 0.3s ease" }}
                   >
                     <span
                       className="input-group-text"
@@ -346,7 +360,10 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                         border: "1px solid #dee2e6",
                         fontSize: "0.85rem",
                         padding: "8px 12px",
+                        transition: "all 0.2s ease"
                       }}
+                      onFocus={(e) => e.target.style.borderColor = "#0d6efd"}
+                      onBlur={(e) => e.target.style.borderColor = "#dee2e6"}
                     />
                   </div>
                 </div>
@@ -407,23 +424,27 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                     style={{
                       backgroundColor:
                         loading || !filters.channelName || !filters.query
-                          ? "#e9ecef"
+                          ? "#e2e8f0"
                           : "#0d6efd",
                       color:
                         loading || !filters.channelName || !filters.query
-                          ? "#6c757d"
+                          ? "#94a3b8"
                           : "#ffffff",
                       border: "none",
-                      fontWeight: "600",
+                      fontWeight: "750",
                       padding: "10px 16px",
-                      borderRadius: "6px",
+                      borderRadius: "10px",
                       cursor:
                         loading || !filters.channelName || !filters.query
                           ? "not-allowed"
                           : "pointer",
                       fontSize: "0.95rem",
-                      transition: "all 0.3s ease",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      boxShadow: (loading || !filters.channelName || !filters.query) ? "none" : "0 4px 12px rgba(13, 110, 253, 0.25)",
+                      transform: (loading || !filters.channelName || !filters.query) ? "scale(1)" : "scale(1)"
                     }}
+                    onMouseEnter={(e) => { if(!loading && filters.channelName && filters.query) e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={(e) => { if(!loading && filters.channelName && filters.query) e.currentTarget.style.transform = "translateY(0)"; }}
                   >
                     {loading ? "Searching..." : "Search"}
                   </button>
