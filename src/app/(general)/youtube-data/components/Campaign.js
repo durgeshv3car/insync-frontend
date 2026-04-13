@@ -429,7 +429,7 @@ const YouTubeTable = () => {
             </h6>
           </div>
 
-          <div className="row g-3 align-items-end">
+          <div className="row g-3 align-items-start">
             <div className="col-lg-2">
               <label
                 style={{
@@ -667,7 +667,7 @@ const YouTubeTable = () => {
               <label
                 style={{
                   padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
+                  fontSize: "0.80rem",
                   fontWeight: "700",
                   color: "#495057",
                   textTransform: "uppercase",
@@ -675,115 +675,171 @@ const YouTubeTable = () => {
                   display: "block",
                 }}
               >
-                Filter By Query
+                Filters Keyword
               </label>
-              <select
-                name="csvResults"
-                value={filters.csvResults || "all"}
-                onChange={handleChange}
-                className="form-select"
-                style={{
-                  border: "1px solid #dee2e6",
-                  fontSize: "0.85rem",
+              <div 
+                style={{ 
+                  display: "flex", 
+                  flexWrap: "wrap", 
+                  gap: "6px",
+                  padding: "6px 10px",
+                  backgroundColor: "#f8f9fa",
                   borderRadius: "6px",
-                  padding: "8px 12px",
+                  border: "1px solid #dee2e6",
+                  minHeight: "38px",
+                  alignItems: "center"
                 }}
               >
-                <option value="all">All</option>
+                {/* "All" Chip */}
+                <div
+                  onClick={() => handleChange({ target: { name: "csvResults", value: "all" } })}
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: "16px",
+                    fontSize: "0.7rem",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    backgroundColor: (filters.csvResults === "all" || !filters.csvResults) ? "#0d6efd" : "#ffffff",
+                    color: (filters.csvResults === "all" || !filters.csvResults) ? "#ffffff" : "#6c757d",
+                    border: "1px solid",
+                    borderColor: (filters.csvResults === "all" || !filters.csvResults) ? "#0d6efd" : "#dee2e6",
+                    transition: "all 0.1s ease",
+                    userSelect: "none"
+                  }}
+                >
+                  All
+                </div>
+
+                {/* Keyword Chips */}
                 {filters.query
                   ?.split(",")
                   .map((q) => q.trim())
                   .filter(Boolean)
-                  .map((q, idx) => (
-                    <option key={idx} value={q.toLowerCase()}>
-                      {q}
-                    </option>
-                  ))}
-              </select>
+                  .map((q, idx) => {
+                    const isActive = filters.csvResults === q.toLowerCase();
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => handleChange({ target: { name: "csvResults", value: q.toLowerCase() } })}
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "16px",
+                          fontSize: "0.7rem",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          backgroundColor: isActive ? "#0d6efd" : "#ffffff",
+                          color: isActive ? "#ffffff" : "#6c757d",
+                          border: "1px solid",
+                          borderColor: isActive ? "#0d6efd" : "#dee2e6",
+                          transition: "all 0.1s ease",
+                          userSelect: "none"
+                        }}
+                      >
+                        {q}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+
+          {/* Result Actions Bar (Left Aligned) */}
+          <div 
+            className="mt-4 d-flex align-items-center flex-wrap gap-3"
+            style={{ borderTop: "none" }}
+          >
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "6px 14px",
+                backgroundColor: "#f0f4ff",
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                border: "1px solid #d0e2ff",
+                color: "#0d6efd",
+                fontWeight: "700"
+              }}
+            >
+              <Users size={16} style={{ marginRight: "8px" }} />
+              {count > 0 ? (
+                <span>
+                  Showing {Math.min((currentPage - 1) * filters.limit + 1, count)}-
+                  {Math.min(currentPage * filters.limit, count)} of {count.toLocaleString()} Total Found
+                </span>
+              ) : (
+                "No videos to display"
+              )}
             </div>
 
-            <div className="col-lg-3 d-flex gap-2 justify-content-start">
-              <div
+            <div className="d-flex align-items-center gap-2">
+              <button
+                className="btn btn-sm"
+                onClick={downloadCSV}
+                title="Download CSV"
                 style={{
-                  display: "inline-flex",
+                  backgroundColor: "#ffffff",
+                  color: "#0d6efd",
+                  border: "1px solid #0d6efd",
+                  borderRadius: "8px",
+                  padding: "6px 16px",
+                  fontSize: "0.8rem",
+                  fontWeight: "600",
+                  display: "flex",
                   alignItems: "center",
-                  gap: "8px",
-                  padding: "5px 10px",
-                  backgroundColor: "#f0f4ff",
-                  borderRadius: "6px",
-                  fontSize: "0.95rem",
+                  transition: "all 0.2s"
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#0d6efd"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; e.currentTarget.style.color = "#0d6efd"; }}
               >
-                <span style={{ fontWeight: "600", color: "#0d6efd" }}>
-                  {count}
-                </span>
-                <span style={{ color: "#6c757d" }}>
-                  video{count !== 1 ? "s" : ""}
-                </span>
-              </div>
-
-              {videos.length > 0 && (
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    className="btn btn-sm"
-                    onClick={downloadCSV}
-                    title="Download as CSV"
-                    style={{
-                      backgroundColor: "#0d6efd",
-                      color: "#ffffff",
-                      border: "1px solid #dee2e6",
-                      borderRadius: "4px",
-                      fontSize: "0.75rem",
-                      fontWeight: "500",
-                    }}
-                  >
-                    <Download
-                      size={12}
-                      style={{ marginRight: "4px", display: "inline" }}
-                    />
-                    CSV
-                  </button>
-                  <button
-                    className="btn btn-sm"
-                    onClick={downloadExcel}
-                    title="Download as Excel"
-                    style={{
-                      backgroundColor: "#0d6efd",
-                      color: "#ffffff",
-                      border: "1px solid #dee2e6",
-                      borderRadius: "4px",
-                      fontSize: "0.75rem",
-                      fontWeight: "500",
-                    }}
-                  >
-                    <Download
-                      size={14}
-                      style={{ marginRight: "4px", display: "inline" }}
-                    />
-                    Excel
-                  </button>
-                  {audienceId && (
-                    <button
-                      className="btn btn-sm"
-                      onClick={AddToCampaign}
-                      title="Download as Excel"
-                      style={{
-                        backgroundColor: "#0d6efd",
-                        color: "#ffffff",
-                        border: "1px solid #dee2e6",
-                        borderRadius: "4px",
-                        fontSize: "0.75rem",
-                        fontWeight: "500",
-                      }}
-                    >
-                      <Download
-                        size={14}
-                        style={{ marginRight: "4px", display: "inline" }}
-                      />
-                      Add to Campaign
-                    </button>
-                  )}
-                </div>
+                <Download size={14} style={{ marginRight: "6px" }} />
+                CSV
+              </button>
+              <button
+                className="btn btn-sm"
+                onClick={downloadExcel}
+                title="Download Excel"
+                style={{
+                  backgroundColor: "#ffffff",
+                  color: "#0d6efd",
+                  border: "1px solid #0d6efd",
+                  borderRadius: "8px",
+                  padding: "6px 16px",
+                  fontSize: "0.8rem",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#0d6efd"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; e.currentTarget.style.color = "#0d6efd"; }}
+              >
+                <Download size={14} style={{ marginRight: "6px" }} />
+                Excel
+              </button>
+              {audienceId && (
+                <button
+                  className="btn btn-sm"
+                  onClick={AddToCampaign}
+                  style={{
+                    backgroundColor: "#198754",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "6px 16px",
+                    fontSize: "0.8rem",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    transition: "all 0.2s",
+                    boxShadow: "0 2px 4px rgba(25, 135, 84, 0.2)"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#157347"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#198754"}
+                >
+                  <Star size={14} style={{ marginRight: "6px" }} />
+                  Add To Campaign
+                </button>
               )}
             </div>
           </div>
@@ -792,38 +848,14 @@ const YouTubeTable = () => {
         {/* Results Header */}
         <div
           style={{
-            marginBottom: "20px",
+            marginBottom: "0px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
-          <div>
-            <h6
-              style={{
-                fontSize: "1rem",
-                fontWeight: "600",
-                color: "#1a1a1a",
-                marginBottom: "4px",
-              }}
-            >
-              Video Results ({videos.length})
-            </h6>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                color: "#6c757d",
-                marginBottom: "0",
-              }}
-            >
-              {videos.length > 0
-                ? `Showing ${videos.length} video${
-                    videos.length !== 1 ? "s" : ""
-                  } total`
-                : "No videos to display"}
-            </p>
-          </div>
         </div>
+
 
         {/* Table Section */}
         <div
