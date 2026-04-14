@@ -24,11 +24,7 @@ const Header = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   const isPathPresent = [
-    "/reports/overview",
-    "/reports/device",
-    "/reports/demographics",
-    "/reports/creative",
-    "/reports/category",
+    "/report"
   ].includes(pathname);
 
   // Decode user

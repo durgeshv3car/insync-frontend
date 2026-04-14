@@ -12,7 +12,7 @@ const Home = () => {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/reports/overview");
+      router.push("/report");
     }
   }, [status, router]);
 

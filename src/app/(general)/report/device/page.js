@@ -699,17 +699,6 @@ export default function OverviewPage() {
 
   return (
     <>
-      <PageHeader>
-        {" "}
-        <button
-          className="btn btn-sm btn-ghost"
-          onClick={downloadPDF}
-          title="Download Data as PDF"
-        >
-          <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
-          Export PDF
-        </button>
-      </PageHeader>
       <main className="main-content" ref={mainContentRef}>
         {/* Charts Section */}
         <section className="charts-section">

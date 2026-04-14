@@ -36,7 +36,7 @@ const LoginForm = ({ registerPath, resetPath }) => {
         });
         if (res.ok) {
           toast.success(res.message || "Login successful");
-          router.push("/reports/overview");
+          router.push("/report");
         } else {
           toast.error(res.error || "Login failed");
         }

@@ -63,6 +63,7 @@ const YouTubeTable = () => {
     { code: "GB", name: "United Kingdom" },
     { code: "CA", name: "Canada" },
   ];
+  const [isReady, setIsReady] = useState(false);
   const [filters, setFilters] = useState({
     channelName: "",
     query: "",
@@ -76,6 +77,7 @@ const YouTubeTable = () => {
     page: currentPage,
     limit: 50,
     csvResults: "all",
+    userId: "",
   });
 
   // Dummy data for analytics - Replace with your actual data
@@ -110,18 +112,19 @@ const YouTubeTable = () => {
   const endIndex = startIndex + videos.length;
 
   const fetchVideos = async () => {
+    // Safety check: don't fetch if we don't have a user context yet
+    if (!filters.userId && !isReady) return;
+
     setLoading(true);
     try {
       const res = await getQueryResults(filters);
+      if (res && res.results) {
+        setVideos(res.results);
+        setCount(res.pagination?.totalCount || 0);
+        setTotalPages(res.pagination?.totalPages || 0);
+        setAnalytics(res.totals || {});
 
-      setVideos(res.results);
-      setCurrentPage(res.pagination.currentPage);
-      setCount(res.pagination.totalCount);
-      setTotalPages(res.pagination.totalPages);
-      setAnalytics(res.totals);
-
-      // Update ID to videoId map
-      if (res.results) {
+        // Update ID to videoId map
         setIdToVideoIdMap((prev) => {
           const newMap = { ...prev };
           res.results.forEach((v) => {
@@ -134,8 +137,9 @@ const YouTubeTable = () => {
       }
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchRegions = async () => {
@@ -222,43 +226,43 @@ const YouTubeTable = () => {
 
         console.log("YouTube Data: API Raw Response - Latest:", latestRes, "List:", listRes);
 
+        let finalQuery = "";
         if (latestRes) {
-          const qStr = typeof latestRes === 'string' ? latestRes : (latestRes.query || latestRes.text || JSON.stringify(latestRes));
-          setFilters((prev) => ({
-            ...prev,
-            query: qStr,
-            userId: uid,
-          }));
-          setQueryInput(qStr);
-          console.log("YouTube Data: Successfully set initial query to:", qStr);
-        } else {
-          setFilters((prev) => ({ 
-            ...prev, 
-            query: "", // Explicitly clear query if none found
-            userId: uid 
-          }));
-          setQueryInput(""); // Clear input field
-          console.log("YouTube Data: No latest query found for user. Cleared fields.");
+          finalQuery = typeof latestRes === 'string' ? latestRes : (latestRes.query || latestRes.text || "");
+          setQueryInput(finalQuery);
         }
+
+        // Set filters once with all initial data
+        setFilters((prev) => ({
+          ...prev,
+          query: finalQuery,
+          userId: uid,
+        }));
 
         if (listRes && Array.isArray(listRes)) {
           setRecentQueries(listRes);
-          console.log("YouTube Data: History list loaded with", listRes.length, "items.");
         } else {
-          setRecentQueries([]); // Clear history list
+          setRecentQueries([]);
         }
+
+        // Mark as ready to trigger first fetch
+        setIsReady(true);
       } catch (err) {
         console.error("YouTube Data: Critical error in init workflow:", err);
+        setIsReady(true); // Still set ready to allow manual searches
       }
     };
     init();
   }, [session, status]);
 
+  // Main fetch hook - fires whenever filters change, but only after init is done
   useEffect(() => {
-    fetchVideos();
-    fetchRegions();
-    setSelectedVideos(new Set()); // Reset selection on filter change
-  }, [filters]);
+    if (isReady && filters.userId) {
+      fetchVideos();
+      fetchRegions();
+      setSelectedVideos(new Set());
+    }
+  }, [isReady, filters.query, filters.channelName, filters.regionCode, filters.videoType, filters.sortBy, filters.page, filters.limit, filters.userId]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

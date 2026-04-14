@@ -4,7 +4,8 @@ import html2canvas from "html2canvas";
 export const downloadDashboardPDF = async (
   elementRef,
   title = "Dashboard Report",
-  dateRangeText = ""
+  dateRangeText = "",
+  singlePage = false
 ) => {
   if (!elementRef || !elementRef.current) return;
 
@@ -19,16 +20,15 @@ export const downloadDashboardPDF = async (
     });
 
     const imgData = canvas.toDataURL("image/jpeg", 0.8);
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    const headerHeight = 20; // 🔥 header space
-
-    const imgProps = pdf.getImageProperties(imgData);
+    
+    const pdfWidth = 210; // A4 width in mm
     const imgWidth = pdfWidth;
-    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const headerHeight = 20; // 🔥 header space
+    
+    const pageHeight = singlePage ? (imgHeight + headerHeight) : 297; // 297 is A4 height in mm
+
+    const pdf = new jsPDF("p", "mm", singlePage ? [pdfWidth, pageHeight] : "a4");
 
     const currentDate = new Date().toLocaleDateString();
 
@@ -61,21 +61,19 @@ export const downloadDashboardPDF = async (
 
     // ---------- First Page ----------
     addHeader();
-
     pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
 
-    heightLeft -= pdfHeight;
+    if (!singlePage) {
+      heightLeft -= pageHeight;
 
-    // ---------- Additional Pages ----------
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight + headerHeight;
-      pdf.addPage();
-
-      addHeader();
-
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-
-      heightLeft -= pdfHeight;
+      // ---------- Additional Pages ----------
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + headerHeight;
+        pdf.addPage();
+        addHeader();
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
     }
 
     pdf.save(`${title.replace(/\s+/g, "_").toLowerCase()}.pdf`);

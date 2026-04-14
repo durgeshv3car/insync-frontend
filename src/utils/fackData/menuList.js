@@ -18,48 +18,54 @@ export const menuList = [
   path: "/campaign", 
   icon: "feather-activity"   
 },
+  { 
+  id: 5, 
+  name: "Report", 
+  path: "/report", 
+  icon: "feather-bar-chart-2"   
+},
 
   // Project
 
   // REPORTS MENU
-  {
-    id: 6,
-    name: "Reports",
-    path: "#",
-    icon: "feather-bar-chart-2",
-    dropdownMenu: [
-      {
-        id: 1,
-        name: "Overview",
-        path: "/reports/overview",
-        subdropdownMenu: false,
-      },
-      {
-        id: 1,
-        name: "Device",
-        path: "/reports/device",
-        subdropdownMenu: false,
-      },
-      {
-        id: 1,
-        name: "Demographics",
-        path: "/reports/demographics",
-        subdropdownMenu: false,
-      },
-      // {
-      //   id: 1,
-      //   name: "creative",
-      //   path: "/reports/creative",
-      //   subdropdownMenu: false,
-      // },
-      // {
-      //   id: 1,
-      //   name: "Category",
-      //   path: "/reports/category",
-      //   subdropdownMenu: false,
-      // },
-    ],
-  },
+  // {
+  //   id: 6,
+  //   name: "Reports",
+  //   path: "#",
+  //   icon: "feather-bar-chart-2",
+  //   dropdownMenu: [
+  //     {
+  //       id: 1,
+  //       name: "Overview",
+  //       path: "/reports/overview",
+  //       subdropdownMenu: false,
+  //     },
+  //     {
+  //       id: 1,
+  //       name: "Device",
+  //       path: "/reports/device",
+  //       subdropdownMenu: false,
+  //     },
+  //     {
+  //       id: 1,
+  //       name: "Demographics",
+  //       path: "/reports/demographics",
+  //       subdropdownMenu: false,
+  //     },
+  //     // {
+  //     //   id: 1,
+  //     //   name: "creative",
+  //     //   path: "/reports/creative",
+  //     //   subdropdownMenu: false,
+  //     // },
+  //     // {
+  //     //   id: 1,
+  //     //   name: "Category",
+  //     //   path: "/reports/category",
+  //     //   subdropdownMenu: false,
+  //     // },
+  //   ],
+  // },
 
   { id: 7, name: "Audience", path: "/audience", icon: "feather-layout" },
   {
