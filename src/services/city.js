@@ -32,7 +32,7 @@ export const createReportsDataCity = async (params) => {
 };
 
 // Daily reports with filter (LAST_7_DAYS, LAST_30_DAYS, etc.)
-export const getDailyReportsByFilterCity = async (insertionOrderId, filter) => {
+export const getDailyReportsByFilterCity = async (insertionOrderId, filter, audienceId) => {
   try {
     const token = await getToken();
     const res = await axios.post(
@@ -40,6 +40,7 @@ export const getDailyReportsByFilterCity = async (insertionOrderId, filter) => {
       {
         insertionOrderId,
         filter,
+        audienceId,
       },
       {
         headers: {
@@ -59,7 +60,7 @@ export const getDailyReportsByFilterCity = async (insertionOrderId, filter) => {
 };
 
 // Daily reports with custom date range
-export const getDailyReportsByRangeCity = async (insertionOrderId, startDate, endDate) => {
+export const getDailyReportsByRangeCity = async (insertionOrderId, startDate, endDate, audienceId) => {
   try {
     const token = await getToken();
     const res = await axios.post(
@@ -68,6 +69,7 @@ export const getDailyReportsByRangeCity = async (insertionOrderId, startDate, en
         insertionOrderId,
         startDate,
         endDate,
+        audienceId,
       },
       {
         headers: {

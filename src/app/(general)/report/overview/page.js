@@ -168,14 +168,14 @@ export default function OverviewPage() {
       const performFetch = async () => {
         if (dateRange === "CUSTOM") {
           const [dailyData, monthlyData] = await Promise.all([
-            getDailyReportsByRange(insertionOrderId, startDate, endDate),
-            getMonthlyReportsByRange(insertionOrderId, startDate, endDate),
+            getDailyReportsByRange(insertionOrderId, startDate, endDate,audienceId),
+            getMonthlyReportsByRange(insertionOrderId, startDate, endDate,audienceId),
           ]);
           return { dailyData, monthlyData };
         } else {
           const [dailyData, monthlyData] = await Promise.all([
-            getDailyReportsByFilter(insertionOrderId, dateRange),
-            getMonthlyReportsByFilter(insertionOrderId, dateRange),
+            getDailyReportsByFilter(insertionOrderId, dateRange,audienceId),
+            getMonthlyReportsByFilter(insertionOrderId, dateRange,audienceId),
           ]);
           return { dailyData, monthlyData };
         }
@@ -204,7 +204,6 @@ export default function OverviewPage() {
           "Data not found in DB or error occurred, triggering sync...",
         );
 
-        // Clear old data to prevent showing stale results during sync
         setDailyReportsData(null);
         setMonthlyReportsData(null);
 
@@ -212,7 +211,6 @@ export default function OverviewPage() {
 
         if (isSent) {
           console.log("Sync complete, fetching refreshed data...");
-          // Fetch again after sync
           const refreshed = await performFetch();
           dailyData = refreshed.dailyData;
           monthlyData = refreshed.monthlyData;
@@ -1148,8 +1146,7 @@ export default function OverviewPage() {
                         <td>
                           ₹
                           {(
-                            (Number(item?.mediaCostAdvertiserCurrency) || 0) *
-                            (Number(count) || 0)
+                            (Number(item?.cost) || 0) 
                           ).toFixed(2)}
                         </td>
 
@@ -1213,7 +1210,7 @@ export default function OverviewPage() {
                         </td>
                         <td>
                           ₹
-                          {parseFloat(item.mediaCostAdvertiserCurrency).toFixed(
+                          {parseFloat(item.cost).toFixed(
                             2,
                           )}
                         </td>

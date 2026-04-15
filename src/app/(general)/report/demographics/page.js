@@ -46,7 +46,7 @@ const groupDemographicsData = (data) => {
         impressions: 0,
         clicks: 0,
         completeViews: 0,
-        mediaCost: 0,
+        cost: 0,
         genderMap: {},
       };
     }
@@ -55,12 +55,12 @@ const groupDemographicsData = (data) => {
     const imps = parseInt(curr.impressions) || 0;
     const clks = parseInt(curr.clicks) || 0;
     const views = parseInt(curr.completeViewsVideo) || 0;
-    const cost = parseFloat(curr.mediaCostAdvertiserCurrency) || 0;
+    const cost = parseFloat(curr.cost || curr.mediaCostAdvertiserCurrency) || 0;
 
     aGroup.impressions += imps;
     aGroup.clicks += clks;
     aGroup.completeViews += views;
-    aGroup.mediaCost += cost;
+    aGroup.cost += cost;
 
     if (!aGroup.genderMap[gender]) {
       aGroup.genderMap[gender] = {
@@ -68,7 +68,7 @@ const groupDemographicsData = (data) => {
         impressions: 0,
         clicks: 0,
         completeViews: 0,
-        mediaCost: 0,
+        cost: 0,
       };
     }
 
@@ -76,7 +76,7 @@ const groupDemographicsData = (data) => {
     gGroup.impressions += imps;
     gGroup.clicks += clks;
     gGroup.completeViews += views;
-    gGroup.mediaCost += cost;
+    gGroup.cost += cost;
 
     return acc;
   }, {});
@@ -91,7 +91,7 @@ const groupDemographicsData = (data) => {
       range: age.range,
       impressions: age.impressions,
       clicks: age.clicks,
-      mediaCost: age.mediaCost,
+      cost: age.cost,
       ctr: parseFloat(ctr.toFixed(3)),
       vcr: parseFloat(vcr.toFixed(2)),
       gender: Object.values(age.genderMap).map((g) => {
@@ -103,7 +103,7 @@ const groupDemographicsData = (data) => {
           impressions: g.impressions,
           clicks: g.clicks,
           completeViews: g.completeViews,
-          mediaCost: g.mediaCost,
+          cost: g.cost,
           ctr: parseFloat(gCtr.toFixed(3)),
           vcr: parseFloat(gVcr.toFixed(2)),
         };
@@ -180,7 +180,6 @@ export default function OverviewPage() {
     return "";
   });
 
-
   // Global insertionOrderId - TODO: Make this dynamic later
   const INSERTION_ORDER_ID = insertionOrderId;
 
@@ -210,7 +209,6 @@ export default function OverviewPage() {
       if (key === "audienceName") setAudienceName(newValue || "");
       if (key === "insertionId") setInsertionOrderId(newValue || "");
       if (key === "count") setCount(newValue ? Number(newValue) : 0);
-
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -290,21 +288,25 @@ export default function OverviewPage() {
             INSERTION_ORDER_ID,
             startDate,
             endDate,
+            audienceId,
           );
           const dailyDataCity = await getDailyReportsByRangeCity(
             INSERTION_ORDER_ID,
             startDate,
             endDate,
+            audienceId,
           );
           return { dailyData, dailyDataCity };
         } else {
           const dailyData = await getDailyReportsByFilter(
             INSERTION_ORDER_ID,
             dateRange,
+            audienceId,
           );
           const dailyDataCity = await getDailyReportsByFilterCity(
             INSERTION_ORDER_ID,
             dateRange,
+            audienceId,
           );
           return { dailyData, dailyDataCity };
         }
@@ -774,7 +776,10 @@ export default function OverviewPage() {
               />
             </div>
 
-            <ChartCard title={`Age Level Performance (${audienceName})`} className="equal-height">
+            <ChartCard
+              title={`Age Level Performance (${audienceName})`}
+              className="equal-height"
+            >
               <canvas ref={ageLevelChartRef} id="ageLevelChart" />
             </ChartCard>
 
@@ -856,13 +861,7 @@ export default function OverviewPage() {
                         <td>{item.impressions.toLocaleString()}</td>
                         <td>{item.ctr}%</td>
                         <td>{item.vcr}%</td>
-                        <td>
-                          ₹
-                          {(
-                            (Number(item?.mediaCost) || 0) *
-                            (Number(count) || 0)
-                          ).toFixed(2)}
-                        </td>
+                        <td>₹{(Number(item?.cost) || 0).toFixed(2)}</td>
                       </tr>
                       {isExpanded && (
                         <tr
@@ -902,11 +901,7 @@ export default function OverviewPage() {
                                       <td>{g.ctr}%</td>
                                       <td>{g.vcr}%</td>
                                       <td>
-                                        ₹
-                                        {(
-                                          (Number(g?.mediaCost) || 0) *
-                                          (Number(count) || 0)
-                                        ).toFixed(2)}
+                                        ₹{(Number(g?.cost) || 0).toFixed(2)}
                                       </td>
                                     </tr>
                                   ))}

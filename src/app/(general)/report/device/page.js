@@ -183,12 +183,14 @@ export default function OverviewPage() {
             INSERTION_ORDER_ID,
             startDate,
             endDate,
+            audienceId
           );
           return { dailyData };
         } else {
           const dailyData = await getDailyReportsByFilter(
             INSERTION_ORDER_ID,
             dateRange,
+            audienceId
           );
           return { dailyData };
         }
@@ -320,13 +322,14 @@ export default function OverviewPage() {
           impressions: 0,
           clicks: 0,
           completeViews: 0,
-          spend: 0,
+          cost: 0,
         };
       }
       acc[device].impressions += parseInt(curr.impressions) || 0;
       acc[device].clicks += parseInt(curr.clicks) || 0;
       acc[device].completeViews += parseInt(curr.completeViewsVideo) || 0;
-      acc[device].spend += parseFloat(curr.mediaCostAdvertiserCurrency) || 0;
+      acc[device].cost +=
+        parseFloat(curr.cost || curr.mediaCostAdvertiserCurrency) || 0;
       return acc;
     }, {});
 
@@ -768,7 +771,7 @@ export default function OverviewPage() {
                       <td>
                         ₹
                         {(
-                          (Number(item?.spend) || 0) * (Number(count) || 0)
+                          (Number(item?.cost) || 0)
                         ).toFixed(2)}
                       </td>
                     </tr>
