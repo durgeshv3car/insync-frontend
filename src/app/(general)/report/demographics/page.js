@@ -249,17 +249,7 @@ export default function OverviewPage() {
   const [dailyReportsDataCity, setDailyReportsDataCity] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
-  const sentReportsData = async () => {
-    try {
-      const res = await createReportsDataAge(params);
-      await createReportsDataCity(params);
-      console.log("Reports data sent successfully:", res);
-      return true;
-    } catch (error) {
-      console.error("Error sending reports data:", error);
-      return false;
-    }
-  };
+
 
   const fetchReportsData = async () => {
     // Validation: Check if dateRange is selected
@@ -279,6 +269,8 @@ export default function OverviewPage() {
     }
 
     setIsLoadingData(true);
+    // Add artificial delay for smoother transition
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
       // 1. Helper function to perform the actual fetch
@@ -312,44 +304,10 @@ export default function OverviewPage() {
         }
       };
 
-      let dailyData = null;
-      let dailyDataCity = null;
-      let fetchErrorOccurred = false;
+      const result = await performFetch();
+      const dailyData = result.dailyData;
+      const dailyDataCity = result.dailyDataCity;
 
-      // 2. Try fetching existing data first
-      try {
-        const initialResult = await performFetch();
-        dailyData = initialResult.dailyData;
-        dailyDataCity = initialResult.dailyDataCity;
-      } catch (error) {
-        console.log("Initial fetch failed or data not found:", error.message);
-        fetchErrorOccurred = true;
-      }
-
-      // 3. Check if we have data. If not (or if fetch failed), trigger sync and fetch again.
-      const hasData =
-        dailyData && Array.isArray(dailyData) && dailyData.length > 0;
-
-      const hasCityData =
-        dailyDataCity &&
-        Array.isArray(dailyDataCity) &&
-        dailyDataCity.length > 0;
-
-      if (!hasData || !hasCityData || fetchErrorOccurred) {
-        console.log(
-          "Data not found in DB or error occurred, triggering sync...",
-        );
-        setDailyReportsData(null);
-        setDailyReportsDataCity(null);
-        const isSent = await sentReportsData();
-
-        if (isSent) {
-          console.log("Sync complete, fetching refreshed data...");
-          const refreshed = await performFetch();
-          dailyData = refreshed.dailyData;
-          dailyDataCity = refreshed.dailyDataCity;
-        }
-      }
       setDailyReportsData(dailyData);
       setDailyReportsDataCity(dailyDataCity);
       console.log("Report data updated successfully.");
@@ -444,7 +402,6 @@ export default function OverviewPage() {
 
   // Chart refs
   const genderChartRef = useRef(null);
-  const ageLevelChartRef = useRef(null);
   const ageBreakdownChartRef = useRef(null);
   const cityChartRef = useRef(null);
 
@@ -549,59 +506,6 @@ export default function OverviewPage() {
         });
       }
 
-      // Age Level Performance (Bar)
-      if (ageLevelChartRef.current) {
-        const ctx = ageLevelChartRef.current.getContext("2d");
-        const metricKey = activeMetric.toLowerCase();
-
-        chartsRef.current.ageLevel = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: aggregatedData.map((d) => d.range),
-            datasets: [
-              {
-                label: activeMetric,
-                data: aggregatedData.map((d) => d[metricKey]),
-                backgroundColor: "rgba(99, 102, 241, 0.6)",
-                hoverBackgroundColor: "#6366f1",
-                borderRadius: 6,
-                barPercentage: 0.8,
-                categoryPercentage: 0.9,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) =>
-                    `${activeMetric}: ${activeMetric === "Impressions" ? ctx.parsed.y.toLocaleString() : ctx.parsed.y + "%"}`,
-                },
-              },
-              datalabels: {
-                align: "top",
-                anchor: "center",
-                color: "#fff",
-                font: { weight: "bold" },
-                formatter: (v) =>
-                  activeMetric === "Impressions" ? formatNumber(v) : v + "%",
-              },
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: (v) =>
-                    activeMetric === "Impressions" ? formatNumber(v) : v + "%",
-                },
-              },
-            },
-          },
-        });
-      }
 
       // Age Breakdown (Doughnut)
       if (ageBreakdownChartRef.current) {
@@ -664,7 +568,7 @@ export default function OverviewPage() {
       // Always sort by Impressions and take TOP 25
       const processedCityData = [...cityData]
         .sort((a, b) => b.impressions - a.impressions)
-        .slice(0, 25);
+        .slice(0, 50);
 
       const labels = processedCityData.map((d) => d.city);
       const dataValues = processedCityData.map((d) => d.impressions);
@@ -712,6 +616,10 @@ export default function OverviewPage() {
             },
             y: {
               grid: { display: false },
+              // ticks: {
+              //   autoSkip: false,
+              //   font: { size: 10 },
+              // },
             },
           },
         },
@@ -737,7 +645,13 @@ export default function OverviewPage() {
     <>
       <main className="main-content" ref={mainContentRef}>
         {/* Charts Section */}
-        <section className="charts-section">
+        <section className="charts-section" style={{ position: "relative" }}>
+          {isLoadingData && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">Refreshing analytics...</div>
+            </div>
+          )}
           <div
             className="metric-toggle-bar"
             style={{
@@ -768,7 +682,11 @@ export default function OverviewPage() {
             ))}
           </div>
           <div className="charts-grid top-charts">
-            <div className="chart-item equal-height">
+            {/* Gender - top left, row 1 */}
+            <div
+              className="chart-item equal-height"
+              style={{ gridColumn: 1, gridRow: 1 }}
+            >
               <TopCountryBarChart
                 dailyReportsData={dailyReportsData}
                 activeMetric={activeMetric}
@@ -776,31 +694,34 @@ export default function OverviewPage() {
               />
             </div>
 
+            {/* City - right column, spans both rows */}
             <ChartCard
-              title={`Age Level Performance (${audienceName})`}
+              title={`Top 50 Cities Performance (${audienceName})`}
               className="equal-height"
+              style={{ gridColumn: 2, gridRow: "1 / 3", height: "auto" }}
             >
-              <canvas ref={ageLevelChartRef} id="ageLevelChart" />
+              <canvas ref={cityChartRef} id="cityChart" />
             </ChartCard>
 
+            {/* Age Breakdown - bottom left, row 2 */}
             <ChartCard
               title={`Age Breakdown (${audienceName})`}
               className="equal-height"
+              style={{ gridColumn: 1, gridRow: 2 }}
             >
               <canvas ref={ageBreakdownChartRef} id="ageBreakdownChart" />
-            </ChartCard>
-
-            <ChartCard
-              title={`Top 25 Cities Performance (${audienceName})`}
-              className="equal-height"
-            >
-              <canvas ref={cityChartRef} id="cityChart" />
             </ChartCard>
           </div>
         </section>
 
         {/* Table */}
-        <div className="data-table-card">
+        <div className="data-table-card" style={{ position: "relative" }}>
+          {isLoadingData && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">Updating demographics...</div>
+            </div>
+          )}
           <div className="table-header">
             <h3>Demographics Performance Summary ({audienceName})</h3>
 
@@ -975,8 +896,9 @@ function StatCard({ title, value, icon, change }) {
 }
 
 function ChartCard({ title, children, subtitle, className = "", style = {} }) {
+  const hasStyle = Object.keys(style).length > 0;
   return (
-    <div className={`chart-card ${className}`}>
+    <div className={`chart-card ${className}`} style={hasStyle ? style : undefined}>
       <div className="chart-header">
         <div className="chart-title-group">
           <h3>{title}</h3>
@@ -986,10 +908,7 @@ function ChartCard({ title, children, subtitle, className = "", style = {} }) {
           <i className="fas fa-ellipsis-h" />
         </button>
       </div>
-      <div
-        className="chart-container"
-        style={Object.keys(style).length ? style : undefined}
-      >
+      <div className="chart-container">
         {children}
       </div>
     </div>

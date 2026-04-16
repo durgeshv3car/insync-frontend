@@ -105,25 +105,8 @@ function DateSection() {
     setIsInitialized(true);
   }, []);
 
-  // Save to localStorage whenever state changes (only after initialization)
-  useEffect(() => {
-    if (!isInitialized) return;
+  // Remove auto-save useEffect
 
-    const updates = [
-      { key: "selectedRange", value: selectedRange },
-      { key: "startDate", value: customStartDate },
-      { key: "endDate", value: customEndDate },
-    ];
-
-    updates.forEach(({ key, value }) => {
-      localStorage.setItem(key, value);
-      window.dispatchEvent(
-        new CustomEvent("storage", {
-          detail: { key, newValue: value },
-        }),
-      );
-    });
-  }, [selectedRange, customStartDate, customEndDate, isInitialized]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -152,6 +135,20 @@ function DateSection() {
   };
 
   const handleApply = () => {
+    const updates = [
+      { key: "selectedRange", value: selectedRange },
+      { key: "startDate", value: customStartDate },
+      { key: "endDate", value: customEndDate },
+    ];
+
+    updates.forEach(({ key, value }) => {
+      localStorage.setItem(key, value);
+      window.dispatchEvent(
+        new CustomEvent("storage", {
+          detail: { key, newValue: value },
+        }),
+      );
+    });
     setShow(false);
   };
 

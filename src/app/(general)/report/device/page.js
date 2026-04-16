@@ -145,16 +145,7 @@ export default function OverviewPage() {
   const [dailyReportsData, setDailyReportsData] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
-  const sentReportsData = async () => {
-    try {
-      const res = await createReportsDataDevice(params);
-      console.log("Reports data sent successfully:", res);
-      return true;
-    } catch (error) {
-      console.error("Error sending reports data:", error);
-      return false;
-    }
-  };
+
 
   const fetchReportsData = async () => {
     // Validation: Check if dateRange is selected
@@ -174,6 +165,8 @@ export default function OverviewPage() {
     }
 
     setIsLoadingData(true);
+    // Add artificial delay for smoother transition
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
       // 1. Helper function to perform the actual fetch
@@ -196,43 +189,8 @@ export default function OverviewPage() {
         }
       };
 
-      let dailyData = null;
-      let monthlyData = null;
-      let fetchErrorOccurred = false;
-
-      // 2. Try fetching existing data first
-      try {
-        const initialResult = await performFetch();
-        dailyData = initialResult.dailyData;
-      } catch (error) {
-        console.log("Initial fetch failed or data not found:", error.message);
-        fetchErrorOccurred = true;
-      }
-
-      // 3. Check if we have data. If not (or if fetch failed), trigger sync and fetch again.
-      const hasData =
-        dailyData && Array.isArray(dailyData) && dailyData.length > 0;
-
-      if (!hasData || fetchErrorOccurred) {
-        console.log(
-          "Data not found in DB or error occurred, triggering sync...",
-        );
-
-        // Clear old data to prevent showing stale results during sync
-        setDailyReportsData(null);
-        setMonthlyReportsData(null);
-
-        const isSent = await sentReportsData();
-
-        if (isSent) {
-          console.log("Sync complete, fetching refreshed data...");
-          // Fetch again after sync
-          const refreshed = await performFetch();
-          dailyData = refreshed.dailyData;
-        }
-      } else {
-        console.log("Existing data found in DB, skipping sync.");
-      }
+      const result = await performFetch();
+      const dailyData = result.dailyData;
 
       setDailyReportsData(dailyData);
       console.log("Report data updated successfully.");
@@ -704,14 +662,26 @@ export default function OverviewPage() {
     <>
       <main className="main-content" ref={mainContentRef}>
         {/* Charts Section */}
-        <section className="charts-section">
+        <section className="charts-section" style={{ position: "relative" }}>
+          {isLoadingData && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">Refreshing charts...</div>
+            </div>
+          )}
           <div className="grid">
             <TopCountryBarChart dailyReportsData={dailyReportsData} audienceName={audienceName} />
           </div>
         </section>
 
         {/* Table */}
-        <div className="data-table-card">
+        <div className="data-table-card" style={{ position: "relative" }}>
+          {isLoadingData && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">Updating device data...</div>
+            </div>
+          )}
           <div className="table-header">
             <h3>Device Performance Summary ({audienceName})</h3>
 

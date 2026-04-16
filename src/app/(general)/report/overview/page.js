@@ -133,16 +133,7 @@ export default function OverviewPage() {
 
   const downloadCsvOverview = () => {};
 
-  const sentReportsData = async () => {
-    try {
-      const res = await createReportsDataDevice(params);
-      console.log("Reports data sent successfully:", res);
-      return true;
-    } catch (error) {
-      console.error("Error sending reports data:", error);
-      return false;
-    }
-  };
+
 
   const fetchReportsData = async () => {
     // Validation: Check if dateRange is selected
@@ -162,6 +153,8 @@ export default function OverviewPage() {
     }
 
     setIsLoadingData(true);
+    // Add artificial delay for smoother transition
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
       // 1. Helper function to perform the actual fetch
@@ -181,43 +174,9 @@ export default function OverviewPage() {
         }
       };
 
-      let dailyData = null;
-      let monthlyData = null;
-      let fetchErrorOccurred = false;
-
-      // 2. Try fetching existing data first
-      try {
-        const initialResult = await performFetch();
-        dailyData = initialResult.dailyData;
-        monthlyData = initialResult.monthlyData;
-      } catch (error) {
-        console.log("Initial fetch failed or data not found:", error.message);
-        fetchErrorOccurred = true;
-      }
-
-      // 3. Check if we have data. If not (or if fetch failed), trigger sync and fetch again.
-      const hasData =
-        dailyData && Array.isArray(dailyData) && dailyData.length > 0;
-
-      if (!hasData || fetchErrorOccurred) {
-        console.log(
-          "Data not found in DB or error occurred, triggering sync...",
-        );
-
-        setDailyReportsData(null);
-        setMonthlyReportsData(null);
-
-        const isSent = await sentReportsData();
-
-        if (isSent) {
-          console.log("Sync complete, fetching refreshed data...");
-          const refreshed = await performFetch();
-          dailyData = refreshed.dailyData;
-          monthlyData = refreshed.monthlyData;
-        }
-      } else {
-        console.log("Existing data found in DB, skipping sync.");
-      }
+      const result = await performFetch();
+      const dailyData = result.dailyData;
+      const monthlyData = result.monthlyData;
 
       setDailyReportsData(dailyData);
       setMonthlyReportsData(monthlyData);
@@ -1019,6 +978,13 @@ export default function OverviewPage() {
               </div>
             </div>
 
+            {isLoadingData && (
+              <div className="loading-overlay">
+                <div className="loading-spinner"></div>
+                <div className="loading-text">Updating metrics...</div>
+              </div>
+            )}
+
             <div className="realtime-stats">
               <Stat
                 value={formatNumber(summaryMetrics.impressions)}
@@ -1039,7 +1005,13 @@ export default function OverviewPage() {
         </section>
 
         {/* Charts Section */}
-        <section className="charts-section">
+        <section className="charts-section" style={{ position: "relative" }}>
+          {isLoadingData && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">Refreshing charts...</div>
+            </div>
+          )}
           <h2 className="section-title">Analytics & Insights ({audienceName})</h2>
           <div className="charts-grid">
             <VisitorsChart dailyReportsData={dailyReportsData} />
@@ -1048,7 +1020,13 @@ export default function OverviewPage() {
         </section>
 
         {/* Table */}
-        <div className="data-table-card">
+        <div className="data-table-card" style={{ position: "relative" }}>
+          {isLoadingData && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">Updating table...</div>
+            </div>
+          )}
           <div className="table-header">
             <h3>Campaign Performance Summary ({audienceName})</h3>
 
