@@ -211,7 +211,7 @@ const Campaign = () => {
         setProgress(20);
       }
 
-      if (res.audience?._id) {
+      if (editingIndex === null && res.audience?._id) {
         const params = {
           audienceId: res.audience._id,
           dataRange: "ALL_TIME",
@@ -511,6 +511,7 @@ const Campaign = () => {
                           className="form-control"
                           placeholder="Advertiser ID"
                           required
+                          readOnly={editingIndex !== null}
                         />
                       </div>
                     </div>
@@ -527,6 +528,7 @@ const Campaign = () => {
                           className="form-control"
                           placeholder="Campaign ID"
                           required
+                          readOnly={editingIndex !== null}
                         />
                       </div>
                     </div>
@@ -545,6 +547,7 @@ const Campaign = () => {
                           className="form-control"
                           placeholder="Insertion Order ID"
                           required
+                          readOnly={editingIndex !== null}
                         />
                       </div>
                     </div>

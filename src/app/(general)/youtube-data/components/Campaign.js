@@ -14,6 +14,8 @@ import {
   Download,
   TrendingUp,
   Video,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import {
   LineChart,
@@ -79,6 +81,62 @@ const YouTubeTable = () => {
     csvResults: "all",
     userId: "",
   });
+
+  const handleSort = (field) => {
+    setFilters((prev) => {
+      let nextSortBy = field;
+
+      if (field === "published") {
+        // Toggle between recent and oldest
+        nextSortBy = prev.sortBy === "recent" ? "oldest" : "recent";
+      } else {
+        // Toggle between field and engagement
+        nextSortBy = prev.sortBy === field ? "engagement" : field;
+      }
+
+      return {
+        ...prev,
+        sortBy: nextSortBy,
+        page: 1,
+      };
+    });
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (field) => {
+    let isActive = false;
+
+    if (field === "published") {
+      isActive = filters.sortBy === "recent" || filters.sortBy === "oldest";
+      const isOldest = filters.sortBy === "oldest";
+
+      return isOldest ? (
+        <ArrowDown size={12} style={{ color: "#0d6efd", marginLeft: "4px" }} />
+      ) : (
+        <ArrowUp 
+          size={12} 
+          style={{ 
+            color: isActive ? "#0d6efd" : "#adb5bd", 
+            marginLeft: "4px",
+            opacity: isActive ? 1 : 0.4 
+          }} 
+        />
+      );
+    } else {
+      isActive = filters.sortBy === field;
+      return (
+        <ArrowUp 
+          size={12} 
+          style={{ 
+            color: isActive ? "#0d6efd" : "#adb5bd", 
+            marginLeft: "4px",
+            opacity: isActive ? 1 : 0.4,
+            transition: "all 0.2s ease"
+          }} 
+        />
+      );
+    }
+  };
 
   // Dummy data for analytics - Replace with your actual data
   const [analytics, setAnalytics] = useState({});
@@ -642,7 +700,6 @@ const YouTubeTable = () => {
                 <option value="views">Views</option>
                 <option value="likes">Likes</option>
                 <option value="comments">Comments</option>
-                <option value="popular">Popular</option>
                 <option value="subscribers">Subscribers</option>
                 <option value="engagement">Engagement</option>
                 <option value="erscore">Top Rated</option>
@@ -925,7 +982,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "5%",
+                      width: "4%",
                     }}
                   >
                     <input
@@ -954,7 +1011,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "18%",
+                      width: "16%",
                     }}
                   >
                     Video
@@ -968,7 +1025,7 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "12%",
+                      width: "10%",
                     }}
                   >
                     Channel
@@ -982,12 +1039,13 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "12%",
+                      width: "10%",
                     }}
                   >
                     Keyword
                   </th>
                   <th
+                    onClick={() => handleSort("views")}
                     style={{
                       padding: "14px",
                       textAlign: "left",
@@ -997,11 +1055,16 @@ const YouTubeTable = () => {
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "8%",
+                      cursor: "pointer",
+                      userSelect: "none",
                     }}
                   >
-                    Views
+                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                      Views {getSortIcon("views")}
+                    </div>
                   </th>
                   <th
+                    onClick={() => handleSort("likes")}
                     style={{
                       padding: "14px",
                       textAlign: "left",
@@ -1011,11 +1074,16 @@ const YouTubeTable = () => {
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "8%",
+                      cursor: "pointer",
+                      userSelect: "none",
                     }}
                   >
-                    Likes
+                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                      Likes {getSortIcon("likes")}
+                    </div>
                   </th>
                   <th
+                    onClick={() => handleSort("comments")}
                     style={{
                       padding: "14px",
                       textAlign: "left",
@@ -1024,12 +1092,17 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "8%",
+                      width: "11%",
+                      cursor: "pointer",
+                      userSelect: "none",
                     }}
                   >
-                    Comments
+                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                      Comments {getSortIcon("comments")}
+                    </div>
                   </th>
                   <th
+                    onClick={() => handleSort("subscribers")}
                     style={{
                       padding: "14px",
                       textAlign: "left",
@@ -1038,12 +1111,17 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "8%",
+                      width: "13%",
+                      cursor: "pointer",
+                      userSelect: "none",
                     }}
                   >
-                    Subscribers
+                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                      Subscribers {getSortIcon("subscribers")}
+                    </div>
                   </th>
                   <th
+                    onClick={() => handleSort("published")}
                     style={{
                       padding: "14px",
                       textAlign: "left",
@@ -1052,12 +1130,17 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "8%",
+                      width: "11%",
+                      cursor: "pointer",
+                      userSelect: "none",
                     }}
                   >
-                    Published
+                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                      Published {getSortIcon("published")}
+                    </div>
                   </th>
                   <th
+                    onClick={() => handleSort("engagement")}
                     style={{
                       padding: "14px",
                       textAlign: "left",
@@ -1066,10 +1149,14 @@ const YouTubeTable = () => {
                       color: "#495057",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "9%",
+                      width: "10%",
+                      cursor: "pointer",
+                      userSelect: "none",
                     }}
                   >
-                    ER Rate
+                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                      ER Rate {getSortIcon("engagement")}
+                    </div>
                   </th>
                 </tr>
               </thead>
