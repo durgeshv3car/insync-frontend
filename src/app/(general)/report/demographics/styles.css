@@ -609,7 +609,7 @@
   border-radius: 0.75rem;
   border: 1px solid var(--border);
   overflow: hidden;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
 }
 
 .table-header {
@@ -1063,4 +1063,4 @@
   opacity: 0.6;
   pointer-events: none;
   filter: grayscale(0.5);
-}
+}

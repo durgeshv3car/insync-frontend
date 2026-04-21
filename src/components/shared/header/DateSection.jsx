@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Calendar, ChevronDown, RotateCcw  } from "lucide-react";
+import { formatDate } from "@/utils/dateFormatter";
 
 function DateSection() {
   const [show, setShow] = useState(false);
@@ -173,7 +174,7 @@ function DateSection() {
 
   const getSelectedLabel = () => {
     if (isCustom && customStartDate && customEndDate) {
-      return `${customStartDate} to ${customEndDate}`;
+      return `${formatDate(customStartDate)} to ${formatDate(customEndDate)}`;
     }
     const found = dateRanges.find((r) => r.value === selectedRange);
     return found?.label || "Select Date Range";
@@ -358,7 +359,7 @@ function DateSection() {
                    </div>
                    <div style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b" }}>
                       {isCustom ? (
-                        customStartDate && customEndDate ? `${customStartDate} ➔ ${customEndDate}` : 'Choose dates above'
+                        customStartDate && customEndDate ? `${formatDate(customStartDate)} ➔ ${formatDate(customEndDate)}` : 'Choose dates above'
                       ) : (
                         dateRanges.find(r => r.value === selectedRange)?.label || 'None Selected'
                       )}

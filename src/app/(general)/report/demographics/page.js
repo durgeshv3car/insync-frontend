@@ -32,6 +32,20 @@ function formatNumber(num) {
   return rounded.toLocaleString();
 }
 
+const getAgeRangeColor = (range) => {
+  const colors = {
+    "18-24": "#6366f1",
+    "25-34": "#ec4899",
+    "35-44": "#06b6d4",
+    "45-54": "#10b981",
+    "55-64": "#f59e0b",
+    "65+": "#8b5cf6",
+    "65 AND OVER": "#8b5cf6",
+    "UNKNOWN": "#6366f1", // Match image for Unknown
+  };
+  return colors[range] || colors[range.toUpperCase()] || "#6366f1";
+};
+
 const groupDemographicsData = (data) => {
   if (!data || !Array.isArray(data)) return [];
 
@@ -150,7 +164,6 @@ const groupCityData = (data) => {
 };
 
 export default function OverviewPage() {
-  const [activeMetric, setActiveMetric] = useState("Impressions");
   const [expandedAgeRow, setExpandedAgeRow] = useState(null);
   const [dateRange, setDateRange] = useState("");
   const [campaign, setCampaign] = useState("all");
@@ -401,7 +414,6 @@ export default function OverviewPage() {
   const [goals, setGoals] = useState([]);
 
   // Chart refs
-  const genderChartRef = useRef(null);
   const ageBreakdownChartRef = useRef(null);
   const cityChartRef = useRef(null);
 
@@ -415,98 +427,6 @@ export default function OverviewPage() {
     chartsRef.current = {};
 
     if (aggregatedData && aggregatedData.length > 0) {
-      // Gender Level Performance (Bar)
-      if (genderChartRef.current) {
-        const ctx = genderChartRef.current.getContext("2d");
-        const metricKey = activeMetric.toLowerCase();
-
-        // We need to sum metrics across ALL data to get true distribution
-        const genderTotals = {};
-        aggregatedData.forEach((age) => {
-          age.gender.forEach((g) => {
-            if (!genderTotals[g.type]) {
-              genderTotals[g.type] = {
-                impressions: 0,
-                clicks: 0,
-                completeViews: 0,
-              };
-            }
-            genderTotals[g.type].impressions += g.impressions;
-            genderTotals[g.type].clicks += g.clicks;
-            genderTotals[g.type].completeViews += g.completeViews || 0;
-          });
-        });
-
-        const labels = ["Male", "Female", "Unknown"].filter(
-          (l) => genderTotals[l],
-        );
-        const dataValues = labels.map((l) => {
-          const g = genderTotals[l];
-          if (activeMetric === "Impressions") return g.impressions;
-          if (activeMetric === "CTR")
-            return g.impressions > 0 ? (g.clicks / g.impressions) * 100 : 0;
-          if (activeMetric === "VCR")
-            return g.impressions > 0
-              ? (g.completeViews / g.impressions) * 100
-              : 0;
-          return 0;
-        });
-
-        chartsRef.current.gender = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: activeMetric,
-                data: dataValues,
-                backgroundColor: labels.map((l) =>
-                  l === "Male"
-                    ? "#6366f1"
-                    : l === "Female"
-                      ? "#ec4899"
-                      : "#94a3b8",
-                ),
-                borderRadius: 6,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) =>
-                    `${activeMetric}: ${activeMetric === "Impressions" ? ctx.parsed.y.toLocaleString() : ctx.parsed.y.toFixed(2) + "%"}`,
-                },
-              },
-              datalabels: {
-                align: "top",
-                anchor: "center",
-                color: "#fff",
-                font: { weight: "bold" },
-                formatter: (v) =>
-                  activeMetric === "Impressions"
-                    ? formatNumber(v)
-                    : v.toFixed(2) + "%",
-              },
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: (v) =>
-                    activeMetric === "Impressions" ? formatNumber(v) : v + "%",
-                },
-              },
-            },
-          },
-        });
-      }
-
-
       // Age Breakdown (Doughnut)
       if (ageBreakdownChartRef.current) {
         const ctx = ageBreakdownChartRef.current.getContext("2d");
@@ -630,7 +550,7 @@ export default function OverviewPage() {
       Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
       chartsRef.current = {};
     };
-  }, [aggregatedData, cityData, activeMetric]);
+  }, [aggregatedData, cityData]);
 
   const downloadPDF = () => {
     const dateText =
@@ -652,35 +572,6 @@ export default function OverviewPage() {
               <div className="loading-text">Refreshing analytics...</div>
             </div>
           )}
-          <div
-            className="metric-toggle-bar"
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "0.5rem",
-              marginBottom: "1.5rem",
-            }}
-          >
-            {["Impressions", "VCR", "CTR"].map((m) => (
-              <button
-                key={m}
-                className={`btn btn-sm ${activeMetric === m ? "btn-primary" : "btn-ghost"}`}
-                onClick={() => setActiveMetric(m)}
-                style={{
-                  borderRadius: "2rem",
-                  padding: "0.5rem 1.25rem",
-                  background: activeMetric === m ? "var(--primary)" : "white",
-                  color: activeMetric === m ? "white" : "var(--text)",
-                  border: "1px solid var(--border)",
-                  fontWeight: "600",
-                  fontSize: "0.85rem",
-                  transition: "all 0.2s",
-                }}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
           <div className="charts-grid top-charts">
             {/* Gender - top left, row 1 */}
             <div
@@ -689,14 +580,13 @@ export default function OverviewPage() {
             >
               <TopCountryBarChart
                 dailyReportsData={dailyReportsData}
-                activeMetric={activeMetric}
                 audienceName={audienceName}
               />
             </div>
 
             {/* City - right column, spans both rows */}
             <ChartCard
-              title={`Top 50 Cities Performance (${audienceName})`}
+              title={`Top 50 Cities Performance`}
               className="equal-height"
               style={{ gridColumn: 2, gridRow: "1 / 3", height: "auto" }}
             >
@@ -705,7 +595,7 @@ export default function OverviewPage() {
 
             {/* Age Breakdown - bottom left, row 2 */}
             <ChartCard
-              title={`Age Breakdown (${audienceName})`}
+              title={`Age Breakdown`}
               className="equal-height"
               style={{ gridColumn: 1, gridRow: 2 }}
             >
@@ -723,16 +613,17 @@ export default function OverviewPage() {
             </div>
           )}
           <div className="table-header">
-            <h3>Demographics Performance Summary ({audienceName})</h3>
+            <h3>Demographics Performance Summary</h3>
 
             <div className="table-actions">
               <button
                 className="btn btn-sm btn-ghost"
                 onClick={() => downloadAllDailyCityCSV(insertionOrderId)}
                 title="Download Data as PDF"
+                style={{ textTransform: "none" }}
               >
                 <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
-                Export City CSV
+                Export City Csv
               </button>
             </div>
           </div>
@@ -751,7 +642,6 @@ export default function OverviewPage() {
             <tbody>
               {aggregatedData && aggregatedData.length > 0 ? (
                 aggregatedData.map((item, index) => {
-                  const metricKey = activeMetric.toLowerCase();
                   const isExpanded = expandedAgeRow === index;
 
                   return (
@@ -775,6 +665,8 @@ export default function OverviewPage() {
                               borderRadius: "50%",
                               width: "1.5rem",
                               height: "1.5rem",
+                              backgroundColor: getAgeRangeColor(item.range),
+                              border: "none",
                             }}
                           />
                           {item.range}

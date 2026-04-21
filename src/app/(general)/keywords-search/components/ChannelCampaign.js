@@ -17,18 +17,19 @@ import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const AILoader = ({ realProgress }) => {
   const [progress, setProgress] = useState(0);
   const [statusIndex, setStatusIndex] = useState(0);
 
   const statuses = [
-    "Initializing AI engine...",
-    "Analyzing search patterns...",
-    "Fetching viral keywords...",
-    "Filtering high-potential videos...",
-    "Optimizing data presentation...",
-    "Finalizing results...",
+    "Initializing AI engine",
+    "Analyzing search patterns",
+    "Fetching viral keywords",
+    "Filtering high-potential videos",
+    "Optimizing data presentation",
+    "Finalizing results",
   ];
 
   useEffect(() => {
@@ -123,7 +124,6 @@ const AILoader = ({ realProgress }) => {
                 color: "#64748b",
                 marginTop: "8px",
                 fontWeight: "600",
-                textTransform: "uppercase",
                 letterSpacing: "0.5px",
               }}
             >
@@ -184,6 +184,7 @@ const AILoader = ({ realProgress }) => {
 };
 
 const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
+  const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
@@ -233,6 +234,11 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
         const videoData =
           res.results || (Array.isArray(res.data) ? res.data : []);
         setVideos(videoData);
+
+        // Redirect to youtube-data page after getting all data
+        if (videoData.length > 0) {
+          router.push("/youtube-data");
+        }
       }
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
@@ -260,16 +266,17 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      <div className="container mt-3">
+      <div>
         {/* Filter Card */}
         <div
           style={{
             backgroundColor: "#ffffff",
             borderRadius: "12px",
-            padding: "12px",
+            padding: "24px",
             marginBottom: "30px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             border: "1px solid #e9ecef",
+            marginTop: "16px",
           }}
         >
           <div
@@ -622,7 +629,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
       </div>
 
       {/* Table Section */}
-      <div className="container">
+      <div className="mb-5">
         <div
           style={{
             backgroundColor: "#ffffff",
@@ -652,8 +659,8 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                 >
                   <th
                     style={{
-                      padding: "10px",
-                      textAlign: "left",
+                      padding: "10px 10px 10px 24px",
+                      textAlign: "center",
                       fontSize: "0.8rem",
                       fontWeight: "700",
                       color: "#495057",
@@ -667,7 +674,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   <th
                     style={{
                       padding: "10px",
-                      textAlign: "left",
+                      textAlign: "center",
                       fontSize: "0.8rem",
                       fontWeight: "700",
                       color: "#495057",
@@ -681,7 +688,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   <th
                     style={{
                       padding: "14px",
-                      textAlign: "left",
+                      textAlign: "center",
                       fontSize: "0.8rem",
                       fontWeight: "700",
                       color: "#495057",
@@ -695,7 +702,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   <th
                     style={{
                       padding: "14px",
-                      textAlign: "left",
+                      textAlign: "center",
                       fontSize: "0.8rem",
                       fontWeight: "700",
                       color: "#495057",
@@ -709,7 +716,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   <th
                     style={{
                       padding: "14px",
-                      textAlign: "left",
+                      textAlign: "center",
                       fontSize: "0.8rem",
                       fontWeight: "700",
                       color: "#495057",
@@ -723,7 +730,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   <th
                     style={{
                       padding: "14px",
-                      textAlign: "left",
+                      textAlign: "center",
                       fontSize: "0.8rem",
                       fontWeight: "700",
                       color: "#495057",
@@ -736,8 +743,8 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   </th>
                   <th
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
+                      padding: "14px 24px 14px 14px",
+                      textAlign: "center",
                       fontSize: "0.8rem",
                       fontWeight: "700",
                       color: "#495057",
@@ -766,27 +773,19 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                           size={48}
                           style={{ color: "#dee2e6", marginBottom: "16px" }}
                         />
+                       
                         <h5
-                          style={{
+                           style={{
                             color: "#6c757d",
                             fontWeight: "500",
                             marginBottom: "8px",
-                            fontSize: "1.1rem",
-                          }}
-                        >
-                          No videos found
-                        </h5>
-                        <p
-                          style={{
-                            color: "#adb5bd",
-                            marginBottom: "0",
-                            fontSize: "0.95rem",
+                            fontSize: "1rem",
                           }}
                         >
                           {filters.query
                             ? "Try adjusting your search terms or filters"
                             : "Enter a search query to find videos"}
-                        </p>
+                        </h5>
                       </div>
                     </td>
                   </tr>
@@ -799,7 +798,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                       borderBottom: "1px solid #e9ecef",
                       transition: "background-color 0.2s ease",
                       backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
-                      cursor: "pointer",
+                      cursor: "default",
                     }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.backgroundColor = "#f0f4ff")
@@ -809,12 +808,12 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                         idx % 2 === 0 ? "#ffffff" : "#f8f9fa")
                     }
                   >
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                      }}
+                     <td
+                       style={{
+                         padding: "12px 12px 12px 24px",
+                         verticalAlign: "middle",
+                         minWidth: 0,
+                       }}
                     >
                       <div
                         style={{
@@ -877,12 +876,14 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                         padding: "12px",
                         verticalAlign: "middle",
                         minWidth: 0,
+                        textAlign: "center",
                       }}
                     >
                       <div
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "center",
                           gap: "8px",
                           minWidth: 0,
                         }}
@@ -924,12 +925,14 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                         padding: "12px",
                         verticalAlign: "middle",
                         minWidth: 0,
+                        textAlign: "center",
                       }}
                     >
                       <div
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "center",
                           gap: "6px",
                         }}
                       >
@@ -953,12 +956,14 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                         padding: "12px",
                         verticalAlign: "middle",
                         minWidth: 0,
+                        textAlign: "center",
                       }}
                     >
                       <div
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "center",
                           gap: "6px",
                         }}
                       >
@@ -982,12 +987,14 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                         padding: "12px",
                         verticalAlign: "middle",
                         minWidth: 0,
+                        textAlign: "center",
                       }}
                     >
                       <div
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "center",
                           gap: "6px",
                         }}
                       >
@@ -1011,12 +1018,14 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                         padding: "12px",
                         verticalAlign: "middle",
                         minWidth: 0,
+                        textAlign: "center",
                       }}
                     >
                       <div
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "center",
                           gap: "6px",
                         }}
                       >
@@ -1035,12 +1044,13 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                         </span>
                       </div>
                     </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                      }}
+                     <td
+                       style={{
+                         padding: "12px 24px 12px 12px",
+                         verticalAlign: "middle",
+                         minWidth: 0,
+                         textAlign: "center",
+                       }}
                     >
                       <span
                         style={{
@@ -1050,6 +1060,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
                           display: "block",
+                          textAlign: "center",
                         }}
                       >
                         {new Date(v.publishedDate).toLocaleDateString()}

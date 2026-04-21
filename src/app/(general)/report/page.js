@@ -33,6 +33,7 @@ export default function UnifiedReportDashboard() {
           className="btn btn-sm btn-ghost"
           onClick={downloadPDF}
           title="Download Data as PDF"
+          style={{ textTransform: "none" }}
         >
           <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
           Export PDF
@@ -47,16 +48,14 @@ export default function UnifiedReportDashboard() {
             <OverviewReport />
           </section>
 
-          {/* Thick visual divider between full reports */}
-          <div style={{ height: "4px", backgroundColor: "#e2e8f0", margin: "1rem 2rem" }} />
+
 
           {/* Section 2: Device */}
           <section>
             <DeviceReport />
           </section>
 
-          {/* Thick visual divider between full reports */}
-          <div style={{ height: "4px", backgroundColor: "#e2e8f0", margin: "1rem 2rem" }} />
+
 
           {/* Section 3: Demographics */}
           <section>

@@ -13,6 +13,7 @@ import {
   getDailyReportsByFilter,
   getDailyReportsByRange,
 } from "@/services/device";
+import { formatDate } from "@/utils/dateFormatter";
 import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
 import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChart";
 import { FiSmartphone, FiMonitor, FiTablet, FiTv } from "react-icons/fi";
@@ -22,16 +23,16 @@ const getDeviceIcon = (type) => {
   const t = type?.toLowerCase();
 
   if (t.includes("mobile") || t.includes("smart phone"))
-    return <FiSmartphone size={16} style={{ marginRight: 6 }} />;
+    return <FiSmartphone size={16} style={{ marginRight: 6,color:  "rgba(234, 77, 77, 0.85)" }} />;
 
   if (t.includes("desktop"))
-    return <FiMonitor size={16} style={{ marginRight: 6 }} />;
+    return <FiMonitor size={16} style={{ marginRight: 6,color: "rgba(255, 162, 29, 0.85)" }} />;
 
   if (t.includes("tablet"))
-    return <FiTablet size={16} style={{ marginRight: 6 }} />;
+    return <FiTablet size={16} style={{ marginRight: 6,color: "rgba(37, 184, 101, 0.85)" }} />;
 
   if (t.includes("tv") || t.includes("connected tv"))
-    return <FiTv size={16} style={{ marginRight: 6 }} />;
+    return <FiTv size={16} style={{ marginRight: 6,color: "rgba(52, 84, 209, 0.85)" }} />;
 
   return null;
 };
@@ -342,12 +343,7 @@ export default function OverviewPage() {
       // Process daily data from API
       const dailyData = {
         labels: dailyReportsData.map((item) => {
-          // Format date from "2025/12/13" to "Dec 13"
-          const date = new Date(item.date);
-          return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          });
+          return formatDate(item.date);
         }),
         impressions: dailyReportsData.map(
           (item) => parseInt(item.impressions) || 0,
@@ -683,16 +679,17 @@ export default function OverviewPage() {
             </div>
           )}
           <div className="table-header">
-            <h3>Device Performance Summary ({audienceName})</h3>
+            <h3>Device Performance Summary</h3>
 
             <div className="table-actions">
               <button
                 className="btn btn-sm btn-ghost"
                 onClick={() => downloadAllDailyDeviceCSV(insertionOrderId)}
                 title="Download Data as PDF"
+                style={{ textTransform: "none" }}
               >
                 <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
-                Export Device CSV
+                Export Device Csv
               </button>
             </div>
           </div>

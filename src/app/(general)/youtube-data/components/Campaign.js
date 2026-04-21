@@ -262,7 +262,7 @@ const YouTubeTable = () => {
       fetchRegions();
       setSelectedVideos(new Set());
     }
-  }, [isReady, filters.query, filters.channelName, filters.regionCode, filters.videoType, filters.sortBy, filters.page, filters.limit, filters.userId]);
+  }, [isReady, filters.query, filters.channelName, filters.regionCode, filters.videoType, filters.sortBy, filters.page, filters.limit, filters.userId, filters.csvResults]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -645,7 +645,7 @@ const YouTubeTable = () => {
                 <option value="popular">Popular</option>
                 <option value="subscribers">Subscribers</option>
                 <option value="engagement">Engagement</option>
-                <option value="erscore">ER SCORE</option>
+                <option value="erscore">Top Rated</option>
               </select>
             </div>
 
@@ -793,7 +793,7 @@ const YouTubeTable = () => {
               {count > 0 ? (
                 <span>
                   Showing {Math.min((currentPage - 1) * filters.limit + 1, count)}-
-                  {Math.min(currentPage * filters.limit, count)} of {count.toLocaleString()} Total Found
+                  {Math.min(currentPage * filters.limit, count)} of {count.toLocaleString()} 
                 </span>
               ) : (
                 "No videos to display"
@@ -815,7 +815,9 @@ const YouTubeTable = () => {
                   fontWeight: "600",
                   display: "flex",
                   alignItems: "center",
-                  transition: "all 0.2s"
+                  justifyContent: "center",
+                  transition: "all 0.2s",
+                  width: "95px"
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#0d6efd"; e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; e.currentTarget.style.color = "#0d6efd"; }}
@@ -1058,7 +1060,7 @@ const YouTubeTable = () => {
                   <th
                     style={{
                       padding: "14px",
-                      textAlign: "center",
+                      textAlign: "left",
                       fontSize: "0.8rem",
                       fontWeight: "700",
                       color: "#495057",
@@ -1147,7 +1149,7 @@ const YouTubeTable = () => {
                         : idx % 2 === 0
                           ? "#ffffff"
                           : "#f8f9fa",
-                      cursor: "pointer",
+                      cursor: "default",
                     }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.backgroundColor = "#f0f4ff")
@@ -1264,22 +1266,52 @@ const YouTubeTable = () => {
                         }}
                       >
                         <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "#e9ecef",
-                            fontWeight: "600",
-                            fontSize: "0.8rem",
-                            color: "#495057",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {v.channelName.charAt(0).toUpperCase()}
-                        </div>
+  style={{
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+    overflow: "hidden",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#e9ecef",
+    flexShrink: 0,
+  }}
+>
+  {v.logo ? (
+    <img
+      src={v.logo}
+      alt={v.channelName}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      }}
+      onError={(e) => {
+        e.target.style.display = "none";
+        e.target.parentNode.innerHTML = `
+          <span style="
+            font-weight:600;
+            font-size:0.8rem;
+            color:#495057;
+          ">
+            ${v.channelName.charAt(0).toUpperCase()}
+          </span>
+        `;
+      }}
+    />
+  ) : (
+    <span
+      style={{
+        fontWeight: "600",
+        fontSize: "0.8rem",
+        color: "#495057",
+      }}
+    >
+      {v.channelName.charAt(0).toUpperCase()}
+    </span>
+  )}
+</div>
                         <span
                           style={{
                             overflow: "hidden",

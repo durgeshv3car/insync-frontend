@@ -1,3 +1,5 @@
+import { formatDate } from "../dateFormatter";
+
 export const visitorChartOption = (dailyReportsData = []) => {
   // Sort by date
    const dataArray = Array.isArray(dailyReportsData)
@@ -13,7 +15,7 @@ export const visitorChartOption = (dailyReportsData = []) => {
   const vcrSeries = [];
 
   sorted.forEach((item) => {
-    const dateLabel = item.date.split("/").slice(1).join("/"); // MM/DD
+    const dateLabel = formatDate(item.date);
     categories.push(dateLabel);
 
     const impressions = Number(item.impressions) || 0;

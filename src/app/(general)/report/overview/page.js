@@ -14,6 +14,7 @@ import {
   getMonthlyReportsByFilter,
   getMonthlyReportsByRange,
 } from "@/services/reports";
+import { formatDate } from "@/utils/dateFormatter";
 import { createReportsDataDevice } from "@/services/device";
 import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
 import VisitorsChartVcr from "@/components/widgetsCharts/VistiorsChartVcr";
@@ -323,12 +324,7 @@ export default function OverviewPage() {
       // Process daily data from API
       const dailyData = {
         labels: dailyReportsData.map((item) => {
-          // Format date from "2025/12/13" to "Dec 13"
-          const date = new Date(item.date);
-          return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          });
+          return formatDate(item.date);
         }),
         impressions: dailyReportsData.map(
           (item) => parseInt(item.impressions) || 0,
@@ -974,7 +970,7 @@ export default function OverviewPage() {
           <div className="realtime-card">
             <div className="realtime-header">
               <div className="realtime-title">
-                <h3>Performance Summary ({audienceName})</h3>
+                <h3>Campaign Summary ({audienceName})</h3>
               </div>
             </div>
 
@@ -1012,7 +1008,7 @@ export default function OverviewPage() {
               <div className="loading-text">Refreshing charts...</div>
             </div>
           )}
-          <h2 className="section-title">Analytics & Insights ({audienceName})</h2>
+          <h2 className="section-title">Analytics & Insights</h2>
           <div className="charts-grid">
             <VisitorsChart dailyReportsData={dailyReportsData} />
             <VisitorsChartVcr dailyReportsData={dailyReportsData} />
@@ -1028,18 +1024,20 @@ export default function OverviewPage() {
             </div>
           )}
           <div className="table-header">
-            <h3>Campaign Performance Summary ({audienceName})</h3>
+            <h3>Campaign Performance Summary</h3>
 
             <div className="table-actions">
-              <div className="btn-group">
+              <div className="btn-group" >
                 <button
                   className={`btn btn-sm ${tableType === "daily" ? "btn-primary" : "btn-ghost"}`}
+                  style={{ textTransform: "none" }}
                   onClick={() => setTableType("daily")}
                 >
                   Daily
                 </button>
                 <button
                   className={`btn btn-sm ${tableType === "monthly" ? "btn-primary" : "btn-ghost"}`}
+                  style={{ textTransform: "none" }}
                   onClick={() => setTableType("monthly")}
                 >
                   Monthly
@@ -1049,9 +1047,10 @@ export default function OverviewPage() {
           className="btn btn-sm btn-ghost"
           onClick={() => downloadAllDailyOverviewCSV(insertionOrderId)}
           title="Download Data as PDF"
+          style={{ textTransform: "none" }}
         >
           <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
-          Export Overview CSV
+          Export Overview Csv
         </button>
              
             </div>
@@ -1099,7 +1098,7 @@ export default function OverviewPage() {
 
                     return (
                       <tr key={index}>
-                        <td>{item.date}</td>
+                        <td>{formatDate(item.date)}</td>
                         <td>{parseInt(item.impressions).toLocaleString()}</td>
                         <td>{parseInt(item.clicks).toLocaleString()}</td>
                         <td>{item.ctr}</td>
@@ -1164,7 +1163,7 @@ export default function OverviewPage() {
 
                     return (
                       <tr key={index}>
-                        <td>{item.month}</td>
+                        <td>{formatDate(item.month)}</td>
                         <td>{parseInt(item.impressions).toLocaleString()}</td>
                         <td>{parseInt(item.clicks).toLocaleString()}</td>
                         <td>{item.ctr}</td>

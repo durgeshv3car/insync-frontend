@@ -17,18 +17,19 @@ import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const AILoader = ({ realProgress }) => {
   const [progress, setProgress] = useState(0);
   const [statusIndex, setStatusIndex] = useState(0);
   
   const statuses = [
-    "Initializing AI engine...",
-    "Analyzing search patterns...",
-    "Fetching viral keywords...",
-    "Filtering high-potential videos...",
-    "Optimizing data presentation...",
-    "Finalizing results..."
+    "Initializing AI engine",
+    "Analyzing search patterns",
+    "Fetching viral keywords",
+    "Filtering high-potential videos",
+    "Optimizing data presentation",
+    "Finalizing results"
   ];
 
   useEffect(() => {
@@ -92,7 +93,7 @@ const AILoader = ({ realProgress }) => {
               }}>
                 {realProgress.processed} / {realProgress.total}
               </span>
-              <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "8px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "8px", fontWeight: "600", letterSpacing: "0.5px" }}>
                 Videos Processed
               </div>
            </div>
@@ -142,13 +143,14 @@ const AILoader = ({ realProgress }) => {
 
 
 const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
+  const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     query: "",
     regionCode: "IN",
     minViews: "",
-    minSubscribers: "",
+    minSubscribers: "1000",
     maxResults: "200",
     sortBy: "relevance",
     startDate: "",
@@ -185,6 +187,11 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
         setVideos(res.data);
       } else if (res.results) {
         setVideos(res.results);
+      }
+
+      // Redirect to youtube-data page after getting all data
+      if ((res && (res.data || res.results)) && (res.data?.length > 0 || res.results?.length > 0)) {
+        router.push("/youtube-data");
       }
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
@@ -228,8 +235,8 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
       
   
 
-      <div className="container">
-        {/* Header Section */}
+      <div>
+        {/* Filter Card */}
         {/* <div style={{ marginBottom: "40px", paddingTop: "20px" }}>
           <h1 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "8px", color: "#1a1a1a" }}>
             YouTube Search Query
@@ -450,15 +457,21 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                 <span className="input-group-text" style={{ border: "1px solid #dee2e6", backgroundColor: "#f8f9fa" }}>
                   <Users size={16} style={{ color: "#6c757d" }} />
                 </span>
-                <input
-                  type="number"
+                <select
                   name="minSubscribers"
                   value={filters.minSubscribers}
                   onChange={handleChange}
-                  className="form-control"
-                  placeholder="0"
+                  className="form-select"
                   style={{ border: "1px solid #dee2e6", fontSize: "0.85rem", padding: "8px 12px" }}
-                />
+                >
+                  <option value="1000">1k</option>
+                  <option value="10000">10k</option>
+                  <option value="25000">25k</option>
+                  <option value="50000">50k</option>
+                  <option value="75000">75k</option>
+                  <option value="100000">100k</option>
+                  <option value="1000000">1M+</option>
+                </select>
               </div>
             </div>
 
@@ -539,7 +552,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
 
       {/* Table Section */}
     
-      <div className="container mb-5">
+      <div className="mb-5">
 
   <div style={{
         backgroundColor: "#ffffff",
@@ -557,8 +570,8 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
             <thead>
               <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
                 <th style={{ 
-                  padding: "10px",
-                  textAlign: "left",
+                  padding: "10px 10px 10px 24px",
+                  textAlign: "center",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -568,7 +581,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                 }}>Video</th>
                 <th style={{ 
                   padding: "10px",
-                  textAlign: "left",
+                  textAlign: "center",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -578,7 +591,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                 }}>Channel</th>
                 <th style={{ 
                   padding: "14px",
-                  textAlign: "left",
+                  textAlign: "center",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -588,7 +601,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                 }}>Views</th>
                 <th style={{ 
                   padding: "14px",
-                  textAlign: "left",
+                  textAlign: "center",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -598,7 +611,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                 }}>Likes</th>
                 <th style={{ 
                   padding: "14px",
-                  textAlign: "left",
+                  textAlign: "center",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -608,7 +621,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                 }}>Comments</th>
                 <th style={{ 
                   padding: "14px",
-                  textAlign: "left",
+                  textAlign: "center",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -618,7 +631,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                 }}>Subscribers</th>
                 <th style={{ 
                   padding: "14px",
-                  textAlign: "left",
+                  textAlign: "center",
                   fontSize: "0.8rem",
                   fontWeight: "700",
                   color: "#495057",
@@ -627,7 +640,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                   width: "10%"
                 }}>Published</th>
                 <th style={{ 
-                  padding: "14px",
+                  padding: "14px 24px 14px 14px",
                   textAlign: "center",
                   fontSize: "0.8rem",
                   fontWeight: "700",
@@ -644,12 +657,18 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                   <td colSpan="8" style={{ textAlign: "center", padding: "60px 20px", borderBottom: "1px solid #dee2e6" }}>
                     <div>
                       <AlertCircle size={48} style={{ color: "#dee2e6", marginBottom: "16px" }} />
-                      <h5 style={{ color: "#6c757d", fontWeight: "500", marginBottom: "8px", fontSize: "1.1rem" }}>
-                        No videos found
-                      </h5>
-                      <p style={{ color: "#adb5bd", marginBottom: "0", fontSize: "0.95rem" }}>
-                        {filters.query ? "Try adjusting your search terms or filters" : "Enter a search query to find videos"}
-                      </p>
+                      <h5
+                           style={{
+                            color: "#6c757d",
+                            fontWeight: "500",
+                            marginBottom: "8px",
+                            fontSize: "1rem",
+                          }}
+                        >
+                          {filters.query
+                            ? "Try adjusting your search terms or filters"
+                            : "Enter a search query to find videos"}
+                        </h5>
                     </div>
                   </td>
                 </tr>
@@ -660,12 +679,12 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                   borderBottom: "1px solid #e9ecef",
                   transition: "background-color 0.2s ease",
                   backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
-                  cursor: "pointer"
+                  cursor: "default"
                 }} 
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f0f4ff"}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? "#ffffff" : "#f8f9fa"}
                 >
-                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0 }}>
+                  <td style={{ padding: "12px 12px 12px 24px", verticalAlign: "middle", minWidth: 0, textAlign: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
                       <img
                         src={v.thumbnail}
@@ -705,8 +724,8 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0, textAlign: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", minWidth: 0 }}>
                       <div style={{
                         width: "32px",
                         height: "32px",
@@ -734,44 +753,44 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0, textAlign: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                       <Eye size={12} style={{ color: "#6c757d", flexShrink: 0 }} />
                       <span style={{ fontSize: "0.8rem", color: "#1a1a1a", fontWeight: "500" }}>
                         {formatNumber(v.views)}
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0, textAlign: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                       <ThumbsUp size={12} style={{ color: "#6c757d", flexShrink: 0 }} />
                       <span style={{ fontSize: "0.8rem", color: "#1a1a1a", fontWeight: "500" }}>
                         {formatNumber(v.likes)}
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0, textAlign: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                       <MessageCircle size={12} style={{ color: "#6c757d", flexShrink: 0 }} />
                       <span style={{ fontSize: "0.8rem", color: "#1a1a1a", fontWeight: "500" }}>
                         {formatNumber(v.comments)}
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0, textAlign: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                       <Users size={12} style={{ color: "#6c757d", flexShrink: 0 }} />
                       <span style={{ fontSize: "0.8rem", color: "#1a1a1a", fontWeight: "500" }}>
                         {formatNumber(v.subscribers)}
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0 }}>
+                  <td style={{ padding: "12px", verticalAlign: "middle", minWidth: 0, textAlign: "center" }}>
                     <span style={{ fontSize: "0.8rem", color: "#6c757d", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
                       {new Date(v.publishedDate).toLocaleDateString()}
                     </span>
                   </td>
-                  <td style={{ padding: "12px", verticalAlign: "middle", textAlign: "center", minWidth: 0 }}>
+                  <td style={{ padding: "12px 24px 12px 12px", verticalAlign: "middle", textAlign: "center", minWidth: 0 }}>
                     <span style={{
                       display: "inline-block",
                       padding: "3px 8px",

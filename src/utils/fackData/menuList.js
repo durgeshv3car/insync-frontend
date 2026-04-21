@@ -2,16 +2,17 @@ export const menuList = [
   { id: 1, name: "Users", path: "/users", icon: "feather-users" },
   {
     id: 2,
-    name: "Youtube Data",
-    path: "/youtube-data",
-    icon: "feather-youtube",
-  },
-  {
-    id: 3,
     name: "Keywords Search",
     path: "/keywords-search",
     icon: "feather-search",
   },
+  {
+    id: 3,
+    name: "Youtube Data",
+    path: "/youtube-data",
+    icon: "feather-youtube",
+  },
+
   { 
   id: 4, 
   name: "Create Campaign", 
