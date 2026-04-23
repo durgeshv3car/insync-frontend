@@ -191,6 +191,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
     channelName: "",
     query: "",
     sortBy: "relevance",
+    dateRange: "none",
     maxResults: 100,
     userId: "",
   });
@@ -462,7 +463,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                     />
                   </div>
                 </div>
-                <div className="col-lg-3">
+                <div className="col-lg-2">
                   <label
                     style={{
                       padding: "14px 0 8px 0",
@@ -506,6 +507,59 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                     </select>
                   </div>
                 </div>
+
+                  <div className="col-lg-2">
+                  <label
+                    style={{
+                      padding: "14px 0 8px 0",
+                      fontSize: "0.8rem",
+                      fontWeight: "700",
+                      color: "#495057",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      display: "block",
+                    }}
+                  >
+                    Date filter Data
+                  </label>
+                  <div
+                    className="input-group"
+                    style={{ borderRadius: "6px", overflow: "hidden" }}
+                  >
+                    <span
+                      className="input-group-text"
+                      style={{
+                        border: "1px solid #dee2e6",
+                        backgroundColor: "#f8f9fa",
+                      }}
+                    >
+                      <Filter size={16} style={{ color: "#6c757d" }} />
+                    </span>
+                    <select
+                      name="dateRange"
+                      value={filters.dateRange}
+                      onChange={handleChange}
+                      className="form-select"
+                      style={{
+                        border: "1px solid #dee2e6",
+                        fontSize: "0.85rem",
+                        padding: "8px 12px",
+                      }}
+                    >
+                      <option value="none">None</option>
+                      <option value="24h">Last 24 Hours</option>
+                      <option value="7d">7 Days</option>
+                      <option value="15d">15 Days</option>
+                      <option value="30d">30 Days</option>
+                      <option value="3m">3 Months</option>
+                      <option value="6m">6 Months</option>
+                      <option value="12m">1 Year</option>
+                      <option value="24m">2 Year</option>
+
+                    </select>
+                  </div>
+                </div>
+
 
                 <div className="col-lg-2">
                   <label

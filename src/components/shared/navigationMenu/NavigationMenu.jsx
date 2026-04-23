@@ -68,34 +68,60 @@ const NavigationManu = () => {
               </ul>
 
               <div style={{ width: "100%" }}>
-                <p
-                  style={{
-                    marginLeft: "60px",
-                    marginBottom: "-12px",
-                    color: "#fff",
-                    fontSize: "9px",
-                  }}
-                >
-                  Built by
-                </p>
                 {navigationOpen || isHovered ? (
+                  <p
+                    style={{
+                      marginLeft: "110px",
+                      marginBottom: "-12px",
+                      color: "#fff",
+                      fontSize: "9px",
+                    }}
+                  >
+                    Built by
+                  </p>
+                ) : (
+                  <p
+                    style={{
+                      marginLeft: "45px",
+                      marginBottom: "-12px",
+                      color: "#fff",
+                      fontSize: "9px",
+                    }}
+                  >
+                    Built by
+                  </p>
+                )}
+
+                {navigationOpen || isHovered ? (
+                   <div
+                   style={{
+                      marginLeft: "30px"
+                    }}
+                  >
                   <Image
                     width={500}
                     height={125}
-                    style={{ width: "92px", height: "35px" }}
+                    style={{ width: "110px", height: "35px" }}
                     src="/images/automate360.png"
                     alt="logo"
                     className=""
                   />
+                  </div>
                 ) : (
-                  <Image
-                    width={500}
-                    height={125}
-                    style={{ width: "92px", height: "35px" }}
-                    src="/images/a360.png"
-                    alt="logo"
-                    className=""
-                  />
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Image
+                      width={500}
+                      height={125}
+                      style={{ width: "55px", height: "35px" }}
+                      src="/images/a360.png"
+                      alt="logo"
+                    />
+                  </div>
                 )}
               </div>
             </div>

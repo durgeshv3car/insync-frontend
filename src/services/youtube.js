@@ -10,8 +10,9 @@ export const getYouTubeResultsByChannel = async (filters) => {
       `${API_URL}/query/searchByChannel`,
       {
         channelName: filters.channelName,
-        query: Array.isArray(filters.query) ? filters.query : [filters.query], 
+        query: Array.isArray(filters.query) ? filters.query : [filters.query],
         sortBy: filters.sortBy,
+        dateRange: filters.dateRange,
         maxResults: filters.maxResults,
         userId: filters.userId,
       },
@@ -19,25 +20,28 @@ export const getYouTubeResultsByChannel = async (filters) => {
         headers: {
           Authorization: token,
         },
-      }
+      },
     );
 
     if (res.status === 202 && (res.data.jobId || res.data.progressId)) {
       const { regionCode, ...pollingFilters } = filters;
       // Use progressId if available, fallback to jobId
-      return await pollSearchJob(res.data.progressId || res.data.jobId, pollingFilters, filters.onProgress);
+      return await pollSearchJob(
+        res.data.progressId || res.data.jobId,
+        pollingFilters,
+        filters.onProgress,
+      );
     }
 
     return res.data;
   } catch (error) {
     console.error(
       "Error fetching YouTube results:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error;
   }
 };
-
 
 /**
  * Create a new token
@@ -54,7 +58,7 @@ export const getSearchJobStatus = async (jobId) => {
   } catch (error) {
     console.error(
       "Error fetching job status:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error;
   }
@@ -71,7 +75,7 @@ const pollSearchJob = async (progressId, filters, onProgress) => {
       const res = await axios.get(`${API_URL}/progress/${progressId}`, {
         headers: { Authorization: token },
       });
-      
+
       const data = res.data;
       const status = data.status;
 
@@ -80,7 +84,12 @@ const pollSearchJob = async (progressId, filters, onProgress) => {
           status,
           processed: data.processedItems || 0,
           total: data.totalItems || filters.maxResults || 20,
-          percent: Math.min(Math.floor(((data.processedItems || 0) / (data.totalItems || 20)) * 100), 99)
+          percent: Math.min(
+            Math.floor(
+              ((data.processedItems || 0) / (data.totalItems || 20)) * 100,
+            ),
+            99,
+          ),
         });
       }
 
@@ -113,6 +122,7 @@ export const getYouTubeResults = async (filters) => {
         minSubscribers: filters.minSubscribers,
         regionCode: filters.regionCode,
         sortBy: filters.sortBy,
+        dateRange: filters.dateRange,
         maxResults: filters.maxResults,
         startDate: filters.startDate,
         endDate: filters.endDate,
@@ -122,24 +132,27 @@ export const getYouTubeResults = async (filters) => {
         headers: {
           Authorization: token,
         },
-      }
+      },
     );
 
     if (res.status === 202 && (res.data.jobId || res.data.progressId)) {
       // Use progressId if available, fallback to jobId
-      return await pollSearchJob(res.data.progressId || res.data.jobId, filters, filters.onProgress);
+      return await pollSearchJob(
+        res.data.progressId || res.data.jobId,
+        filters,
+        filters.onProgress,
+      );
     }
 
     return res.data;
   } catch (error) {
     console.error(
       "Error fetching YouTube results:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error;
   }
 };
-
 
 export const getQueryResults = async (filters) => {
   try {
@@ -147,12 +160,16 @@ export const getQueryResults = async (filters) => {
     const params = {
       ...filters,
       // Ensure query and channelName are strings for backend .split(",") compatibility
-      query: Array.isArray(filters.query) ? filters.query.join(",") : filters.query,
-      channelName: Array.isArray(filters.channelName) ? filters.channelName.join(",") : filters.channelName,
+      query: Array.isArray(filters.query)
+        ? filters.query.join(",")
+        : filters.query,
+      channelName: Array.isArray(filters.channelName)
+        ? filters.channelName.join(",")
+        : filters.channelName,
       // Prioritize explicit limit over maxResults
       limit: filters.limit || filters.maxResults || 2000,
     };
-    
+
     const res = await axios.get(`${API_URL}/query/results`, {
       params,
       headers: {
@@ -164,7 +181,7 @@ export const getQueryResults = async (filters) => {
   } catch (error) {
     console.error(
       "Error fetching query results:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error;
   }
@@ -173,7 +190,7 @@ export const getQueryResults = async (filters) => {
 export const getFiltersResults = async () => {
   try {
     const token = await getToken();
-    
+
     const res = await axios.get(`${API_URL}/query/regions`, {
       headers: {
         Authorization: token,
@@ -184,17 +201,16 @@ export const getFiltersResults = async () => {
   } catch (error) {
     console.error(
       "Error fetching query results:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error;
   }
 };
 
-
 export const getcsvResults = async (filters) => {
-   try {
+  try {
     const token = await getToken();
-    
+
     const res = await axios.get(`${API_URL}/query/download`, {
       params: filters,
       headers: {
@@ -206,22 +222,27 @@ export const getcsvResults = async (filters) => {
   } catch (error) {
     console.error(
       "Error fetching query results:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error;
   }
-
-}
+};
 
 export const getLatestQueryByUserId = async (userId) => {
   try {
     const token = await getToken();
-    const res = await axios.get(`${API_URL}/recent-keywords/latest-query/${userId}`, {
-      headers: { Authorization: token },
-    });
+    const res = await axios.get(
+      `${API_URL}/recent-keywords/latest-query/${userId}`,
+      {
+        headers: { Authorization: token },
+      },
+    );
     return res.data.query;
   } catch (error) {
-    console.error("Error fetching latest query:", error.response?.data || error.message);
+    console.error(
+      "Error fetching latest query:",
+      error.response?.data || error.message,
+    );
     throw error;
   }
 };
@@ -229,13 +250,18 @@ export const getLatestQueryByUserId = async (userId) => {
 export const getRecentTenQueries = async (userId) => {
   try {
     const token = await getToken();
-    const res = await axios.get(`${API_URL}/recent-keywords/ten-list/${userId}`, {
-      headers: { Authorization: token },
-    });
+    const res = await axios.get(
+      `${API_URL}/recent-keywords/ten-list/${userId}`,
+      {
+        headers: { Authorization: token },
+      },
+    );
     return res.data.queries;
   } catch (error) {
-    console.error("Error fetching ten list:", error.response?.data || error.message);
+    console.error(
+      "Error fetching ten list:",
+      error.response?.data || error.message,
+    );
     throw error;
   }
 };
-
