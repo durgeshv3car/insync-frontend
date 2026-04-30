@@ -152,6 +152,10 @@ pre {
   /* side bar should be high but below header */
 }
 
+.nxl-navigation .ps__rail-x {
+  display: none !important;
+}
+
 
 .header-left * {
   color: #ffffff;
