@@ -99,7 +99,7 @@ const pollSearchJob = async (progressId, filters, onProgress) => {
       }
 
       if (status === "failed") {
-        throw new Error("Search job failed on server");
+        return Promise.reject(new Error("Search job failed on server"));
       }
     } catch (err) {
       console.warn("Polling error:", err.message);
