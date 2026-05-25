@@ -23,6 +23,7 @@ const emptyCampaign = {
   campaignId: "",
   insertionOrderId: "",
   cpm: "",
+  active: true,
 };
 
 const CampaignLoader = ({ progress, status }) => {
@@ -185,6 +186,32 @@ const Campaign = () => {
   };
 
 
+  const handleToggleActive = async (index) => {
+    const c = campaigns[index];
+    const updatedCampaign = { ...c, active: c.active !== false ? false : true };
+    
+    // Update local state first for instant visual feedback (optimistic update)
+    const originalCampaigns = [...campaigns];
+    const newCampaigns = [...campaigns];
+    newCampaigns[index] = updatedCampaign;
+    setCampaigns(newCampaigns);
+
+    try {
+      await updateAudience(c._id, {
+        reportName: updatedCampaign.reportName,
+        advertiserId: updatedCampaign.advertiserId,
+        campaignId: updatedCampaign.campaignId,
+        insertionOrderId: updatedCampaign.insertionOrderId,
+        cpm: updatedCampaign.cpm,
+        active: updatedCampaign.active,
+      });
+    } catch (err) {
+      console.error("Failed to toggle active status:", err);
+      // Revert if API call fails
+      setCampaigns(originalCampaigns);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     const isValid =
@@ -324,13 +351,14 @@ const Campaign = () => {
                 <th>Campaign ID</th>
                 <th>Insertion Order ID</th>
                 <th>CPM</th>
+                <th className="text-center">Status</th>
                 <th className="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={5} className="text-center py-4">
+                  <td colSpan={7} className="text-center py-4">
                     <div
                       className="spinner-border spinner-border-sm me-2"
                       role="status"
@@ -342,7 +370,7 @@ const Campaign = () => {
 
               {!loading && campaigns.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-center py-4 text-muted">
+                  <td colSpan={7} className="text-center py-4 text-muted">
                     No campaigns yet. Click "Add" to create one.
                   </td>
                 </tr>
@@ -356,6 +384,28 @@ const Campaign = () => {
                     <td className="align-middle">{c.campaignId}</td>
                     <td className="align-middle">{c.insertionOrderId}</td>
                     <td className="align-middle">{c.cpm}</td>
+                    <td className="text-center align-middle">
+                      <div className="d-flex align-items-center justify-content-center gap-2">
+                        <span 
+                          className={`badge ${c.active !== false ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle'}`}
+                          style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '12px', fontWeight: '600' }}
+                        >
+                          {c.active !== false ? 'Active' : 'Inactive'}
+                        </span>
+                        
+                        <div className="form-check form-switch mb-0 d-inline-block">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id={`active-switch-${c._id || idx}`}
+                            checked={c.active !== false}
+                            onChange={() => handleToggleActive(idx)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        </div>
+                      </div>
+                    </td>
                     <td className="text-end align-middle">
                       {/* action buttons as a single row with gap and inline SVG icons */}
                       <div
@@ -567,6 +617,31 @@ const Campaign = () => {
                           step="0.01"
                           required
                         />
+                      </div>
+                    </div>
+
+                    <div className="row mb-3">
+                      <div className="col-4 d-flex align-items-center">
+                        <label className="fw-semibold mb-0">Active Status</label>
+                      </div>
+                      <div className="col-8 d-flex align-items-center">
+                        <div className="form-check form-switch mb-0">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="campaign-active-modal"
+                            name="active"
+                            checked={campaignData?.active !== false}
+                            onChange={(e) => {
+                              setCampaignData((prev) => ({ ...prev, active: e.target.checked }));
+                            }}
+                            style={{ cursor: 'pointer', transform: 'scale(1.1)', transformOrigin: 'left' }}
+                          />
+                          <label className="form-check-label ms-2 text-muted" htmlFor="campaign-active-modal" style={{ fontSize: '0.9rem' }}>
+                            {campaignData?.active !== false ? "Active (Receiving Traffic/Reports)" : "Inactive"}
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
