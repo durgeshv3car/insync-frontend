@@ -177,7 +177,11 @@ export const downloadAllDailyOverviewCSV = async (insertionOrderId) => {
       "Error downloading daily overview CSV:",
       error.response?.data || error.message
     );
-    throw error;
+    if (error.response && error.response.status === 404) {
+      alert("No daily overview data found to export.");
+      return;
+    }
+    alert("Failed to download daily overview CSV.");
   }
 };
 

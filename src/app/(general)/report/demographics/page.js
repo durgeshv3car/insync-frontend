@@ -636,7 +636,7 @@ export default function OverviewPage() {
                 <th>Impressions</th>
                 <th>CTR</th>
                 <th>VCR</th>
-                <th>Media Cost</th>
+                {/* <th>Media Cost</th> */}
               </tr>
             </thead>
             <tbody>
@@ -674,7 +674,7 @@ export default function OverviewPage() {
                         <td>{item.impressions.toLocaleString()}</td>
                         <td>{item.ctr}%</td>
                         <td>{item.vcr}%</td>
-                        <td>₹{(Number(item?.cost) || 0).toFixed(2)}</td>
+                        {/* <td>₹{(Number(item?.cost) || 0).toFixed(2)}</td> */}
                       </tr>
                       {isExpanded && (
                         <tr
@@ -703,7 +703,7 @@ export default function OverviewPage() {
                                     <th>Impressions</th>
                                     <th>CTR</th>
                                     <th>VCR</th>
-                                    <th>Media Cost</th>
+                                    {/* <th>Media Cost</th> */}
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -713,9 +713,9 @@ export default function OverviewPage() {
                                       <td>{g.impressions.toLocaleString()}</td>
                                       <td>{g.ctr}%</td>
                                       <td>{g.vcr}%</td>
-                                      <td>
+                                      {/* <td>
                                         ₹{(Number(g?.cost) || 0).toFixed(2)}
-                                      </td>
+                                      </td> */}
                                     </tr>
                                   ))}
                                 </tbody>

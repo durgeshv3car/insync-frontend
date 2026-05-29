@@ -120,6 +120,10 @@ export const downloadAllDailyCityCSV = async (insertionOrderId) => {
       "Error downloading daily city CSV:",
       error.response?.data || error.message
     );
-    throw error;
+    if (error.response && error.response.status === 404) {
+      alert("No daily city data found to export.");
+      return;
+    }
+    alert("Failed to download daily city CSV.");
   }
 };

@@ -26,8 +26,6 @@ function formatNumber(num) {
 
   if (rounded >= 1000000) {
     return Math.round(rounded / 1000000).toLocaleString() + "M";
-  } else if (rounded >= 1000) {
-    return Math.round(rounded / 1000).toLocaleString() + "K";
   }
   return rounded.toLocaleString();
 }
@@ -132,7 +130,7 @@ export default function OverviewPage() {
   const [monthlyReportsData, setMonthlyReportsData] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
-  const downloadCsvOverview = () => {};
+  const downloadCsvOverview = () => { };
 
 
 
@@ -162,14 +160,14 @@ export default function OverviewPage() {
       const performFetch = async () => {
         if (dateRange === "CUSTOM") {
           const [dailyData, monthlyData] = await Promise.all([
-            getDailyReportsByRange(insertionOrderId, startDate, endDate,audienceId),
-            getMonthlyReportsByRange(insertionOrderId, startDate, endDate,audienceId),
+            getDailyReportsByRange(insertionOrderId, startDate, endDate, audienceId),
+            getMonthlyReportsByRange(insertionOrderId, startDate, endDate, audienceId),
           ]);
           return { dailyData, monthlyData };
         } else {
           const [dailyData, monthlyData] = await Promise.all([
-            getDailyReportsByFilter(insertionOrderId, dateRange,audienceId),
-            getMonthlyReportsByFilter(insertionOrderId, dateRange,audienceId),
+            getDailyReportsByFilter(insertionOrderId, dateRange, audienceId),
+            getMonthlyReportsByFilter(insertionOrderId, dateRange, audienceId),
           ]);
           return { dailyData, monthlyData };
         }
@@ -1044,15 +1042,15 @@ export default function OverviewPage() {
                 </button>
               </div>
               <button
-          className="btn btn-sm btn-ghost"
-          onClick={() => downloadAllDailyOverviewCSV(insertionOrderId)}
-          title="Download Data as PDF"
-          style={{ textTransform: "none" }}
-        >
-          <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
-          Export Overview Csv
-        </button>
-             
+                className="btn btn-sm btn-ghost"
+                onClick={() => downloadAllDailyOverviewCSV(insertionOrderId)}
+                title="Download Data as PDF"
+                style={{ textTransform: "none" }}
+              >
+                <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
+                Export Overview Csv
+              </button>
+
             </div>
           </div>
 
@@ -1074,8 +1072,8 @@ export default function OverviewPage() {
             </thead>
             <tbody>
               {tableType === "daily" &&
-              dailyReportsData &&
-              Array.isArray(dailyReportsData) ? (
+                dailyReportsData &&
+                Array.isArray(dailyReportsData) ? (
                 (() => {
                   const sortedData = [...dailyReportsData].sort((a, b) =>
                     b.date.localeCompare(a.date),
@@ -1123,15 +1121,15 @@ export default function OverviewPage() {
                         <td>
                           ₹
                           {(
-                            (Number(item?.cost) || 0) 
+                            (Number(item?.cost) || 0)
                           ).toFixed(2)}
                         </td>
 
                         <td>
                           {item.uniqueReachImpressionReach !== "-"
                             ? parseInt(
-                                item.uniqueReachImpressionReach,
-                              ).toLocaleString()
+                              item.uniqueReachImpressionReach,
+                            ).toLocaleString()
                             : "-"}
                         </td>
                       </tr>
@@ -1194,8 +1192,8 @@ export default function OverviewPage() {
                         <td>
                           {item.uniqueReachImpressionReach !== "-"
                             ? parseInt(
-                                item.uniqueReachImpressionReach,
-                              ).toLocaleString()
+                              item.uniqueReachImpressionReach,
+                            ).toLocaleString()
                             : "-"}
                         </td>
                       </tr>
@@ -1225,107 +1223,107 @@ export default function OverviewPage() {
         {/* Pagination UI */}
         {(tableType === "daily" ? dailyReportsData : monthlyReportsData)
           ?.length > 0 && (
-          <div className="pagination-wrapper">
-            <div className="rows-per-page">
-              <span>Rows per page:</span>
-              <select
-                value={rowsPerPage}
-                onChange={(e) => {
-                  setRowsPerPage(parseInt(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="rows-select"
-              >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="pagination-controls">
-              <span className="pagination-info">
-                Showing {(currentPage - 1) * rowsPerPage + 1} to{" "}
-                {Math.min(
-                  currentPage * rowsPerPage,
-                  (tableType === "daily"
-                    ? dailyReportsData
-                    : monthlyReportsData
-                  ).length,
-                )}{" "}
-                of{" "}
-                {
-                  (tableType === "daily"
-                    ? dailyReportsData
-                    : monthlyReportsData
-                  ).length
-                }
-              </span>
-              <div className="pagination-buttons">
-                <button
-                  className="btn btn-sm btn-ghost"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
+            <div className="pagination-wrapper">
+              <div className="rows-per-page">
+                <span>Rows per page:</span>
+                <select
+                  value={rowsPerPage}
+                  onChange={(e) => {
+                    setRowsPerPage(parseInt(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="rows-select"
                 >
-                  <i className="fas fa-chevron-left" />
-                </button>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
 
-                {/* Simple page numbers */}
-                {(() => {
-                  const totalPages = Math.ceil(
+              <div className="pagination-controls">
+                <span className="pagination-info">
+                  Showing {(currentPage - 1) * rowsPerPage + 1} to{" "}
+                  {Math.min(
+                    currentPage * rowsPerPage,
                     (tableType === "daily"
                       ? dailyReportsData
                       : monthlyReportsData
-                    ).length / rowsPerPage,
-                  );
-                  const pages = [];
-                  let startPage = Math.max(1, currentPage - 2);
-                  let endPage = Math.min(totalPages, startPage + 4);
-
-                  if (endPage - startPage < 4) {
-                    startPage = Math.max(1, endPage - 4);
+                    ).length,
+                  )}{" "}
+                  of{" "}
+                  {
+                    (tableType === "daily"
+                      ? dailyReportsData
+                      : monthlyReportsData
+                    ).length
                   }
+                </span>
+                <div className="pagination-buttons">
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="fas fa-chevron-left" />
+                  </button>
 
-                  for (let i = startPage; i <= endPage; i++) {
-                    pages.push(
-                      <button
-                        key={i}
-                        className={`btn btn-sm ${currentPage === i ? "btn-primary" : "btn-ghost"}`}
-                        onClick={() => setCurrentPage(i)}
-                      >
-                        {i}
-                      </button>,
-                    );
-                  }
-                  return pages;
-                })()}
-
-                <button
-                  className="btn btn-sm btn-ghost"
-                  onClick={() => {
+                  {/* Simple page numbers */}
+                  {(() => {
                     const totalPages = Math.ceil(
                       (tableType === "daily"
                         ? dailyReportsData
                         : monthlyReportsData
                       ).length / rowsPerPage,
                     );
-                    setCurrentPage((p) => Math.min(totalPages, p + 1));
-                  }}
-                  disabled={
-                    currentPage ===
-                    Math.ceil(
-                      (tableType === "daily"
-                        ? dailyReportsData
-                        : monthlyReportsData
-                      ).length / rowsPerPage,
-                    )
-                  }
-                >
-                  <i className="fas fa-chevron-right" />
-                </button>
+                    const pages = [];
+                    let startPage = Math.max(1, currentPage - 2);
+                    let endPage = Math.min(totalPages, startPage + 4);
+
+                    if (endPage - startPage < 4) {
+                      startPage = Math.max(1, endPage - 4);
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          className={`btn btn-sm ${currentPage === i ? "btn-primary" : "btn-ghost"}`}
+                          onClick={() => setCurrentPage(i)}
+                        >
+                          {i}
+                        </button>,
+                      );
+                    }
+                    return pages;
+                  })()}
+
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    onClick={() => {
+                      const totalPages = Math.ceil(
+                        (tableType === "daily"
+                          ? dailyReportsData
+                          : monthlyReportsData
+                        ).length / rowsPerPage,
+                      );
+                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    }}
+                    disabled={
+                      currentPage ===
+                      Math.ceil(
+                        (tableType === "daily"
+                          ? dailyReportsData
+                          : monthlyReportsData
+                        ).length / rowsPerPage,
+                      )
+                    }
+                  >
+                    <i className="fas fa-chevron-right" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Bottom Sections */}
       </main>

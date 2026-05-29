@@ -22,7 +22,7 @@ const emptyCampaign = {
   advertiserId: "",
   campaignId: "",
   insertionOrderId: "",
-  cpm: "",
+  cpcv: "",
   active: true,
 };
 
@@ -202,7 +202,7 @@ const Campaign = () => {
         advertiserId: updatedCampaign.advertiserId,
         campaignId: updatedCampaign.campaignId,
         insertionOrderId: updatedCampaign.insertionOrderId,
-        cpm: updatedCampaign.cpm,
+        cpcv: updatedCampaign.cpcv,
         active: updatedCampaign.active,
       });
     } catch (err) {
@@ -219,7 +219,7 @@ const Campaign = () => {
       campaignData?.advertiserId?.trim() &&
       campaignData?.campaignId?.trim() &&
       campaignData?.insertionOrderId?.trim() &&
-      campaignData?.cpm?.toString().trim();
+      campaignData?.cpcv?.toString().trim();
 
     if (!isValid) return;
     setLoading(true);
@@ -350,7 +350,7 @@ const Campaign = () => {
                 <th>Advertiser ID</th>
                 <th>Campaign ID</th>
                 <th>Insertion Order ID</th>
-                <th>CPM</th>
+                <th>CPCV</th>
                 <th className="text-center">Status</th>
                 <th className="text-end">Actions</th>
               </tr>
@@ -383,7 +383,7 @@ const Campaign = () => {
                     <td className="align-middle">{c.advertiserId}</td>
                     <td className="align-middle">{c.campaignId}</td>
                     <td className="align-middle">{c.insertionOrderId}</td>
-                    <td className="align-middle">{c.cpm}</td>
+                    <td className="align-middle">{c.cpcv}</td>
                     <td className="text-center align-middle">
                       <div className="d-flex align-items-center justify-content-center gap-2">
                         <span 
@@ -603,18 +603,18 @@ const Campaign = () => {
                     </div>
                     <div className="row mb-3">
                       <div className="col-4 d-flex align-items-center">
-                        <label className="fw-semibold mb-0">CPM</label>
+                        <label className="fw-semibold mb-0">CPCV</label>
                       </div>
                       <div className="col-8">
                         <input
                           type="number"
-                          name="cpm"
-                          value={campaignData?.cpm || ""}
+                          name="cpcv"
+                          value={campaignData?.cpcv || ""}
                           onChange={handleInputChange}
                           className="form-control"
-                          placeholder="Enter CPM"
+                          placeholder="Enter CPCV"
                           min="0"
-                          step="0.01"
+                          step="0.0001"
                           required
                         />
                       </div>
@@ -662,7 +662,7 @@ const Campaign = () => {
                           campaignData?.advertiserId?.trim() &&
                           campaignData?.campaignId?.trim() &&
                           campaignData?.insertionOrderId?.trim() &&
-                          campaignData?.cpm?.toString().trim()
+                          campaignData?.cpcv?.toString().trim()
                         )
                       }
                     >

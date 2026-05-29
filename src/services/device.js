@@ -119,7 +119,11 @@ export const downloadAllDailyDeviceCSV = async (insertionOrderId) => {
       "Error downloading daily device CSV:",
       error.response?.data || error.message
     );
-    throw error;
+    if (error.response && error.response.status === 404) {
+      alert("No daily device data found to export.");
+      return;
+    }
+    alert("Failed to download daily device CSV.");
   }
 };
 

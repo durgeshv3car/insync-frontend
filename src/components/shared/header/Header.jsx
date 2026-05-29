@@ -65,7 +65,7 @@ const Header = () => {
     localStorage.setItem("audienceId", defaultAudience._id);
     localStorage.setItem("audienceName", defaultAudience.reportName);
     localStorage.setItem("insertionId",defaultAudience.insertionOrderId); 
-    localStorage.setItem("count", defaultAudience.cpm);
+    localStorage.setItem("count", defaultAudience.cpcv);
 
     setIsInitialized(true);
   }, [audienceList]);
@@ -78,7 +78,7 @@ const Header = () => {
       { key: "audienceId", value: selectedAudience._id },
       { key: "audienceName", value: selectedAudience.reportName },
       { key: "insertionId", value: selectedAudience.insertionOrderId },
-      { key: "count", value: selectedAudience.cpm },
+      { key: "count", value: selectedAudience.cpcv },
     ];
 
     updates.forEach(({ key, value }) => {
