@@ -212,6 +212,7 @@ export default function OverviewPage() {
         completeViews: 0,
         ctr: "0.00",
         vcr: "0.00",
+        cost: 0,
       };
     }
 
@@ -220,9 +221,10 @@ export default function OverviewPage() {
         acc.impressions += parseInt(curr.impressions) || 0;
         acc.clicks += parseInt(curr.clicks) || 0;
         acc.completeViews += parseInt(curr.completeViewsVideo) || 0;
+        acc.cost += parseFloat(curr.cost) || 0;
         return acc;
       },
-      { impressions: 0, clicks: 0, completeViews: 0 },
+      { impressions: 0, clicks: 0, completeViews: 0, cost: 0 },
     );
 
     const ctr =
@@ -240,6 +242,7 @@ export default function OverviewPage() {
       completeViews: totals.completeViews,
       ctr,
       vcr,
+      cost: totals.cost,
     };
   };
 
@@ -994,6 +997,10 @@ export default function OverviewPage() {
                 label="Clicks"
               />
               <Stat value={`${summaryMetrics.ctr}%`} label="CTR" />
+              <Stat
+                value={`₹${(summaryMetrics.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                label="Media Cost"
+              />
             </div>
           </div>
         </section>
