@@ -105,6 +105,7 @@ const groupDemographicsData = (data) => {
       range: age.range,
       impressions: age.impressions,
       clicks: age.clicks,
+      completeViews: age.completeViews,
       cost: age.cost,
       ctr: parseFloat(ctr.toFixed(3)),
       vcr: parseFloat(vcr.toFixed(2)),
@@ -403,6 +404,35 @@ export default function OverviewPage() {
     () => groupDemographicsData(dailyReportsData),
     [dailyReportsData],
   );
+
+  const demographicsTotals = React.useMemo(() => {
+    if (!aggregatedData || aggregatedData.length === 0) return null;
+
+    const totals = aggregatedData.reduce(
+      (acc, curr) => {
+        acc.impressions += curr.impressions || 0;
+        acc.clicks += curr.clicks || 0;
+        acc.completeViews += curr.completeViews || 0;
+        return acc;
+      },
+      { impressions: 0, clicks: 0, completeViews: 0 }
+    );
+
+    const ctr = totals.impressions > 0
+      ? ((totals.clicks / totals.impressions) * 100).toFixed(3)
+      : "0.000";
+    
+    const vcr = totals.impressions > 0
+      ? ((totals.completeViews / totals.impressions) * 100).toFixed(2)
+      : "0.00";
+
+    return {
+      ...totals,
+      ctr,
+      vcr,
+    };
+  }, [aggregatedData]);
+
   const cityData = React.useMemo(
     () => groupCityData(dailyReportsDataCity),
     [dailyReportsDataCity],
@@ -744,6 +774,17 @@ export default function OverviewPage() {
                 </tr>
               )}
             </tbody>
+            {demographicsTotals && (
+              <tfoot>
+                <tr className="totals-row">
+                  <td />
+                  <td>Total</td>
+                  <td>{demographicsTotals.impressions.toLocaleString()}</td>
+                  <td>{demographicsTotals.ctr}%</td>
+                  <td>{demographicsTotals.vcr}%</td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
 

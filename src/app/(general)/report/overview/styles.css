@@ -1069,4 +1069,16 @@
   opacity: 0.6;
   pointer-events: none;
   filter: grayscale(0.5);
+}
+
+/* Totals Row styling */
+.totals-row {
+  background-color: #f8fafc !important;
+  border-top: 2px solid #cbd5e1 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+.totals-row td {
+  font-weight: 700 !important;
+  color: var(--dark) !important;
 }

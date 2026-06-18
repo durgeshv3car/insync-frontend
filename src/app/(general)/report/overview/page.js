@@ -246,6 +246,60 @@ export default function OverviewPage() {
     };
   };
 
+  const calculateGrandTotals = () => {
+    const data = tableType === "daily" ? dailyReportsData : monthlyReportsData;
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return null;
+    }
+
+    const totals = data.reduce(
+      (acc, curr) => {
+        acc.impressions += parseInt(curr.impressions) || 0;
+        acc.clicks += parseInt(curr.clicks) || 0;
+        acc.firstQuartileViews += parseInt(curr.firstQuartileViewsVideo) || 0;
+        acc.midpointViews += parseInt(curr.midpointViewsVideo) || 0;
+        acc.thirdQuartileViews += parseInt(curr.thirdQuartileViewsVideo) || 0;
+        acc.completeViews += parseInt(curr.completeViewsVideo) || 0;
+        acc.cost += parseFloat(curr.cost) || 0;
+        
+        if (curr.uniqueReachImpressionReach && curr.uniqueReachImpressionReach !== "-") {
+          const reach = parseInt(curr.uniqueReachImpressionReach);
+          if (!isNaN(reach)) {
+            acc.uniqueReach += reach;
+            acc.hasUniqueReach = true;
+          }
+        }
+        return acc;
+      },
+      {
+        impressions: 0,
+        clicks: 0,
+        firstQuartileViews: 0,
+        midpointViews: 0,
+        thirdQuartileViews: 0,
+        completeViews: 0,
+        cost: 0,
+        uniqueReach: 0,
+        hasUniqueReach: false,
+      }
+    );
+
+    const ctr =
+      totals.impressions > 0
+        ? ((totals.clicks / totals.impressions) * 100).toFixed(2)
+        : "0.00";
+    const vcr =
+      totals.impressions > 0
+        ? ((totals.completeViews / totals.impressions) * 100).toFixed(2)
+        : "0.00";
+
+    return {
+      ...totals,
+      ctr,
+      vcr,
+    };
+  };
+
   const shouldShowData = () => {
     return dateRange && (dateRange !== "CUSTOM" || (startDate && endDate));
   };
@@ -1224,6 +1278,31 @@ export default function OverviewPage() {
                 </tr>
               )}
             </tbody>
+            {(() => {
+              const grandTotals = calculateGrandTotals();
+              if (!grandTotals) return null;
+              return (
+                <tfoot>
+                  <tr className="totals-row">
+                    <td>Total</td>
+                    <td>{grandTotals.impressions.toLocaleString()}</td>
+                    <td>{grandTotals.clicks.toLocaleString()}</td>
+                    <td>{grandTotals.ctr}%</td>
+                    <td>{grandTotals.vcr}%</td>
+                    <td>{grandTotals.firstQuartileViews.toLocaleString()}</td>
+                    <td>{grandTotals.midpointViews.toLocaleString()}</td>
+                    <td>{grandTotals.thirdQuartileViews.toLocaleString()}</td>
+                    <td>{grandTotals.completeViews.toLocaleString()}</td>
+                    <td>₹{grandTotals.cost.toFixed(2)}</td>
+                    <td>
+                      {grandTotals.hasUniqueReach
+                        ? grandTotals.uniqueReach.toLocaleString()
+                        : "-"}
+                    </td>
+                  </tr>
+                </tfoot>
+              );
+            })()}
           </table>
         </div>
 

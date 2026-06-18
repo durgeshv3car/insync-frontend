@@ -297,6 +297,37 @@ export default function OverviewPage() {
 
   const aggregatedData = groupDataByDevice(dailyReportsData);
 
+  const calculateDeviceTotals = () => {
+    if (!aggregatedData || !Array.isArray(aggregatedData) || aggregatedData.length === 0) {
+      return null;
+    }
+
+    const totals = aggregatedData.reduce(
+      (acc, curr) => {
+        acc.impressions += curr.impressions || 0;
+        acc.clicks += curr.clicks || 0;
+        acc.completeViews += curr.completeViews || 0;
+        acc.cost += parseFloat(curr.cost) || 0;
+        return acc;
+      },
+      { impressions: 0, clicks: 0, completeViews: 0, cost: 0 }
+    );
+
+    const ctr = totals.impressions > 0
+      ? ((totals.clicks / totals.impressions) * 100).toFixed(2)
+      : "0.00";
+    
+    const vcr = totals.impressions > 0
+      ? ((totals.completeViews / totals.impressions) * 100).toFixed(2)
+      : "0.00";
+
+    return {
+      ...totals,
+      ctr,
+      vcr,
+    };
+  };
+
   const [campaigns, setCampaigns] = useState([]);
   const [activities, setActivities] = useState([]);
   const [topPerformers, setTopPerformers] = useState([]);
@@ -761,6 +792,23 @@ export default function OverviewPage() {
                 </tr>
               )}
             </tbody>
+            {(() => {
+              const totals = calculateDeviceTotals();
+              if (!totals) return null;
+              return (
+                <tfoot>
+                  <tr className="totals-row">
+                    <td>Total</td>
+                    <td>{totals.impressions.toLocaleString()}</td>
+                    <td>{totals.clicks.toLocaleString()}</td>
+                    <td>{totals.ctr}%</td>
+                    <td>{totals.vcr}%</td>
+                    <td>{totals.completeViews.toLocaleString()}</td>
+                    <td>₹{totals.cost.toFixed(2)}</td>
+                  </tr>
+                </tfoot>
+              );
+            })()}
           </table>
         </div>
 

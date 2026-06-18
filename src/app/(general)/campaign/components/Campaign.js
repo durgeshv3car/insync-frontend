@@ -16,6 +16,8 @@ import Image from "next/image";
 import { Search, Loader2, CheckCircle2, Layout, Database, BarChart3, PieChart, MapPin } from "lucide-react";
 
 import React, { useState, useEffect } from "react";
+import Select from "react-select";
+import { getAllUsers } from "@/services/users";
 
 const emptyCampaign = {
   reportName: "",
@@ -108,6 +110,8 @@ const Campaign = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [audienceId, setAudienceId] = useState(null);
+  const [userOptions, setUserOptions] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
 
 
   useEffect(() => {
@@ -128,6 +132,26 @@ const Campaign = () => {
 
     fetchAudiences();
   }, [search]);
+
+  useEffect(() => {
+    if (showEmailModal) {
+      const fetchUsers = async () => {
+        try {
+          const res = await getAllUsers();
+          if (res.message && res.userData) {
+            const formatted = res.userData.map((user) => ({
+              value: user.email,
+              label: `${user.email} (${user.role || "User"})`,
+            }));
+            setUserOptions(formatted);
+          }
+        } catch (error) {
+          console.error("Failed to fetch users", error);
+        }
+      };
+      fetchUsers();
+    }
+  }, [showEmailModal]);
 
   const openAddModal = () => {
     setCampaignData(emptyCampaign);
@@ -301,6 +325,8 @@ const Campaign = () => {
     setShowEmailModal(true);
     setError("");
     setAudienceId(id);
+    setSelectedUser(null);
+    setEmail("");
   };
 
   const handleAddUser = async () => {
@@ -678,11 +704,11 @@ const Campaign = () => {
 
       {showEmailModal && (
         <div className="modal fade show d-block" tabIndex="-1">
-          <div className="modal-dialog modal-sm modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               {/* Header */}
               <div className="modal-header">
-                <h5 className="modal-title">Add User</h5>
+                <h5 className="modal-title">Add User to Campaign</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -692,14 +718,41 @@ const Campaign = () => {
 
               {/* Body */}
               <div className="modal-body">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  placeholder="Enter user email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                {error && (
+                  <div className="alert alert-danger py-2 px-3 mb-3" style={{ fontSize: "0.875rem" }}>
+                    {error}
+                  </div>
+                )}
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Select User</label>
+                  <Select
+                    options={userOptions}
+                    value={selectedUser}
+                    onChange={(val) => {
+                      setSelectedUser(val);
+                      setEmail(val ? val.value : "");
+                    }}
+                    isClearable
+                    isSearchable
+                    placeholder="Search by user email..."
+                    menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                    styles={{
+                      menuList: (base) => ({
+                        ...base,
+                        maxHeight: "160px",
+                      }),
+                      menuPortal: (base) => ({
+                        ...base,
+                        zIndex: 9999,
+                      }),
+                      option: (base) => ({
+                        ...base,
+                        whiteSpace: "normal",
+                        wordBreak: "break-all",
+                      }),
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Footer */}
