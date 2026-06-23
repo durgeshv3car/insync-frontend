@@ -16,6 +16,7 @@ function CampaignTitleTable({
   campaignData,
   onEdit ,
   onDelete ,
+  onSelect,
 }) {
   const [selectedVideos, setSelectedVideos] = useState(new Set());
   const [currentPage] = useState(1);
@@ -56,12 +57,14 @@ function CampaignTitleTable({
 
   // No-op on frontend; kept to preserve UI but disable functionality.
   const handlePageChange = (page) => {};
-  const handleDelete=(id)=>{
+  const handleDelete=(e, id)=>{
+    e.stopPropagation();
     onDelete(id);
   }
 
   const handleEdit=(e,v)=>{
     e.preventDefault();
+    e.stopPropagation();
     onEdit(v);
   }
 
@@ -167,7 +170,8 @@ function CampaignTitleTable({
 
             {paginatedVideos.map((v, idx) => (
               <tr
-                key={v.videoId}
+                key={v._id || idx}
+                onClick={() => onSelect && onSelect(v)}
                 style={{
                   borderBottom: "1px solid #e9ecef",
                   transition: "background-color 0.2s ease",
@@ -244,8 +248,8 @@ function CampaignTitleTable({
                       <button
                         type="button"
                         className="btn btn-sm btn-outline-danger"
-                        onClick={() => {
-                          handleDelete(v._id || v.id || v);
+                        onClick={(e) => {
+                          handleDelete(e, v._id || v.id || v);
                         }}
                       >
                         Delete

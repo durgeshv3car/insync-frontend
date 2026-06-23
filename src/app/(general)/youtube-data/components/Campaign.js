@@ -284,16 +284,29 @@ const YouTubeTable = () => {
 
         console.log("YouTube Data: API Raw Response - Latest:", latestRes, "List:", listRes);
 
+        const paramChannelName = searchParams.get("channelName");
+        const paramQuery = searchParams.get("query");
+
         let finalQuery = "";
-        if (latestRes) {
-          finalQuery = typeof latestRes === 'string' ? latestRes : (latestRes.query || latestRes.text || "");
+        let finalChannelName = "";
+
+        if (paramChannelName !== null || paramQuery !== null) {
+          finalChannelName = paramChannelName || "";
+          finalQuery = paramQuery || "";
+          setChannelNameInput(finalChannelName);
           setQueryInput(finalQuery);
+        } else {
+          if (latestRes) {
+            finalQuery = typeof latestRes === 'string' ? latestRes : (latestRes.query || latestRes.text || "");
+            setQueryInput(finalQuery);
+          }
         }
 
         // Set filters once with all initial data
         setFilters((prev) => ({
           ...prev,
           query: finalQuery,
+          channelName: finalChannelName,
           userId: uid,
         }));
 
@@ -311,7 +324,7 @@ const YouTubeTable = () => {
       }
     };
     init();
-  }, [session, status]);
+  }, [session, status, searchParams]);
 
   // Main fetch hook - fires whenever filters change, but only after init is done
   useEffect(() => {

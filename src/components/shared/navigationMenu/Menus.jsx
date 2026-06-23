@@ -31,7 +31,7 @@ const Menus = () => {
     if (role === "super_admin") {
       baseMenu = menuList.filter((menu) => menu.name !== "preview");
     } else if (role === "admin") {
-      baseMenu = menuList.filter((menu) => ["dashboards","Youtube Data","Keywords Search","Keyword Search","Report"].includes(menu.name));
+      baseMenu = menuList.filter((menu) => ["dashboards","Youtube Data","Keywords Search","Keyword Search","Report","Audience"].includes(menu.name));
     }
      else {
       baseMenu = menuList.filter((menu) => ["dashboards","Report"].includes(menu.name));

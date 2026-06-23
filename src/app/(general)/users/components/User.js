@@ -7,6 +7,8 @@ import { deleteUser, deleteUserAudience, getAllUsers } from "@/services/users";
 import { Modal, Button } from "react-bootstrap";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
+import Select from "react-select";
+import { addAudienceToUser, getAudience } from "@/services/createaudience";
 
 function UserPage() {
   const [users, setUsers] = useState([]);
@@ -18,6 +20,10 @@ function UserPage() {
   const [campaignsData, setCampaignsData] = useState([]);
   const [removeAudienceId, setremoveAudienceId] = useState(null);
 
+  const [allCampaigns, setAllCampaigns] = useState([]);
+  const [selectedCampaignToAllocate, setSelectedCampaignToAllocate] = useState(null);
+  const [selectedUserEmail, setSelectedUserEmail] = useState("");
+
   const getUserData = async () => {
     const res = await getAllUsers();
     if (res.message) {
@@ -25,8 +31,20 @@ function UserPage() {
     }
   };
 
+  const fetchAllCampaigns = async () => {
+    try {
+      const res = await getAudience();
+      if (res && res.data) {
+        setAllCampaigns(res.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch campaigns:", error);
+    }
+  };
+
   useEffect(() => {
     getUserData();
+    fetchAllCampaigns();
   }, []);
 
   const handleEdit = (id, user) => {
@@ -36,11 +54,41 @@ function UserPage() {
   };
 
   const handleOpenCampaigns = (user) => {
-    // currently using sample data; replace with API call if needed
+    setSelectedUserEmail(user.email);
     setremoveAudienceId(user.email);
-    setCampaignsData(user.AudienceId);
+    setCampaignsData(user.AudienceId || []);
     setShowCampaignsModal(true);
   };
+
+  const handleAllocateCampaign = async () => {
+    if (!selectedCampaignToAllocate || !selectedUserEmail) return;
+    try {
+      const campaignId = selectedCampaignToAllocate.value;
+      const res = await addAudienceToUser(selectedUserEmail, campaignId);
+      if (res.message) {
+        setSelectedCampaignToAllocate(null);
+        
+        const refreshedUsers = await getAllUsers();
+        if (refreshedUsers.message && refreshedUsers.userData) {
+          setUsers(refreshedUsers.userData);
+          const updatedUser = refreshedUsers.userData.find(u => u.email === selectedUserEmail);
+          if (updatedUser) {
+            setCampaignsData(updatedUser.AudienceId || []);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Allocation failed", err);
+    }
+  };
+
+  const allocatedIds = new Set(campaignsData.map(c => c._id));
+  const availableCampaignOptions = allCampaigns
+    .filter(c => !allocatedIds.has(c._id))
+    .map(c => ({
+      value: c._id,
+      label: c.reportName || c.title || c._id
+    }));
 
   const handleSave = (_id, updatedData) => {
     setUsers((prev) =>
@@ -152,6 +200,32 @@ function UserPage() {
           <Modal.Title>Campaigns</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <div className="card mb-4 p-3 bg-light border-0">
+            <h6 className="fw-bold mb-2">Allocate New Campaign</h6>
+            <div className="row g-2 align-items-center">
+              <div className="col-sm-9">
+                <Select
+                  options={availableCampaignOptions}
+                  value={selectedCampaignToAllocate}
+                  onChange={setSelectedCampaignToAllocate}
+                  placeholder="Select a campaign to allocate..."
+                  isSearchable
+                  isClearable
+                />
+              </div>
+              <div className="col-sm-3">
+                <Button
+                  variant="primary"
+                  className="w-100"
+                  onClick={handleAllocateCampaign}
+                  disabled={!selectedCampaignToAllocate}
+                >
+                  Allocate
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <div className="table-responsive">
             <table className="table table-striped table-bordered">
               <thead>
@@ -166,7 +240,7 @@ function UserPage() {
               <tbody>
                 {campaignsData.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="text-center py-4">
+                    <td colSpan="5" className="text-center py-4">
                       No campaigns
                     </td>
                   </tr>

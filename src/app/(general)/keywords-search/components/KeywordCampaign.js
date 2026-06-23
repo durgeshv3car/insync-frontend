@@ -245,7 +245,9 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
         (res.data || res.results) &&
         (res.data?.length > 0 || res.results?.length > 0)
       ) {
-        router.push("/youtube-data");
+        const queryParams = new URLSearchParams();
+        if (filters.query) queryParams.set("query", filters.query);
+        router.push(`/youtube-data?${queryParams.toString()}`);
       }
     } catch (error) {
       console.error("Error fetching YouTube results:", error);

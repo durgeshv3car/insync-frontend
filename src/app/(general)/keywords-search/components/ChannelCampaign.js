@@ -238,7 +238,10 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
 
         // Redirect to youtube-data page after getting all data
         if (videoData.length > 0) {
-          router.push("/youtube-data");
+          const queryParams = new URLSearchParams();
+          if (filters.channelName) queryParams.set("channelName", filters.channelName);
+          if (filters.query) queryParams.set("query", filters.query);
+          router.push(`/youtube-data?${queryParams.toString()}`);
         }
       }
     } catch (error) {

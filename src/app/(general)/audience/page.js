@@ -180,6 +180,7 @@ function page() {
             campaignData={campaignList}
             onEdit={handleEditAudience}
             onDelete={handleDeleteAudience}
+            onSelect={(v) => setSelectedAudience({ value: v._id, label: v.title })}
           />
         )}
       </div>
