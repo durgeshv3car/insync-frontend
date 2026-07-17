@@ -1,23 +1,14 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 export const createReportsData = async (params) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/dv360/listQueries`,
+    const res = await api.post(
+      "/dv360/listQueries",
       {
         audienceId: params.audienceId,
         dataRange: params.dataRange,
         startDate: params.startDate,
         endDate: params.endDate,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -34,18 +25,12 @@ export const createReportsData = async (params) => {
 // Daily reports with filter (LAST_7_DAYS, LAST_30_DAYS, etc.)
 export const getDailyReportsByFilter = async (insertionOrderId, filter, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/overview/filter`,
+    const res = await api.post(
+      "/overview/filter",
       {
         insertionOrderId,
         filter,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -62,19 +47,13 @@ export const getDailyReportsByFilter = async (insertionOrderId, filter, audience
 // Daily reports with custom date range
 export const getDailyReportsByRange = async (insertionOrderId, startDate, endDate, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/overview/range`,
+    const res = await api.post(
+      "/overview/range",
       {
         insertionOrderId,
         startDate,
         endDate,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -91,18 +70,12 @@ export const getDailyReportsByRange = async (insertionOrderId, startDate, endDat
 // Monthly reports with filter (LAST_7_DAYS, LAST_30_DAYS, etc.)
 export const getMonthlyReportsByFilter = async (insertionOrderId, filter, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/overview/monthly/filter`,
+    const res = await api.post(
+      "/overview/monthly/filter",
       {
         insertionOrderId,
         filter,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -119,19 +92,13 @@ export const getMonthlyReportsByFilter = async (insertionOrderId, filter, audien
 // Monthly reports with custom date range
 export const getMonthlyReportsByRange = async (insertionOrderId, startDate, endDate, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/overview/monthly/range`,
+    const res = await api.post(
+      "/overview/monthly/range",
       {
         insertionOrderId,
         startDate,
         endDate,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -148,15 +115,10 @@ export const getMonthlyReportsByRange = async (insertionOrderId, startDate, endD
 // Download ALL daily overview data as CSV
 export const downloadAllDailyOverviewCSV = async (insertionOrderId) => {
   try {
-    const token = await getToken();
-
-    const res = await axios.post(
-      `${API_URL}/overview/download/daily-all`,
+    const res = await api.post(
+      "/overview/download/daily-all",
       { insertionOrderId },
       {
-        headers: {
-          Authorization: token,
-        },
         responseType: "blob", // VERY IMPORTANT for CSV
       }
     );

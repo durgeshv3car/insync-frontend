@@ -1,13 +1,9 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 export const getYouTubeResultsByChannel = async (filters) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/query/searchByChannel`,
+    const res = await api.post(
+      "/query/searchByChannel",
       {
         channelName: filters.channelName,
         query: Array.isArray(filters.query) ? filters.query : [filters.query],
@@ -15,12 +11,7 @@ export const getYouTubeResultsByChannel = async (filters) => {
         dateRange: filters.dateRange,
         maxResults: filters.maxResults,
         userId: filters.userId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
-      },
+      }
     );
 
     if (res.status === 202 && (res.data.jobId || res.data.progressId)) {
@@ -48,12 +39,7 @@ export const getYouTubeResultsByChannel = async (filters) => {
  */
 export const getSearchJobStatus = async (jobId) => {
   try {
-    const token = await getToken();
-    const res = await axios.get(`${API_URL}/query/job/${jobId}`, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    const res = await api.get(`/query/job/${jobId}`);
     return res.data;
   } catch (error) {
     console.error(
@@ -71,10 +57,7 @@ const pollSearchJob = async (progressId, filters, onProgress) => {
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
       // Fetch from the new Progress API
-      const token = await getToken();
-      const res = await axios.get(`${API_URL}/progress/${progressId}`, {
-        headers: { Authorization: token },
-      });
+      const res = await api.get(`/progress/${progressId}`);
 
       const data = res.data;
       const status = data.status;
@@ -113,9 +96,8 @@ const pollSearchJob = async (progressId, filters, onProgress) => {
 
 export const getYouTubeResults = async (filters) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/query/search`,
+    const res = await api.post(
+      "/query/search",
       {
         query: Array.isArray(filters.query) ? filters.query : [filters.query], // send as array
         minViews: filters.minViews,
@@ -127,12 +109,7 @@ export const getYouTubeResults = async (filters) => {
         startDate: filters.startDate,
         endDate: filters.endDate,
         userId: filters.userId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
-      },
+      }
     );
 
     if (res.status === 202 && (res.data.jobId || res.data.progressId)) {
@@ -156,7 +133,6 @@ export const getYouTubeResults = async (filters) => {
 
 export const getQueryResults = async (filters) => {
   try {
-    const token = await getToken();
     const params = {
       ...filters,
       // Ensure query and channelName are strings for backend .split(",") compatibility
@@ -170,12 +146,7 @@ export const getQueryResults = async (filters) => {
       limit: filters.limit || filters.maxResults || 2000,
     };
 
-    const res = await axios.get(`${API_URL}/query/results`, {
-      params,
-      headers: {
-        Authorization: token,
-      },
-    });
+    const res = await api.get("/query/results", { params });
 
     return res.data;
   } catch (error) {
@@ -189,13 +160,7 @@ export const getQueryResults = async (filters) => {
 
 export const getFiltersResults = async () => {
   try {
-    const token = await getToken();
-
-    const res = await axios.get(`${API_URL}/query/regions`, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    const res = await api.get("/query/regions");
 
     return res.data;
   } catch (error) {
@@ -209,14 +174,7 @@ export const getFiltersResults = async () => {
 
 export const getcsvResults = async (filters) => {
   try {
-    const token = await getToken();
-
-    const res = await axios.get(`${API_URL}/query/download`, {
-      params: filters,
-      headers: {
-        Authorization: token,
-      },
-    });
+    const res = await api.get("/query/download", { params: filters });
 
     return res.data;
   } catch (error) {
@@ -230,13 +188,7 @@ export const getcsvResults = async (filters) => {
 
 export const getLatestQueryByUserId = async (userId) => {
   try {
-    const token = await getToken();
-    const res = await axios.get(
-      `${API_URL}/recent-keywords/latest-query/${userId}`,
-      {
-        headers: { Authorization: token },
-      },
-    );
+    const res = await api.get(`/recent-keywords/latest-query/${userId}`);
     return res.data.query;
   } catch (error) {
     console.error(
@@ -249,13 +201,7 @@ export const getLatestQueryByUserId = async (userId) => {
 
 export const getRecentTenQueries = async (userId) => {
   try {
-    const token = await getToken();
-    const res = await axios.get(
-      `${API_URL}/recent-keywords/ten-list/${userId}`,
-      {
-        headers: { Authorization: token },
-      },
-    );
+    const res = await api.get(`/recent-keywords/ten-list/${userId}`);
     return res.data.queries;
   } catch (error) {
     console.error(

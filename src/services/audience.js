@@ -1,21 +1,8 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 export const createAudienceData = async (title) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/campaign`,
-      { title },
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    );
-
+    const res = await api.post("/campaign", { title });
     return res.data;
   } catch (error) {
     console.log(
@@ -28,13 +15,7 @@ export const createAudienceData = async (title) => {
 
 export const getAudienceData = async () => {
   try {
-    const token = await getToken();
-    const res = await axios.get(`${API_URL}/campaigns/data`, {
-      headers: {
-        Authorization: token,
-      },
-    });
-
+    const res = await api.get("/campaigns/data");
     return res.data; 
   } catch (error) {
     console.log(
@@ -47,17 +28,7 @@ export const getAudienceData = async () => {
 
 export const updateAudienceData = async (id, title) => {
   try {
-    const token = await getToken();
-    const res = await axios.put(
-      `${API_URL}/campaign/${id}`,
-      { title },
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    );
-
+    const res = await api.put(`/campaign/${id}`, { title });
     return res.data;
   } catch (error) {
     console.log(
@@ -70,16 +41,7 @@ export const updateAudienceData = async (id, title) => {
 
 export const deleteAudienceData = async (id) => {
   try {
-    const token = await getToken();
-    const res = await axios.delete(
-      `${API_URL}/campaign/${id}`,
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    );
-
+    const res = await api.delete(`/campaign/${id}`);
     return res.data;
   } catch (error) {
     console.log(

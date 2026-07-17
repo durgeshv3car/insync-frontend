@@ -1,18 +1,10 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 export const DownloadCsvCampaignId = async (campaignId) => {
   try {
-    const token = await getToken();
-
-    const response = await axios.get(
-      `${API_URL}/data/campaign-data/csv/${campaignId}`,
+    const response = await api.get(
+      `/data/campaign-data/csv/${campaignId}`,
       {
-        headers: {
-          Authorization: token,
-        },
         responseType: "blob", 
       }
     );
@@ -36,15 +28,9 @@ export const DownloadCsvCampaignId = async (campaignId) => {
 
 export const getCampaignData = async (audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/data/campaigns`,
-      { campaignId:audienceId },
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
+    const res = await api.post(
+      "/data/campaigns",
+      { campaignId:audienceId }
     );
     return res.data;
   } catch (error) {
@@ -58,15 +44,7 @@ export const getCampaignData = async (audienceId) => {
 
 export const getCampaignList = async (audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.get(
-      `${API_URL}/campaigns/data`,
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    );
+    const res = await api.get("/campaigns/data");
     return res.data;
   } catch (error) {
     console.error(
@@ -80,15 +58,9 @@ export const getCampaignList = async (audienceId) => {
 
 export const createCampaignData = async (audienceId, videos) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/data/campaign`,
-      { campaignId:audienceId, youtubeQueryId: videos },
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
+    const res = await api.post(
+      "/data/campaign",
+      { campaignId:audienceId, youtubeQueryId: videos }
     );
     return res.data;
   } catch (error) {
@@ -101,14 +73,9 @@ export const createCampaignData = async (audienceId, videos) => {
 };
 
 export const deleteCampaignData = async (audienceId, videoId) => {
-  const token = await getToken();
-
-  const res = await axios.delete(
-    `${API_URL}/data/campaign`,
+  const res = await api.delete(
+    "/data/campaign",
     {
-      headers: {
-        Authorization: token,
-      },
       data: {
         campaignId: audienceId,
         youtubeQueryId: videoId,

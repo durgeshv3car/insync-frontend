@@ -1,23 +1,14 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 export const createReportsDataCity = async (params) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/dv360/listQueries/city`,
+    const res = await api.post(
+      "/dv360/listQueries/city",
       {
         audienceId: params.audienceId,
         dataRange: params.dataRange,
         startDate: params.startDate,
         endDate: params.endDate,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -34,18 +25,12 @@ export const createReportsDataCity = async (params) => {
 // Daily reports with filter (LAST_7_DAYS, LAST_30_DAYS, etc.)
 export const getDailyReportsByFilterCity = async (insertionOrderId, filter, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/city/filter`,
+    const res = await api.post(
+      "/city/filter",
       {
         insertionOrderId,
         filter,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -62,19 +47,13 @@ export const getDailyReportsByFilterCity = async (insertionOrderId, filter, audi
 // Daily reports with custom date range
 export const getDailyReportsByRangeCity = async (insertionOrderId, startDate, endDate, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/city/range`,
+    const res = await api.post(
+      "/city/range",
       {
         insertionOrderId,
         startDate,
         endDate,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -92,15 +71,10 @@ export const getDailyReportsByRangeCity = async (insertionOrderId, startDate, en
 // Download ALL daily city data as CSV
 export const downloadAllDailyCityCSV = async (insertionOrderId) => {
   try {
-    const token = await getToken();
-
-    const res = await axios.post(
-      `${API_URL}/city/download/daily-all`,
+    const res = await api.post(
+      "/city/download/daily-all",
       { insertionOrderId },
       {
-        headers: {
-          Authorization: token,
-        },
         responseType: "blob", // IMPORTANT for CSV
       }
     );

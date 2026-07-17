@@ -17,7 +17,7 @@ api.interceptors.request.use(
     try {
       const token = await getToken();
       if (token) {
-        config.headers.Authorization = token;
+        config.headers.Authorization = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
       }
     } catch (error) {
       console.error("Error getting token:", error);
@@ -32,15 +32,6 @@ api.interceptors.request.use(
 // Response interceptor for toasts
 api.interceptors.response.use(
   (response) => {
-    // You can customize this to check for specific success codes or messages if your API returns them
-    // For now, we'll try to use a message from the response, or a generic one if it's a mutation
-    // GET requests usually don't need a success toast unless specific action
-    
-    // Strategy: Show toast if response has a 'message' field which usually implies an action result
-    if (response.data && response.data.message) {
-        toast.success(response.data.message);
-    }
-    
     return response;
   },
   (error) => {

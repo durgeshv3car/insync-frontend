@@ -1,23 +1,14 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 /**
  * Register a new user
  */
 export const registerUser = async ( name, role, email, password ) => {
   try {
-    const token = await getToken();
     console.log(name,role,email,password)
-    const res = await axios.post(
-      `${API_URL}/auth/register`,
-      { name, role, email, password },
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
+    const res = await api.post(
+      "/auth/register",
+      { name, role, email, password }
     );
     return res.data; 
   } catch (error) {
@@ -32,15 +23,9 @@ export const registerUser = async ( name, role, email, password ) => {
 
 export const updateUser = async (id, userData) => {
   try {
-    const token = await getToken();
-    const res = await axios.put(
-      `${API_URL}/auth/user/${id}`,
-      userData,
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
+    const res = await api.put(
+      `/auth/user/${id}`,
+      userData
     );
     return res.data;
   } catch (error) {
@@ -55,12 +40,7 @@ export const updateUser = async (id, userData) => {
  */
 export const getAllUsers = async () => {
   try {
-    const token = await getToken();
-    const res = await axios.get(`${API_URL}/auth/users`, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    const res = await api.get("/auth/users");
     return res.data; // Array of users
   } catch (error) {
     console.error("Error fetching users:", error.response?.data || error.message);
@@ -73,12 +53,7 @@ export const getAllUsers = async () => {
  */
 export const deleteUser = async (id) => {
   try {
-    const token = await getToken();
-    const res = await axios.delete(`${API_URL}/auth/delete/${id}`, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    const res = await api.delete(`/auth/delete/${id}`);
     return res.data; // success message
   } catch (error) {
     console.error("Error deleting user:", error.response?.data || error.message);
@@ -88,17 +63,11 @@ export const deleteUser = async (id) => {
 
 export const deleteUserAudience = async (email, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.patch(
-      `${API_URL}/auth/audience/remove`,
+    const res = await api.patch(
+      "/auth/audience/remove",
       {
         email,
         audienceId, 
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -115,7 +84,7 @@ export const deleteUserAudience = async (email, audienceId) => {
 
 export const forgotPassword = async (email) => {
   try {
-    const res = await axios.post(`${API_URL}/auth/forgot-password`, {
+    const res = await api.post("/auth/forgot-password", {
       email,
     });
 
@@ -132,8 +101,8 @@ export const forgotPassword = async (email) => {
 
 export const resetPassword = async (token, password,confirmPassword) => {
   try {
-    const res = await axios.post(
-      `${API_URL}/auth/reset-password/${token}`,
+    const res = await api.post(
+      `/auth/reset-password/${token}`,
       {
         password,
         confirmPassword,

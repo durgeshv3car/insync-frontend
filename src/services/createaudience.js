@@ -1,16 +1,8 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 export const createAudience = async (campaignData) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(`${API_URL}/audience`, campaignData, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    const res = await api.post("/audience", campaignData);
 
     return res.data;
   } catch (error) {
@@ -24,12 +16,8 @@ export const createAudience = async (campaignData) => {
 
 export const getAudience = async (search = "") => {
   try {
-    const token = await getToken();
-    const res = await axios.get(`${API_URL}/audiences/data`, {
-      params: { search },
-      headers: {
-        Authorization: token,
-      },
+    const res = await api.get("/audiences/data", {
+      params: { search }
     });
 
     return res.data;
@@ -44,12 +32,7 @@ export const getAudience = async (search = "") => {
 
 export const deleteAudience = async (audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.delete(`${API_URL}/audience/${audienceId}`, {
-      headers: {
-        Authorization: token,
-      },
-    });
+    const res = await api.delete(`/audience/${audienceId}`);
 
     return res.data;
   } catch (error) {
@@ -62,17 +45,11 @@ export const deleteAudience = async (audienceId) => {
 };
 export const getAudienceByUser = async (userId, role) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/audiences`,
+    const res = await api.post(
+      "/audiences",
       {
         userId,
         role,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -88,15 +65,9 @@ export const getAudienceByUser = async (userId, role) => {
 
 export const updateAudience = async (audienceId, campaignData) => {
   try {
-    const token = await getToken();
-    const res = await axios.put(
-      `${API_URL}/audience/${audienceId}`,
-      campaignData,
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
+    const res = await api.put(
+      `/audience/${audienceId}`,
+      campaignData
     );
     return res.data;
   } catch (error) {
@@ -110,15 +81,9 @@ export const updateAudience = async (audienceId, campaignData) => {
 
 export const addAudienceToUser = async (email, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/auth/user/add`,
-      { email, audienceId },
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
+    const res = await api.post(
+      "/auth/user/add",
+      { email, audienceId }
     );
 
     return res.data;

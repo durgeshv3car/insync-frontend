@@ -1,23 +1,14 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 export const createReportsDataContext = async (params) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/dv360/listQueries/context`,
+    const res = await api.post(
+      "/dv360/listQueries/context",
       {
         audienceId: params.audienceId,
         dataRange: params.dataRange,
         startDate: params.startDate,
         endDate: params.endDate,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -34,18 +25,12 @@ export const createReportsDataContext = async (params) => {
 // Daily reports with filter (LAST_7_DAYS, LAST_30_DAYS, etc.)
 export const getDailyReportsByFilter = async (insertionOrderId, filter, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/context/filter`,
+    const res = await api.post(
+      "/context/filter",
       {
         insertionOrderId,
         filter,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -62,19 +47,13 @@ export const getDailyReportsByFilter = async (insertionOrderId, filter, audience
 // Daily reports with custom date range
 export const getDailyReportsByRange = async (insertionOrderId, startDate, endDate, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/context/range`,
+    const res = await api.post(
+      "/context/range",
       {
         insertionOrderId,
         startDate,
         endDate,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 

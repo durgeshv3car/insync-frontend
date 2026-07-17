@@ -1,23 +1,14 @@
-import axios from "axios";
-import { getToken } from "@/lib/getToken";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import api from "@/lib/api";
 
 export const createReportsDataDevice = async (params) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/dv360/listQueries/device`,
+    const res = await api.post(
+      "/dv360/listQueries/device",
       {
         audienceId: params.audienceId,
         dataRange: params.dataRange,
         startDate: params.startDate,
         endDate: params.endDate,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -34,18 +25,12 @@ export const createReportsDataDevice = async (params) => {
 // Daily reports with filter (LAST_7_DAYS, LAST_30_DAYS, etc.)
 export const getDailyReportsByFilter = async (insertionOrderId, filter, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/device/filter`,
+    const res = await api.post(
+      "/device/filter",
       {
         insertionOrderId,
         filter,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -62,19 +47,13 @@ export const getDailyReportsByFilter = async (insertionOrderId, filter, audience
 // Daily reports with custom date range
 export const getDailyReportsByRange = async (insertionOrderId, startDate, endDate, audienceId) => {
   try {
-    const token = await getToken();
-    const res = await axios.post(
-      `${API_URL}/device/range`,
+    const res = await api.post(
+      "/device/range",
       {
         insertionOrderId,
         startDate,
         endDate,
         audienceId,
-      },
-      {
-        headers: {
-          Authorization: token,
-        },
       }
     );
 
@@ -91,15 +70,10 @@ export const getDailyReportsByRange = async (insertionOrderId, startDate, endDat
 // Download ALL daily device data as CSV
 export const downloadAllDailyDeviceCSV = async (insertionOrderId) => {
   try {
-    const token = await getToken();
-
-    const res = await axios.post(
-      `${API_URL}/device/download/daily-all`,
+    const res = await api.post(
+      "/device/download/daily-all",
       { insertionOrderId },
       {
-        headers: {
-          Authorization: token,
-        },
         responseType: "blob", // IMPORTANT
       }
     );
