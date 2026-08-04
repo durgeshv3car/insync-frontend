@@ -602,3 +602,17 @@ i[class*=" feather-"] {
     background-position: -200% 0;
   }
 }
+
+/* =====================
+   BASKET PANEL ANIMATION
+===================== */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

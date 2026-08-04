@@ -58,7 +58,9 @@ const YouTubeTable = () => {
   const [csvVideos, setCsvVideos] = useState([]);
   const [regions, setRegions] = useState([]);
   const [audienceId, setAudienceId] = useState(null);
-  const [selectedData, setSelectedData] = useState([]);
+  // Persistent cross-query basket: Map<_id, videoObject>
+  const [selectedBasket, setSelectedBasket] = useState(new Map());
+  const [showBasketPanel, setShowBasketPanel] = useState(false);
   const regionCode = [
     { code: "IN", name: "India" },
     { code: "US", name: "United States" },
@@ -192,6 +194,25 @@ const YouTubeTable = () => {
           });
           return newMap;
         });
+
+        // Pre-check any videos on this page that are already in the basket
+        setSelectedVideos((prevSelected) => {
+          const newSet = new Set(prevSelected);
+          // Only keep IDs that belong to the current page's results
+          const pageIds = new Set(res.results.map((v) => v._id).filter(Boolean));
+          // Remove stale IDs (not on this page)
+          for (const id of newSet) {
+            if (!pageIds.has(id)) newSet.delete(id);
+          }
+          // Re-add basket IDs that appear on this page
+          setSelectedBasket((basket) => {
+            for (const id of basket.keys()) {
+              if (pageIds.has(id)) newSet.add(id);
+            }
+            return basket; // basket itself unchanged here
+          });
+          return newSet;
+        });
       }
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
@@ -209,11 +230,16 @@ const YouTubeTable = () => {
       console.error("Error fetching YouTube results:", error);
     }
   };
+
   const AddToCampaign = async () => {
+    const basketIds = Array.from(selectedBasket.keys());
     console.log("Audience ID:", audienceId);
-    console.log("Complete video objects:", selectedData);
-    const res = await createCampaignData(audienceId, selectedData);
+    console.log("Basket video IDs:", basketIds);
+    if (basketIds.length === 0) return;
+    const res = await createCampaignData(audienceId, basketIds);
     if (res.message) {
+      setSelectedBasket(new Map());
+      setSelectedVideos(new Set());
       router.push("/audience");
     }
   };
@@ -436,12 +462,27 @@ const YouTubeTable = () => {
 
   const handleVideoSelect = (id) => {
     if (!id) return;
+    const video = videos.find((v) => v._id === id);
     setSelectedVideos((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
+        // Remove from persistent basket
+        setSelectedBasket((basket) => {
+          const newBasket = new Map(basket);
+          newBasket.delete(id);
+          return newBasket;
+        });
       } else {
         newSet.add(id);
+        // Add full video object to persistent basket
+        if (video) {
+          setSelectedBasket((basket) => {
+            const newBasket = new Map(basket);
+            newBasket.set(id, video);
+            return newBasket;
+          });
+        }
       }
       return newSet;
     });
@@ -457,18 +498,43 @@ const YouTubeTable = () => {
 
     setSelectedVideos((prev) => {
       const newSet = new Set(prev);
-      if (areAllSelected) {
-        allIdsOnPage.forEach((id) => newSet.delete(id));
-      } else {
-        allIdsOnPage.forEach((id) => newSet.add(id));
-      }
+      setSelectedBasket((basket) => {
+        const newBasket = new Map(basket);
+        if (areAllSelected) {
+          allIdsOnPage.forEach((id) => {
+            newSet.delete(id);
+            newBasket.delete(id);
+          });
+        } else {
+          allIdsOnPage.forEach((id) => {
+            newSet.add(id);
+            const video = videos.find((v) => v._id === id);
+            if (video) newBasket.set(id, video);
+          });
+        }
+        return newBasket;
+      });
       return newSet;
     });
   };
 
-  useEffect(() => {
-    setSelectedData(Array.from(selectedVideos));
-  }, [selectedVideos]);
+  const handleRemoveFromBasket = (id) => {
+    setSelectedBasket((basket) => {
+      const newBasket = new Map(basket);
+      newBasket.delete(id);
+      return newBasket;
+    });
+    setSelectedVideos((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+  };
+
+  const handleClearBasket = () => {
+    setSelectedBasket(new Map());
+    setSelectedVideos(new Set());
+  };
 
   return (
     <div
@@ -918,28 +984,303 @@ const YouTubeTable = () => {
                 Excel
               </button>
               {audienceId && (
-                <button
-                  className="btn btn-sm"
-                  onClick={AddToCampaign}
-                  style={{
-                    backgroundColor: "#198754",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "8px",
-                    padding: "6px 16px",
-                    fontSize: "0.8rem",
-                    fontWeight: "600",
-                    display: "flex",
-                    alignItems: "center",
-                    transition: "all 0.2s",
-                    boxShadow: "0 2px 4px rgba(25, 135, 84, 0.2)"
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#157347"}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#198754"}
-                >
-                  <Star size={14} style={{ marginRight: "6px" }} />
-                  Add To Campaign
-                </button>
+                <>
+                  {/* Basket counter badge */}
+                  <div style={{ position: "relative", display: "inline-flex" }}>
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => setShowBasketPanel((v) => !v)}
+                      title={`${selectedBasket.size} video${selectedBasket.size !== 1 ? "s" : ""} selected across all queries`}
+                      style={{
+                        backgroundColor: selectedBasket.size > 0 ? "#0d6efd" : "#e9ecef",
+                        color: selectedBasket.size > 0 ? "#ffffff" : "#6c757d",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "6px 14px",
+                        fontSize: "0.8rem",
+                        fontWeight: "600",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        transition: "all 0.2s",
+                        boxShadow: selectedBasket.size > 0 ? "0 2px 4px rgba(13,110,253,0.25)" : "none",
+                      }}
+                    >
+                      🗂
+                      <span
+                        style={{
+                          backgroundColor: selectedBasket.size > 0 ? "#ffffff" : "#adb5bd",
+                          color: selectedBasket.size > 0 ? "#0d6efd" : "#ffffff",
+                          borderRadius: "12px",
+                          padding: "1px 7px",
+                          fontSize: "0.75rem",
+                          fontWeight: "700",
+                          minWidth: "22px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {selectedBasket.size}
+                      </span>
+                      Basket
+                    </button>
+
+                    {/* Basket slide-out panel */}
+                    {showBasketPanel && (
+                      <div
+                        style={{
+                          position: "fixed",
+                          top: 0,
+                          right: 0,
+                          width: "360px",
+                          height: "100vh",
+                          backgroundColor: "#ffffff",
+                          boxShadow: "-4px 0 20px rgba(0,0,0,0.15)",
+                          zIndex: 9999,
+                          display: "flex",
+                          flexDirection: "column",
+                          animation: "slideIn 0.25s ease-out",
+                        }}
+                      >
+                        {/* Panel Header */}
+                        <div
+                          style={{
+                            padding: "16px 20px",
+                            borderBottom: "1px solid #e9ecef",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            backgroundColor: "#f8f9fa",
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "#1a1a1a" }}>
+                              🗂 Video Basket
+                            </div>
+                            <div style={{ fontSize: "0.75rem", color: "#6c757d", marginTop: "2px" }}>
+                              {selectedBasket.size} video{selectedBasket.size !== 1 ? "s" : ""} selected across all queries
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setShowBasketPanel(false)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              fontSize: "1.2rem",
+                              cursor: "pointer",
+                              color: "#6c757d",
+                              lineHeight: 1,
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        {/* Panel Body */}
+                        <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px" }}>
+                          {selectedBasket.size === 0 ? (
+                            <div
+                              style={{
+                                textAlign: "center",
+                                color: "#adb5bd",
+                                marginTop: "60px",
+                                fontSize: "0.85rem",
+                              }}
+                            >
+                              <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🗂</div>
+                              No videos in basket yet.<br />
+                              Select videos from any query to add them here.
+                            </div>
+                          ) : (
+                            Array.from(selectedBasket.values()).map((v) => (
+                              <div
+                                key={v._id}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "10px",
+                                  padding: "10px 0",
+                                  borderBottom: "1px solid #f1f3f5",
+                                }}
+                              >
+                                {v.thumbnail ? (
+                                  <img
+                                    src={v.thumbnail}
+                                    alt=""
+                                    style={{
+                                      width: "64px",
+                                      height: "44px",
+                                      objectFit: "cover",
+                                      borderRadius: "4px",
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                ) : (
+                                  <div
+                                    style={{
+                                      width: "64px",
+                                      height: "44px",
+                                      backgroundColor: "#e9ecef",
+                                      borderRadius: "4px",
+                                      flexShrink: 0,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      fontSize: "1.2rem",
+                                    }}
+                                  >
+                                    🎬
+                                  </div>
+                                )}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div
+                                    style={{
+                                      fontSize: "0.78rem",
+                                      fontWeight: "600",
+                                      color: "#212529",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                    title={v.title}
+                                  >
+                                    {v.title}
+                                  </div>
+                                  <div style={{ fontSize: "0.72rem", color: "#6c757d", marginTop: "2px" }}>
+                                    {v.channelName || ""}  {v.csvResults ? `• ${v.csvResults}` : ""}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveFromBasket(v._id)}
+                                  title="Remove from basket"
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    color: "#dc3545",
+                                    fontSize: "1rem",
+                                    padding: "4px",
+                                    borderRadius: "4px",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        {/* Panel Footer */}
+                        <div
+                          style={{
+                            padding: "14px 16px",
+                            borderTop: "1px solid #e9ecef",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px",
+                          }}
+                        >
+                          <button
+                            onClick={AddToCampaign}
+                            disabled={selectedBasket.size === 0}
+                            style={{
+                              backgroundColor: selectedBasket.size > 0 ? "#198754" : "#adb5bd",
+                              color: "#ffffff",
+                              border: "none",
+                              borderRadius: "8px",
+                              padding: "10px 16px",
+                              fontSize: "0.85rem",
+                              fontWeight: "700",
+                              cursor: selectedBasket.size > 0 ? "pointer" : "not-allowed",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "8px",
+                              transition: "background-color 0.2s",
+                            }}
+                            onMouseEnter={(e) => { if (selectedBasket.size > 0) e.currentTarget.style.backgroundColor = "#157347"; }}
+                            onMouseLeave={(e) => { if (selectedBasket.size > 0) e.currentTarget.style.backgroundColor = "#198754"; }}
+                          >
+                            <Star size={15} />
+                            Add {selectedBasket.size} Video{selectedBasket.size !== 1 ? "s" : ""} To Campaign
+                          </button>
+                          <button
+                            onClick={handleClearBasket}
+                            disabled={selectedBasket.size === 0}
+                            style={{
+                              backgroundColor: "transparent",
+                              color: selectedBasket.size > 0 ? "#dc3545" : "#adb5bd",
+                              border: `1px solid ${selectedBasket.size > 0 ? "#dc3545" : "#dee2e6"}`,
+                              borderRadius: "8px",
+                              padding: "8px 16px",
+                              fontSize: "0.82rem",
+                              fontWeight: "600",
+                              cursor: selectedBasket.size > 0 ? "pointer" : "not-allowed",
+                              transition: "all 0.2s",
+                            }}
+                          >
+                            Clear Basket
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Backdrop */}
+                    {showBasketPanel && (
+                      <div
+                        onClick={() => setShowBasketPanel(false)}
+                        style={{
+                          position: "fixed",
+                          inset: 0,
+                          backgroundColor: "rgba(0,0,0,0.3)",
+                          zIndex: 9998,
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Main Add To Campaign button (also works directly) */}
+                  <button
+                    className="btn btn-sm"
+                    onClick={AddToCampaign}
+                    disabled={selectedBasket.size === 0}
+                    style={{
+                      backgroundColor: selectedBasket.size > 0 ? "#198754" : "#adb5bd",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "6px 16px",
+                      fontSize: "0.8rem",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      transition: "all 0.2s",
+                      boxShadow: selectedBasket.size > 0 ? "0 2px 4px rgba(25, 135, 84, 0.2)" : "none",
+                      cursor: selectedBasket.size > 0 ? "pointer" : "not-allowed",
+                    }}
+                    onMouseEnter={(e) => { if (selectedBasket.size > 0) e.currentTarget.style.backgroundColor = "#157347"; }}
+                    onMouseLeave={(e) => { if (selectedBasket.size > 0) e.currentTarget.style.backgroundColor = selectedBasket.size > 0 ? "#198754" : "#adb5bd"; }}
+                  >
+                    <Star size={14} style={{ marginRight: "6px" }} />
+                    Add To Campaign
+                    {selectedBasket.size > 0 && (
+                      <span
+                        style={{
+                          marginLeft: "6px",
+                          backgroundColor: "rgba(255,255,255,0.25)",
+                          borderRadius: "10px",
+                          padding: "1px 6px",
+                          fontSize: "0.72rem",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {selectedBasket.size}
+                      </span>
+                    )}
+                  </button>
+                </>
               )}
             </div>
           </div>
