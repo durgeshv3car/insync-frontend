@@ -16,6 +16,7 @@
     "@fullcalendar/timegrid": "^6.1.15",
     "@popperjs/core": "^2.11.8",
     "@tanstack/react-table": "^8.20.5",
+    "ag-grid-react": "^36.1.0",
     "apexcharts": "^4.3.0",
     "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
