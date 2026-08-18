@@ -16,9 +16,8 @@ export const getYouTubeResultsByChannel = async (filters) => {
 
     if (res.status === 202 && (res.data.jobId || res.data.progressId)) {
       const { regionCode, ...pollingFilters } = filters;
-      // Use progressId if available, fallback to jobId
       return await pollSearchJob(
-        res.data.progressId || res.data.jobId,
+        { progressId: res.data.progressId, jobId: res.data.jobId },
         pollingFilters,
         filters.onProgress,
       );
@@ -50,35 +49,100 @@ export const getSearchJobStatus = async (jobId) => {
   }
 };
 
-const pollSearchJob = async (progressId, filters, onProgress) => {
+const pollSearchJob = async (ids, filters, onProgress) => {
   const POLLING_INTERVAL = 1500; // Faster updates since it's a dedicated API
   const MAX_ATTEMPTS = 200;
+  const progressId = typeof ids === "object" ? ids.progressId : ids;
+  const jobId = typeof ids === "object" ? ids.jobId : null;
 
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     try {
-      // Fetch from the new Progress API
-      const res = await api.get(`/progress/${progressId}`);
+      let status = null;
+      let processed = 0;
+      let total = filters.maxResults || 20;
 
-      const data = res.data;
-      const status = data.status;
+      if (progressId) {
+        // Fetch from the Progress API
+        const res = await api.get(`/progress/${progressId}`);
+        const data = res.data;
+        status = data.status;
+        processed = data.processedItems || 0;
+        total = data.totalItems || total;
+      } else if (jobId) {
+        const jobRes = await getSearchJobStatus(jobId);
+        status = jobRes?.job?.status;
+      }
 
       if (onProgress && typeof onProgress === "function") {
         onProgress({
           status,
-          processed: data.processedItems || 0,
-          total: data.totalItems || filters.maxResults || 20,
+          processed,
+          total,
           percent: Math.min(
-            Math.floor(
-              ((data.processedItems || 0) / (data.totalItems || 20)) * 100,
-            ),
+            Math.floor((processed / (total || 20)) * 100),
             99,
           ),
         });
       }
 
       if (status === "completed") {
+        // Fetch job status if jobId is available to get resultSummary and similarQueries
+        let jobData = null;
+        if (jobId) {
+          try {
+            const jobRes = await getSearchJobStatus(jobId);
+            jobData = jobRes?.job || null;
+          } catch (e) {
+            console.warn("Could not fetch job status:", e.message);
+          }
+        }
+
+        const limitToRequest = filters.maxResults
+          ? Math.max(Number(filters.maxResults), 1)
+          : 50;
+
         // Final results from the results endpoint
-        return await getQueryResults({ ...filters, limit: 10000 });
+        const queryRes = await getQueryResults({
+          ...filters,
+          limit: limitToRequest,
+        });
+
+        const videoResults =
+          Array.isArray(jobData?.searchResults) &&
+          jobData.searchResults.length > 0
+            ? jobData.searchResults.slice(0, limitToRequest)
+            : Array.isArray(queryRes?.results) && queryRes.results.length > 0
+              ? queryRes.results.slice(0, limitToRequest)
+              : [];
+
+        const similarQueries =
+          jobData?.resultSummary?.similarQueries ||
+          queryRes?.similarQueries ||
+          [];
+
+        const unfilteredDbCount =
+          jobData?.resultSummary?.unfilteredDbCount !== undefined
+            ? jobData.resultSummary.unfilteredDbCount
+            : queryRes?.unfilteredDbCount !== undefined
+              ? queryRes.unfilteredDbCount
+              : 0;
+
+        return {
+          ...queryRes,
+          results: videoResults,
+          job: jobData,
+          resultSummary: jobData?.resultSummary || {
+            count: videoResults.length,
+            message:
+              videoResults.length > 0
+                ? "Search completed successfully"
+                : "No videos found",
+            similarQueries,
+            unfilteredDbCount,
+          },
+          similarQueries,
+          unfilteredDbCount,
+        };
       }
 
       if (status === "failed") {
@@ -100,6 +164,8 @@ export const getYouTubeResults = async (filters) => {
       "/query/search",
       {
         query: Array.isArray(filters.query) ? filters.query : [filters.query], // send as array
+        originalQuery: filters.originalQuery || filters.saveAsQuery || undefined,
+        saveAsQuery: filters.saveAsQuery || filters.originalQuery || undefined,
         minViews: filters.minViews,
         minSubscribers: filters.minSubscribers,
         regionCode: filters.regionCode,
@@ -113,9 +179,8 @@ export const getYouTubeResults = async (filters) => {
     );
 
     if (res.status === 202 && (res.data.jobId || res.data.progressId)) {
-      // Use progressId if available, fallback to jobId
       return await pollSearchJob(
-        res.data.progressId || res.data.jobId,
+        { progressId: res.data.progressId, jobId: res.data.jobId },
         filters,
         filters.onProgress,
       );
@@ -188,26 +253,30 @@ export const getcsvResults = async (filters) => {
 
 export const getLatestQueryByUserId = async (userId) => {
   try {
-    const res = await api.get(`/recent-keywords/latest-query/${userId}`);
-    return res.data.query;
+    const res = await api.get(`/recent-keywords/latest-query/${userId}`, {
+      skipToast: true,
+    });
+    return res.data?.query || null;
   } catch (error) {
-    console.error(
-      "Error fetching latest query:",
+    console.warn(
+      "Latest query not available:",
       error.response?.data || error.message,
     );
-    throw error;
+    return null;
   }
 };
 
 export const getRecentTenQueries = async (userId) => {
   try {
-    const res = await api.get(`/recent-keywords/ten-list/${userId}`);
-    return res.data.queries;
+    const res = await api.get(`/recent-keywords/ten-list/${userId}`, {
+      skipToast: true,
+    });
+    return res.data?.queries || [];
   } catch (error) {
-    console.error(
-      "Error fetching ten list:",
+    console.warn(
+      "Recent queries not available:",
       error.response?.data || error.message,
     );
-    throw error;
+    return [];
   }
 };

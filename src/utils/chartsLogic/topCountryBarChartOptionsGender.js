@@ -75,14 +75,16 @@ export const topCountryBarChartOptions = (
     type: "bar",
     height: 400,
     toolbar: { show: false },
+    background: "transparent",
   },
+  theme: { mode: "dark" },
   series: [
     {
       name: activeMetric,
       data: seriesData,
     },
   ],
- 
+
   colors: categories.map((g) => colorMap[g] || "#999"),
   dataLabels: {
     enabled: true,
@@ -105,15 +107,25 @@ export const topCountryBarChartOptions = (
       borderRadius: 6,
       distributed: true,
       dataLabels: {
-        position: 'top', // top, center, bottom
+        position: 'top',
       },
     },
   },
+  grid: {
+    borderColor: "rgba(255,255,255,0.10)",
+    strokeDashArray: 4,
+  },
   xaxis: {
     categories,
+    labels: {
+      style: {
+        fontSize: "12px",
+      },
+    },
   },
   yaxis: {
     labels: {
+      style: { colors: ["#94a3b8"] },
       formatter: (val) => {
         if (activeMetric === "Impressions") {
           return Math.round(val);
@@ -124,6 +136,7 @@ export const topCountryBarChartOptions = (
   },
 
   tooltip: {
+    theme: "dark",
     y: {
       formatter: (val) =>
         activeMetric === "Impressions"

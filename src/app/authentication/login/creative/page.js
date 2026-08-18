@@ -22,45 +22,66 @@ const Page = () => {
   }
 
   return (
- <main className="auth-creative-wrapper">
-      <div className="auth-creative-inner">
-        <div className="creative-card-wrapper">
-          <div >
-            <div className="row flex-1 g-0">
-              {/* Left Side - 70% White Background with Image */}
-                 <div className="col-lg-7 d-md-block d-sm-none order-0 order-lg-0">
-                             <div className="d-flex align-items-center justify-content-center p-5">
-                               <Image
-                                 width={800}
-                                 height={399}
-                                 sizes="100vw"
-                                 src="/images/dashboard_logo1.png"
-             
-                                 alt="img"
-                                 className="img-fluid"
-                               />
-                             </div>
-                           </div>
-             
-
-              {/* Right Side - 30% with Login Form */}
-              <div className="col-lg-5 h-100 my-auto order-1 order-lg-1 position-relative">
-                {/* Logo positioned at top center */}
-                <div className="text-center pt-4 pb-3">
-                   <img
-                    src="/images/automate360.png"
-                    alt="logo"
+    <main className="auth-creative-wrapper">
+      <div className="auth-creative-inner" style={{ minHeight: "100vh", backgroundColor: "#FFFFFF" }}>
+        <div className="creative-card-wrapper" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <div className="row flex-1 g-0" style={{ flex: 1, minHeight: "100vh", alignItems: "stretch" }}>
+              {/* Left Side - 70% White Background with Centered Image */}
+              <div
+                className="col-lg-7 d-none d-lg-flex align-items-center justify-content-center order-0"
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  padding: "40px",
+                }}
+              >
+                <div className="w-100 d-flex align-items-center justify-content-center">
+                  <Image
+                    width={800}
+                    height={399}
+                    src="/images/dashboard_logo1.png"
+                    alt="Showcase image"
                     className="img-fluid"
-                    style={{ width: '240px', marginBottom: '30' }}
+                    style={{
+                      maxHeight: "85vh",
+                      objectFit: "contain",
+                      margin: "auto",
+                    }}
                   />
                 </div>
+              </div>
 
-                {/* Login Form */}
-                <div className="creative-card-body card-body px-4 pb-5">
-                  <LoginForm
-                    registerPath={"/authentication/register/creative"}
-                    resetPath={"/authentication/reset/creative"}
-                  />
+              {/* Right Side - 30% with Login Form */}
+              <div
+                className="col-lg-5 col-12 order-1 position-relative d-flex align-items-center justify-content-center"
+                style={{
+                  backgroundColor: "var(--page-bg)",
+                  minHeight: "100vh",
+                  padding: "40px 20px",
+                  transition: "background-color 0.25s ease",
+                }}
+              >
+                <div style={{ width: "100%", maxWidth: "440px", margin: "auto" }}>
+                  {/* Logo */}
+                  <div className="text-center pb-3">
+                    <img
+                      src="/images/login_logo.png"
+                      alt="logo"
+                      className="img-fluid app-auth-logo"
+                      style={{
+                        width: "210px",
+                        filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.08))",
+                      }}
+                    />
+                  </div>
+
+                  {/* Login Form */}
+                  <div className="creative-card-body card-body p-0">
+                    <LoginForm
+                      registerPath={"/authentication/register/creative"}
+                      resetPath={"/authentication/reset/creative"}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

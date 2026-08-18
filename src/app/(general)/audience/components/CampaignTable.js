@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Table } from "react-bootstrap";
 import {
   Eye,
   ThumbsUp,
@@ -10,8 +9,8 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Star,
   Trash,
+  Film,
 } from "lucide-react";
 import { deleteCampaignData } from "@/services/campaignData";
 
@@ -78,13 +77,83 @@ function CampaignTable({ selectedAudience, campaignData }) {
   return (
     <div
       style={{
-        backgroundColor: "#ffffff",
-        borderRadius: "12px",
+        backgroundColor: "var(--card-bg)",
+        borderRadius: "16px",
         overflow: "hidden",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        border: "1px solid #e9ecef",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)",
+        border: "1px solid var(--card-border)",
+        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
+      {/* Card Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "18px 22px 16px",
+          borderBottom: "1px solid var(--card-border)",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #2563EB 0%, #6366F1 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(37,99,235,0.3)",
+              flexShrink: 0,
+            }}
+          >
+            <Film size={18} color="white" />
+          </div>
+          <div>
+            <h6
+              style={{
+                margin: 0,
+                fontWeight: "800",
+                fontSize: "0.95rem",
+                color: "var(--text-primary)",
+                letterSpacing: "-0.2px",
+              }}
+            >
+              Video Data
+            </h6>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "0.75rem",
+                color: "var(--text-secondary)",
+                fontWeight: "500",
+              }}
+            >
+              Audience campaign videos
+            </p>
+          </div>
+        </div>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            padding: "5px 14px",
+            borderRadius: "20px",
+            backgroundColor: "rgba(37, 99, 235, 0.1)",
+            color: "#3B82F6",
+            fontWeight: "700",
+            fontSize: "0.8rem",
+            border: "1px solid rgba(37, 99, 235, 0.2)",
+          }}
+        >
+          {videos.length} {videos.length === 1 ? "video" : "videos"}
+        </span>
+      </div>
+
       <div
         className="table-responsive"
         style={{ overflowX: "auto", width: "100%", maxWidth: "100%" }}
@@ -92,52 +161,53 @@ function CampaignTable({ selectedAudience, campaignData }) {
         <table
           style={{
             width: "100%",
-            borderCollapse: "collapse",
+            borderCollapse: "separate",
+            borderSpacing: "0",
             tableLayout: "fixed",
           }}
         >
           <thead>
             <tr
               style={{
-                backgroundColor: "#f8f9fa",
-                borderBottom: "2px solid #dee2e6",
+                backgroundColor: "var(--table-header-bg)",
+                borderBottom: "2px solid var(--table-border)",
               }}
             >
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "left",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
-                  width: "15%",
+                  width: "18%",
                 }}
               >
                 Video
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "left",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
-                  width: "11%",
+                  width: "12%",
                 }}
               >
                 Channel
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "left",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   width: "11%",
@@ -147,11 +217,11 @@ function CampaignTable({ selectedAudience, campaignData }) {
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "left",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   width: "10%",
@@ -161,39 +231,39 @@ function CampaignTable({ selectedAudience, campaignData }) {
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "left",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
-                  width: "10%",
+                  width: "9%",
                 }}
               >
                 Likes
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "left",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
-                  width: "10%",
+                  width: "9%",
                 }}
               >
                 Comments
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "left",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   width: "11%",
@@ -203,11 +273,11 @@ function CampaignTable({ selectedAudience, campaignData }) {
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "left",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   width: "8%",
@@ -217,42 +287,42 @@ function CampaignTable({ selectedAudience, campaignData }) {
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "center",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
-                  width: "5%",
+                  width: "6%",
                 }}
               >
                 Region
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "center",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
-                  width: "9%",
+                  width: "8%",
                 }}
               >
                 ER Rate
               </th>
               <th
                 style={{
-                  padding: "14px",
+                  padding: "16px 14px",
                   textAlign: "center",
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   fontWeight: "700",
-                  color: "#495057",
+                  color: "var(--text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
-                  width: "9%",
+                  width: "8%",
                 }}
               >
                 ACTION
@@ -267,32 +337,33 @@ function CampaignTable({ selectedAudience, campaignData }) {
                   style={{
                     textAlign: "center",
                     padding: "60px 20px",
-                    borderBottom: "1px solid #dee2e6",
+                    borderBottom: "none",
                   }}
                 >
                   <div>
                     <AlertCircle
-                      size={48}
-                      style={{ color: "#dee2e6", marginBottom: "16px" }}
+                      size={44}
+                      style={{ color: "var(--text-secondary)", opacity: 0.3, marginBottom: "16px" }}
                     />
                     <h5
                       style={{
-                        color: "#6c757d",
+                        color: "var(--text-secondary)",
                         fontWeight: "500",
                         marginBottom: "8px",
-                        fontSize: "1.1rem",
+                        fontSize: "0.95rem",
                       }}
                     >
                       No videos found
                     </h5>
                     <p
                       style={{
-                        color: "#adb5bd",
+                        color: "var(--text-secondary)",
+                        opacity: 0.7,
                         marginBottom: "0",
-                        fontSize: "0.95rem",
+                        fontSize: "0.85rem",
                       }}
                     >
-                      No campaign data available
+                      No campaign video data available for this audience.
                     </p>
                   </div>
                 </td>
@@ -301,24 +372,12 @@ function CampaignTable({ selectedAudience, campaignData }) {
 
             {paginatedVideos.map((v, idx) => (
               <tr
-                key={v.videoId}
-                style={{
-                  borderBottom: "1px solid #e9ecef",
-                  transition: "background-color 0.2s ease",
-                  backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#f0f4ff")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    idx % 2 === 0 ? "#ffffff" : "#f8f9fa")
-                }
+                key={v.videoId || idx}
+                className="app-table-row"
               >
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     minWidth: 0,
                   }}
@@ -337,21 +396,21 @@ function CampaignTable({ selectedAudience, campaignData }) {
                       width={48}
                       height={36}
                       style={{
-                        borderRadius: "4px",
+                        borderRadius: "8px",
                         objectFit: "cover",
                         flexShrink: 0,
-                        border: "1px solid #e9ecef",
+                        border: "1px solid var(--card-border)",
                       }}
                     />
                     <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
                       <div
                         style={{
-                          fontWeight: "500",
-                          color: "#1a1a1a",
+                          fontWeight: "600",
+                          color: "var(--text-primary)",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
-                          marginBottom: "4px",
+                          marginBottom: "2px",
                           fontSize: "0.85rem",
                         }}
                         title={v.title}
@@ -364,7 +423,8 @@ function CampaignTable({ selectedAudience, campaignData }) {
                         rel="noopener noreferrer"
                         style={{
                           fontSize: "0.75rem",
-                          color: "#0d6efd",
+                          color: "#3B82F6",
+                          fontWeight: "600",
                           textDecoration: "none",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -379,7 +439,7 @@ function CampaignTable({ selectedAudience, campaignData }) {
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     minWidth: 0,
                   }}
@@ -394,20 +454,20 @@ function CampaignTable({ selectedAudience, campaignData }) {
                   >
                     <div
                       style={{
-                        width: "32px",
-                        height: "32px",
+                        width: "30px",
+                        height: "30px",
                         borderRadius: "50%",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        backgroundColor: "#e9ecef",
-                        fontWeight: "600",
-                        fontSize: "0.8rem",
-                        color: "#495057",
+                        backgroundColor: "rgba(59, 130, 246, 0.15)",
+                        fontWeight: "700",
+                        fontSize: "0.78rem",
+                        color: "#3B82F6",
                         flexShrink: 0,
                       }}
                     >
-                      {v.channelName.charAt(0).toUpperCase()}
+                      {v.channelName ? v.channelName.charAt(0).toUpperCase() : "C"}
                     </div>
                     <span
                       style={{
@@ -415,7 +475,8 @@ function CampaignTable({ selectedAudience, campaignData }) {
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                         fontSize: "0.85rem",
-                        color: "#1a1a1a",
+                        fontWeight: "600",
+                        color: "var(--text-primary)",
                         minWidth: 0,
                       }}
                       title={v.channelName}
@@ -426,54 +487,33 @@ function CampaignTable({ selectedAudience, campaignData }) {
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     minWidth: 0,
                   }}
                 >
-                  <div
+                  <span
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      minWidth: 0,
+                      display: "inline-block",
+                      padding: "3px 10px",
+                      borderRadius: "20px",
+                      backgroundColor: "rgba(37, 99, 235, 0.12)",
+                      color: "#3B82F6",
+                      fontSize: "0.78rem",
+                      fontWeight: "700",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
+                    title={v.query}
                   >
-                    <div
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "#e7f1ff",
-                        fontWeight: "600",
-                        fontSize: "0.75rem",
-                        color: "#0d6efd",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {v.query.charAt(0).toUpperCase()}
-                    </div>
-                    <span
-                      style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        fontSize: "0.85rem",
-                        color: "#1a1a1a",
-                        minWidth: 0,
-                      }}
-                      title={v.query}
-                    >
-                      {v.query}
-                    </span>
-                  </div>
+                    {v.query}
+                  </span>
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     minWidth: 0,
                   }}
@@ -486,14 +526,14 @@ function CampaignTable({ selectedAudience, campaignData }) {
                     }}
                   >
                     <Eye
-                      size={12}
-                      style={{ color: "#6c757d", flexShrink: 0 }}
+                      size={14}
+                      style={{ color: "#3B82F6", flexShrink: 0 }}
                     />
                     <span
                       style={{
-                        fontSize: "0.8rem",
-                        color: "#1a1a1a",
-                        fontWeight: "500",
+                        fontSize: "0.82rem",
+                        color: "var(--text-primary)",
+                        fontWeight: "600",
                       }}
                     >
                       {Number(v.views).toLocaleString()}
@@ -502,7 +542,7 @@ function CampaignTable({ selectedAudience, campaignData }) {
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     minWidth: 0,
                   }}
@@ -515,14 +555,14 @@ function CampaignTable({ selectedAudience, campaignData }) {
                     }}
                   >
                     <ThumbsUp
-                      size={12}
-                      style={{ color: "#6c757d", flexShrink: 0 }}
+                      size={14}
+                      style={{ color: "#3B82F6", flexShrink: 0 }}
                     />
                     <span
                       style={{
-                        fontSize: "0.8rem",
-                        color: "#1a1a1a",
-                        fontWeight: "500",
+                        fontSize: "0.82rem",
+                        color: "var(--text-primary)",
+                        fontWeight: "600",
                       }}
                     >
                       {Number(v.likes).toLocaleString()}
@@ -531,7 +571,7 @@ function CampaignTable({ selectedAudience, campaignData }) {
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     minWidth: 0,
                   }}
@@ -544,14 +584,14 @@ function CampaignTable({ selectedAudience, campaignData }) {
                     }}
                   >
                     <MessageCircle
-                      size={12}
-                      style={{ color: "#6c757d", flexShrink: 0 }}
+                      size={14}
+                      style={{ color: "#3B82F6", flexShrink: 0 }}
                     />
                     <span
                       style={{
-                        fontSize: "0.8rem",
-                        color: "#1a1a1a",
-                        fontWeight: "500",
+                        fontSize: "0.82rem",
+                        color: "var(--text-primary)",
+                        fontWeight: "600",
                       }}
                     >
                       {Number(v.comments).toLocaleString()}
@@ -560,7 +600,7 @@ function CampaignTable({ selectedAudience, campaignData }) {
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     minWidth: 0,
                   }}
@@ -573,23 +613,23 @@ function CampaignTable({ selectedAudience, campaignData }) {
                     }}
                   >
                     <Users
-                      size={12}
-                      style={{ color: "#6c757d", flexShrink: 0 }}
+                      size={14}
+                      style={{ color: "#3B82F6", flexShrink: 0 }}
                     />
                     <span
                       style={{
-                        fontSize: "0.8rem",
-                        color: "#1a1a1a",
-                        fontWeight: "500",
+                        fontSize: "0.82rem",
+                        color: "var(--text-primary)",
+                        fontWeight: "600",
                       }}
                     >
-                      {Number(v.subscribers).toLocaleString()}
+                      {Number(v.subscriberCount).toLocaleString()}
                     </span>
                   </div>
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     minWidth: 0,
                   }}
@@ -597,265 +637,248 @@ function CampaignTable({ selectedAudience, campaignData }) {
                   <span
                     style={{
                       fontSize: "0.8rem",
-                      color: "#6c757d",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      display: "block",
+                      color: "var(--text-secondary)",
+                      fontWeight: "500",
                     }}
                   >
-                    {new Date(v.publishedDate).toLocaleDateString()}
+                    {v.publishedAt ? v.publishedAt.split("T")[0] : "-"}
                   </span>
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     textAlign: "center",
-                    minWidth: 0,
                   }}
                 >
                   <span
                     style={{
-                      display: "inline-block",
-                      padding: "3px 8px",
-                      backgroundColor: "#e9ecef",
-                      color: "#495057",
-                      borderRadius: "12px",
-                      fontSize: "0.7rem",
-                      fontWeight: "500",
-                      whiteSpace: "nowrap",
+                      fontSize: "0.8rem",
+                      fontWeight: "700",
+                      color: "var(--text-primary)",
                     }}
                   >
-                    {v.regionCode}
+                    {v.region || "US"}
                   </span>
                 </td>
                 <td
                   style={{
-                    padding: "12px",
+                    padding: "14px 12px",
                     verticalAlign: "middle",
                     textAlign: "center",
-                    minWidth: 0,
                   }}
                 >
-                  <div
+                  <span
                     style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "2px",
+                      fontSize: "0.8rem",
+                      fontWeight: "700",
+                      color: "#10B981",
                     }}
                   >
-                    {[1, 2, 3, 4, 5].map((i) => {
-                      const rating = v.erBySubscribers || 0;
-
-                      const starColor =
-                        rating >= i
-                          ? rating === 1
-                            ? "#ff6b6b"
-                            : rating === 2
-                              ? "#fd7e14"
-                              : rating === 3
-                                ? "#a1e57b"
-                                : rating === 4
-                                  ? "#28a745"
-                                  : "#006400"
-                          : "#dee2e6";
-
-                      return (
-                        <Star
-                          key={i}
-                          size={16}
-                          color={starColor}
-                          fill={starColor}
-                        />
-                      );
-                    })}
-                  </div>
+                    {v.erRate ? `${v.erRate}%` : "0%"}
+                  </span>
                 </td>
-                <td style={{ textAlign: "center" }}>
-                  <div
+                <td
+                  style={{
+                    padding: "14px 12px",
+                    verticalAlign: "middle",
+                    textAlign: "center",
+                  }}
+                >
+                  <button
                     onClick={() => handleDelete(v)}
-                    title="Remove from campaign"
+                    title="Delete Video from Audience"
                     style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "8px",
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      backgroundColor: "var(--card-bg)",
+                      color: "#EF4444",
                       display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      width: "34px",
-                      height: "34px",
-                      borderRadius: "8px",
-                      background: "#ffeaea",
                       cursor: "pointer",
                       transition: "all 0.2s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#ff4d4f";
-                      e.currentTarget.style.transform = "scale(1.1)";
+                      e.currentTarget.style.backgroundColor = "#EF4444";
+                      e.currentTarget.style.color = "#FFFFFF";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "#ffeaea";
-                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.backgroundColor = "var(--card-bg)";
+                      e.currentTarget.style.color = "#EF4444";
                     }}
                   >
-                    <Trash size={16} color="#ff4d4f" />
-                  </div>
+                    <Trash size={14} />
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Pagination */}
+        {/* Pagination Section */}
         {videos.length > 0 && (
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
+              flexDirection: "row",
+              justifyContent: "center",
               alignItems: "center",
-              padding: "20px",
-              backgroundColor: "#f8f9fa",
-              borderTop: "1px solid #dee2e6",
+              padding: "18px 24px",
+              backgroundColor: "var(--card-bg)",
+              borderTop: "1px solid var(--card-border)",
+              gap: "20px",
               flexWrap: "wrap",
-              gap: "12px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "0.9rem", color: "#6c757d" }}>
-                Showing <strong>{startIndex + 1}</strong>-
-                <strong>{Math.min(endIndex, videos.length)}</strong> of{" "}
-                <strong>{videos.length}</strong>
-              </span>
+            {/* Count Info */}
+            <span
+              style={{
+                fontSize: "0.83rem",
+                color: "var(--text-secondary)",
+                fontWeight: "500",
+              }}
+            >
+              Showing{" "}
+              <strong style={{ color: "var(--text-primary)" }}>{startIndex + 1}</strong>–
+              <strong style={{ color: "var(--text-primary)" }}>{Math.min(endIndex, videos.length)}</strong>{" "}
+              of{" "}
+              <strong style={{ color: "var(--text-primary)" }}>{videos.length}</strong>
+            </span>
+
+            {/* Pagination Buttons */}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              {/* First */}
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--card-border)",
+                  backgroundColor: currentPage === 1 ? "var(--table-header-bg)" : "var(--card-bg)",
+                  color: currentPage === 1 ? "var(--text-secondary)" : "var(--text-primary)",
+                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
+                  opacity: currentPage === 1 ? 0.5 : 1,
+                  transition: "all 0.15s ease",
+                }}
+              >«</button>
+
+              {/* Prev */}
+              <button
+                onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                disabled={currentPage === 1}
+                style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--card-border)",
+                  backgroundColor: currentPage === 1 ? "var(--table-header-bg)" : "var(--card-bg)",
+                  color: currentPage === 1 ? "var(--text-secondary)" : "var(--text-primary)",
+                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: currentPage === 1 ? 0.5 : 1,
+                  transition: "all 0.15s ease",
+                }}
+              ><ChevronLeft size={14} /></button>
+
+              {/* Current Page */}
+              <span
+                style={{
+                  minWidth: "34px",
+                  height: "34px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "linear-gradient(135deg, #2563EB 0%, #6366F1 100%)",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.85rem",
+                  fontWeight: "700",
+                  padding: "0 10px",
+                  boxShadow: "0 2px 8px rgba(37,99,235,0.35)",
+                }}
+              >{currentPage} / {totalPages}</span>
+
+              {/* Next */}
+              <button
+                onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--card-border)",
+                  backgroundColor: currentPage === totalPages ? "var(--table-header-bg)" : "var(--card-bg)",
+                  color: currentPage === totalPages ? "var(--text-secondary)" : "var(--text-primary)",
+                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: currentPage === totalPages ? 0.5 : 1,
+                  transition: "all 0.15s ease",
+                }}
+              ><ChevronRight size={14} /></button>
+
+              {/* Last */}
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--card-border)",
+                  backgroundColor: currentPage === totalPages ? "var(--table-header-bg)" : "var(--card-bg)",
+                  color: currentPage === totalPages ? "var(--text-secondary)" : "var(--text-primary)",
+                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
+                  opacity: currentPage === totalPages ? 0.5 : 1,
+                  transition: "all 0.15s ease",
+                }}
+              >»</button>
             </div>
 
-            <nav aria-label="Page navigation">
-              <ul className="pagination pagination-sm mb-0">
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                    title="First page"
-                  >
-                    «
-                  </button>
-                </li>
-
-                <li
-                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() =>
-                      handlePageChange(Math.max(currentPage - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    title="Previous page"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                </li>
-
-                {(() => {
-                  const pages = [];
-                  const maxVisible = 5;
-
-                  if (totalPages <= maxVisible + 2) {
-                    for (let i = 1; i <= totalPages; i++) {
-                      pages.push(i);
-                    }
-                  } else {
-                    if (currentPage <= 3) {
-                      for (let i = 1; i <= 4; i++) pages.push(i);
-                      pages.push("...");
-                      pages.push(totalPages);
-                    } else if (currentPage >= totalPages - 2) {
-                      pages.push(1);
-                      pages.push("...");
-                      for (let i = totalPages - 3; i <= totalPages; i++)
-                        pages.push(i);
-                    } else {
-                      pages.push(1);
-                      pages.push("...");
-                      for (let i = currentPage - 1; i <= currentPage + 1; i++)
-                        pages.push(i);
-                      pages.push("...");
-                      pages.push(totalPages);
-                    }
-                  }
-
-                  return pages.map((page, idx) => {
-                    if (page === "...") {
-                      return (
-                        <li
-                          key={`ellipsis-${idx}`}
-                          className="page-item disabled"
-                        >
-                          <span className="page-link">...</span>
-                        </li>
-                      );
-                    }
-                    return (
-                      <li
-                        key={page}
-                        className={`page-item ${
-                          currentPage === page ? "active" : ""
-                        }`}
-                      >
-                        <button
-                          className="page-link"
-                          onClick={() => handlePageChange(page)}
-                        >
-                          {page}
-                        </button>
-                      </li>
-                    );
-                  });
-                })()}
-
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() =>
-                      handlePageChange(Math.min(currentPage + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    title="Next page"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </li>
-
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                    title="Last page"
-                  >
-                    »
-                  </button>
-                </li>
-              </ul>
-            </nav>
-
-            <div className="d-flex align-items-center gap-2">
-              <label htmlFor="jumpToPage" className="mb-0 text-muted small">
-                Go to page:
+            {/* Go to page */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <label
+                htmlFor="aud-jumpToPage"
+                style={{
+                  fontSize: "0.82rem",
+                  color: "var(--text-secondary)",
+                  fontWeight: "600",
+                  margin: 0,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Go to:
               </label>
               <input
-                id="jumpToPage"
+                id="aud-jumpToPage"
                 type="number"
-                className="form-control form-control-sm"
-                style={{ width: "70px" }}
+                className="app-input"
+                style={{
+                  width: "65px",
+                  padding: "5px 8px",
+                  fontSize: "0.82rem",
+                  textAlign: "center",
+                  color: "var(--text-primary)",
+                }}
                 min="1"
                 max={totalPages}
                 placeholder={currentPage.toString()}

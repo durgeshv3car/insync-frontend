@@ -3,19 +3,17 @@ import React, { useEffect, useState } from "react";
 import {
   Search,
   Eye,
-  ThumbsUp,
-  MessageCircle,
   Globe,
   Calendar,
   Users,
   AlertCircle,
   Filter,
   BookOpen,
+  ExternalLink,
+  Database,
+  Sparkles,
 } from "lucide-react";
 import { getYouTubeResults } from "@/services/youtube";
-import PageHeader from "@/components/shared/pageHeader/PageHeader";
-import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
-import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -55,126 +53,46 @@ const AILoader = ({ realProgress }) => {
   }, [realProgress]);
 
   return (
-    <div
-      className="d-flex flex-column justify-content-center align-items-center vh-100"
-      style={{ background: "#f8f9fa" }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "450px",
-          padding: "40px",
-          textAlign: "center",
-        }}
-      >
+    <div className="ai-loader-wrapper">
+      <div className="ai-loader-card">
         {/* Animated AI Brain Icon */}
-        <div style={{ marginBottom: "30px", position: "relative" }}>
-          <div
-            className="ai-loader-pulse"
-            style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "20px",
-              background: "linear-gradient(135deg, #031035 0%, #081947 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto",
-              boxShadow: "0 10px 25px rgba(3, 16, 53, 0.2)",
-            }}
-          >
-            <Search color="white" size={32} />
+        <div className="ai-loader-icon-wrap">
+          <div className="ai-loader-pulse">
+            <Search color="#ffffff" size={32} />
           </div>
         </div>
 
-        <h4
-          style={{ fontWeight: "700", color: "#031035", marginBottom: "10px" }}
-        >
+        <h4 className="ai-loader-title">
           AI Search in Progress
         </h4>
-        <p
-          style={{
-            color: "#64748b",
-            fontSize: "0.95rem",
-            marginBottom: "10px",
-            height: "1.5rem",
-          }}
-        >
+        <p className="ai-loader-status">
           {statuses[statusIndex]}
         </p>
 
         {realProgress && (
-          <div style={{ marginBottom: "20px" }}>
-            <span
-              style={{
-                fontSize: "1.2rem",
-                fontWeight: "800",
-                color: "#1e293b",
-                background: "#f1f5f9",
-                padding: "4px 12px",
-                borderRadius: "20px",
-                border: "1px solid #e2e8f0",
-              }}
-            >
+          <div className="ai-loader-counter-box">
+            <span className="ai-loader-counter-badge">
               {realProgress.processed} / {realProgress.total}
             </span>
-            <div
-              style={{
-                fontSize: "0.75rem",
-                color: "#64748b",
-                marginTop: "8px",
-                fontWeight: "600",
-                letterSpacing: "0.5px",
-              }}
-            >
+            <div className="ai-loader-counter-label">
               Videos Processed
             </div>
           </div>
         )}
 
         {/* Progress Bar Container */}
-        <div
-          style={{
-            width: "100%",
-            height: "10px",
-            backgroundColor: "#e9ecef",
-            borderRadius: "10px",
-            overflow: "hidden",
-            marginBottom: "15px",
-            position: "relative",
-          }}
-        >
+        <div className="ai-loader-track">
           {/* Progress Bar Fill */}
           <div
-            style={{
-              width: `${progress}%`,
-              height: "100%",
-              background: "linear-gradient(90deg, #031035, #081947)",
-              borderRadius: "10px",
-              transition: "width 0.3s ease-out",
-              position: "relative",
-            }}
+            className="ai-loader-fill"
+            style={{ width: `${progress}%` }}
           >
             {/* Shimmer effect */}
-            <div
-              className="ai-loader-shimmer"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background:
-                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
-              }}
-            />
+            <div className="ai-loader-shimmer" />
           </div>
         </div>
 
-        <div
-          className="d-flex justify-content-between"
-          style={{ fontSize: "0.85rem", fontWeight: "600", color: "#6c757d" }}
-        >
+        <div className="ai-loader-meta">
           <span>{Math.round(progress)}% Complete</span>
           <span>Please wait...</span>
         </div>
@@ -187,6 +105,12 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [similarQueries, setSimilarQueries] = useState([]);
+  const [allSuggestions, setAllSuggestions] = useState([]);
+  const [originalQuery, setOriginalQuery] = useState("");
+  const [triedQueries, setTriedQueries] = useState(new Set());
+  const [unfilteredDbCount, setUnfilteredDbCount] = useState(0);
+  const [hasSearched, setHasSearched] = useState(false);
   const [filters, setFilters] = useState({
     query: "",
     regionCode: "IN",
@@ -195,8 +119,6 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
     maxResults: "100",
     sortBy: "relevance",
     dateRange: "none",
-    startDate: "",
-    endDate: "",
     userId: "",
   });
 
@@ -210,20 +132,51 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
 
   const [jobProgress, setJobProgress] = useState(null);
 
-  const fetchVideos = async () => {
+  const fetchVideos = async (overrideQuery, isFromSuggestion = false) => {
+    const currentQuery =
+      typeof overrideQuery === "string" ? overrideQuery : filters.query;
+
+    const effectiveOriginalQuery = isFromSuggestion
+      ? originalQuery || filters.query
+      : currentQuery;
+
+    const activeFilters = {
+      ...filters,
+      query: currentQuery,
+      originalQuery: effectiveOriginalQuery,
+      saveAsQuery: effectiveOriginalQuery,
+    };
+    if (typeof overrideQuery === "string") {
+      setFilters((prev) => ({ ...prev, query: overrideQuery }));
+    }
+
+    if (!isFromSuggestion) {
+      setOriginalQuery(currentQuery);
+      setTriedQueries(new Set());
+      setAllSuggestions([]);
+    } else {
+      setTriedQueries((prev) => {
+        const next = new Set(prev);
+        if (currentQuery) next.add(currentQuery.trim().toLowerCase());
+        return next;
+      });
+    }
+
     setLoading(true);
+    setHasSearched(true);
     setJobProgress({
       processed: 0,
-      total: filters.maxResults || 100,
+      total: activeFilters.maxResults || 100,
       percent: 0,
     });
     try {
       const res = await getYouTubeResults({
-        ...filters,
+        ...activeFilters,
         onProgress: (prog) => {
           setJobProgress(prog);
         },
       });
+      console.log("Response", res);
 
       // Smooth completion: Slide to 100% before closing
       setJobProgress((prev) => ({
@@ -233,21 +186,66 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
       }));
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      if (res && Array.isArray(res.data)) {
-        setVideos(res.data);
-      } else if (res.results) {
-        setVideos(res.results);
-      }
+      const videoList =
+        res?.results || (Array.isArray(res?.data) ? res.data : []);
+      const suggestions =
+        res?.similarQueries ||
+        res?.resultSummary?.similarQueries ||
+        [];
+      const countInDb =
+        res?.unfilteredDbCount !== undefined
+          ? res.unfilteredDbCount
+          : res?.resultSummary?.unfilteredDbCount !== undefined
+            ? res.resultSummary.unfilteredDbCount
+            : 0;
 
-      // Redirect to youtube-data page after getting all data
-      if (
-        res &&
-        (res.data || res.results) &&
-        (res.data?.length > 0 || res.results?.length > 0)
-      ) {
+      if (videoList.length > 0) {
+        setVideos(videoList);
+        setSimilarQueries([]);
+        setAllSuggestions([]);
+        setUnfilteredDbCount(0);
+
+        // Directly redirect to YouTube Data page with priority IDs on top
+        const processedIds = videoList
+          .map((v) => v._id || v.videoId)
+          .filter(Boolean)
+          .join(",");
+
+        const targetQueryForRedirect = effectiveOriginalQuery || currentQuery;
+
         const queryParams = new URLSearchParams();
-        if (filters.query) queryParams.set("query", filters.query);
+        if (targetQueryForRedirect)
+          queryParams.set("query", targetQueryForRedirect);
+        if (
+          activeFilters.regionCode &&
+          activeFilters.regionCode !== "none" &&
+          activeFilters.regionCode !== "all"
+        )
+          queryParams.set("regionCode", activeFilters.regionCode);
+        if (activeFilters.sortBy)
+          queryParams.set("sortBy", activeFilters.sortBy);
+        if (activeFilters.dateRange && activeFilters.dateRange !== "none")
+          queryParams.set("dateRange", activeFilters.dateRange);
+        if (activeFilters.minViews && Number(activeFilters.minViews) > 0)
+          queryParams.set("minViews", activeFilters.minViews);
+        if (
+          activeFilters.minSubscribers &&
+          Number(activeFilters.minSubscribers) > 0
+        )
+          queryParams.set("minSubscribers", activeFilters.minSubscribers);
+        if (processedIds) queryParams.set("priorityIds", processedIds);
+
         router.push(`/youtube-data?${queryParams.toString()}`);
+        return;
+      } else {
+        // Zero videos found -> Stay on keyword search page and show suggestions
+        setVideos([]);
+        setAllSuggestions((prev) => {
+          if (prev && prev.length > 0) return prev;
+          return suggestions;
+        });
+        setSimilarQueries(suggestions);
+        setUnfilteredDbCount(countInDb);
       }
     } catch (error) {
       console.error("Error fetching YouTube results:", error);
@@ -255,8 +253,25 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
     setLoading(false);
   };
 
+  const handleViewUnfilteredData = () => {
+    const targetQuery = originalQuery || filters.query;
+    if (!targetQuery) return;
+    router.push(`/youtube-data?query=${encodeURIComponent(targetQuery)}`);
+  };
+
+  const handleSuggestedQueryClick = (suggestedTerm) => {
+    setFilters((prev) => ({ ...prev, query: suggestedTerm }));
+    fetchVideos(suggestedTerm, true);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "query") {
+      setOriginalQuery("");
+      setTriedQueries(new Set());
+      setAllSuggestions([]);
+    }
 
     // Constraint for maxResults
     if (name === "maxResults") {
@@ -273,11 +288,6 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
     fetchVideos();
   };
 
-  const formatNumber = (num) => {
-    if (!num) return "0";
-    return Number(num).toLocaleString();
-  };
-
   if (loading) {
     return <AILoader realProgress={jobProgress} />;
   }
@@ -286,100 +296,53 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
     <div style={{ minHeight: "100vh" }}>
       <div>
         {/* Filter Card */}
-        {/* <div style={{ marginBottom: "40px", paddingTop: "20px" }}>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: "8px", color: "#1a1a1a" }}>
-            YouTube Search Query
-          </h1>
- 
-        </div> */}
-
-        {/* Filter Card */}
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "12px",
-            padding: "24px",
-            marginBottom: "30px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
-            marginTop: "16px",
-          }}
-        >
+        <div className="app-search-card">
           <div
             style={{
-              marginBottom: "16px",
+              marginBottom: "20px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
-            <h6
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#1a1a1a",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                margin: 0,
-              }}
-            >
-              Keyword Search Filters
-            </h6>
-
-            <div
-              style={{
-                display: "inline-flex",
-                backgroundColor: "#f1f5f9",
-                padding: "3px",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0",
-                height: "36px",
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
+                display: "flex",
                 alignItems: "center",
-              }}
-            >
+                justifyContent: "center",
+                color: "#ffffff",
+                boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
+              }}>
+                <Filter size={16} />
+              </div>
+              <h6
+                style={{
+                  fontSize: "0.875rem",
+                  fontWeight: "700",
+                  color: "var(--text-primary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.6px",
+                  margin: 0,
+                }}
+              >
+                Keyword Search Filters
+              </h6>
+            </div>
+
+            <div className="app-toggle-pill">
               <button
                 onClick={() => setSearchType("keyword")}
-                className="btn-sm"
-                style={{
-                  padding: "4px 16px",
-                  borderRadius: "10px",
-                  border: "none",
-                  fontSize: "0.75rem",
-                  fontWeight: "750",
-                  backgroundColor:
-                    searchType === "keyword" ? "#ffffff" : "transparent",
-                  color: searchType === "keyword" ? "#0d6efd" : "#64748b",
-                  boxShadow:
-                    searchType === "keyword"
-                      ? "0 2px 6px rgba(0,0,0,0.1)"
-                      : "none",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  transform:
-                    searchType === "keyword" ? "scale(1.02)" : "scale(1)",
-                }}
+                className={`app-toggle-btn ${searchType === "keyword" ? "active" : ""}`}
               >
                 Keyword
               </button>
               <button
                 onClick={() => setSearchType("channel")}
-                className="btn-sm"
-                style={{
-                  padding: "4px 16px",
-                  borderRadius: "10px",
-                  border: "none",
-                  fontSize: "0.75rem",
-                  fontWeight: "750",
-                  backgroundColor:
-                    searchType === "channel" ? "#ffffff" : "transparent",
-                  color: searchType === "channel" ? "#0d6efd" : "#64748b",
-                  boxShadow:
-                    searchType === "channel"
-                      ? "0 2px 6px rgba(0,0,0,0.1)"
-                      : "none",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  transform:
-                    searchType === "channel" ? "scale(1.02)" : "scale(1)",
-                }}
+                className={`app-toggle-btn ${searchType === "channel" ? "active" : ""}`}
               >
                 Channel
               </button>
@@ -388,136 +351,57 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
 
           <div className="row g-3">
             <div className="col-lg-3">
-              <label
-                style={{
-                  padding: "0px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
+              <label className="app-search-label">
                 Search Query
               </label>
-              <div
-                className="input-group"
-                style={{
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  transition: "all 0.3s ease",
-                }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <Search size={16} style={{ color: "#6c757d" }} />
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Search size={16} />
                 </span>
                 <input
                   type="text"
                   name="query"
                   value={filters.query}
                   onChange={handleChange}
-                  className="form-control"
+                  className="app-input"
                   placeholder="Enter search terms..."
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "#0d6efd")}
-                  onBlur={(e) => (e.target.style.borderColor = "#dee2e6")}
                 />
               </div>
             </div>
 
             <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "0px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
+              <label className="app-search-label">
                 Region
               </label>
-              <div
-                className="input-group"
-                style={{ borderRadius: "6px", overflow: "hidden" }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <Globe size={16} style={{ color: "#6c757d" }} />
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Globe size={16} />
                 </span>
                 <input
                   type="text"
                   name="regionCode"
                   value={filters.regionCode}
                   onChange={handleChange}
-                  className="form-control"
+                  className="app-input"
                   placeholder="IN"
                   maxLength={2}
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                  }}
                 />
               </div>
             </div>
 
             <div className="col-lg-3">
-              <label
-                style={{
-                  padding: "0px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
+              <label className="app-search-label">
                 Sort By
               </label>
-              <div
-                className="input-group"
-                style={{ borderRadius: "6px", overflow: "hidden" }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <Filter size={16} style={{ color: "#6c757d" }} />
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Filter size={16} />
                 </span>
                 <select
                   name="sortBy"
                   value={filters.sortBy}
                   onChange={handleChange}
-                  className="form-select"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                  }}
+                  className="app-select"
                 >
                   <option value="relevance">Relevance</option>
                   <option value="popular">Popular</option>
@@ -527,72 +411,37 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
             </div>
 
             <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "0px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
+              <label className="app-search-label">
                 Min Views
               </label>
-              <input
-                type="number"
-                name="minViews"
-                value={filters.minViews}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="0"
-                style={{
-                  border: "1px solid #dee2e6",
-                  fontSize: "0.85rem",
-                  borderRadius: "6px",
-                  padding: "8px 12px",
-                }}
-              />
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Eye size={16} />
+                </span>
+                <input
+                  type="number"
+                  name="minViews"
+                  value={filters.minViews}
+                  onChange={handleChange}
+                  className="app-input"
+                  placeholder="0"
+                />
+              </div>
             </div>
 
             <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "0px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
+              <label className="app-search-label">
                 Min Subscribers
               </label>
-              <div
-                className="input-group"
-                style={{ borderRadius: "6px", overflow: "hidden" }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <Users size={16} style={{ color: "#6c757d" }} />
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Users size={16} />
                 </span>
                 <select
                   name="minSubscribers"
                   value={filters.minSubscribers}
                   onChange={handleChange}
-                  className="form-select"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                  }}
+                  className="app-select"
                 >
                   <option value="1000">1k</option>
                   <option value="10000">10k</option>
@@ -605,44 +454,20 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
               </div>
             </div>
 
-            <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "0px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
+            <div className="col-lg-3">
+              <label className="app-search-label">
                 Date filter Data
               </label>
-              <div
-                className="input-group"
-                style={{ borderRadius: "6px", overflow: "hidden" }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <Users size={16} style={{ color: "#6c757d" }} />
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Calendar size={16} />
                 </span>
                 <select
                   name="dateRange"
                   value={filters.dateRange}
                   onChange={handleChange}
-                  className="form-select"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                  }}
-                > 
+                  className="app-select"
+                >
                   <option value="none">None</option>
                   <option value="24h">Last 24 Hours</option>
                   <option value="7d">7 Days</option>
@@ -657,607 +482,306 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
             </div>
 
             <div className="col-lg-3">
-              <label
-                style={{
-                  padding: "0px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
+              <label className="app-search-label">
                 Max Results
               </label>
-              <div
-                className="input-group"
-                style={{ borderRadius: "6px", overflow: "hidden" }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <BookOpen size={16} style={{ color: "#6c757d" }} />
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <BookOpen size={16} />
                 </span>
                 <input
                   type="text"
                   name="maxResults"
                   value={filters.maxResults}
                   onChange={handleChange}
-                  className="form-control"
+                  className="app-input"
                   placeholder="200"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                  }}
                 />
               </div>
             </div>
 
             <div className="col-lg-2 d-flex align-items-end">
               <button
-                className="btn w-100"
+                className="app-btn-search w-100"
                 type="button"
                 disabled={loading}
                 onClick={handleSubmit}
-                style={{
-                  backgroundColor: loading ? "#e2e8f0" : "#0d6efd",
-                  color: loading ? "#94a3b8" : "#ffffff",
-                  border: "none",
-                  fontWeight: "750",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  fontSize: "0.95rem",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  boxShadow: loading
-                    ? "none"
-                    : "0 4px 12px rgba(13, 110, 253, 0.25)",
-                  transform: loading ? "scale(0.98)" : "scale(1)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading)
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading)
-                    e.currentTarget.style.transform = "translateY(0)";
-                }}
               >
+                <Search size={16} />
                 {loading ? "Searching..." : "Search"}
               </button>
             </div>
+          </div>
+        </div>
 
-            <div className="col-lg-4 d-flex align-items-end">
-              <div
+        {/* No Videos Found / Query Expansion Suggestions */}
+        {hasSearched && videos.length === 0 && !loading && (
+          <div
+            style={{
+              backgroundColor: "var(--card-bg, #1e293b)",
+              borderRadius: "16px",
+              padding: "24px 28px",
+              marginTop: "20px",
+              marginBottom: "24px",
+              border: "1px solid rgba(239, 68, 68, 0.25)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            }}
+          >
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <AlertCircle size={20} color="#ef4444" />
+              <h5
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  margin: 0,
+                  fontSize: "1.05rem",
+                  fontWeight: "700",
+                  color: "#ef4444",
                 }}
               >
-                <div className="d-flex">
-                  <p
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "#6c757d",
-                      marginBottom: "0",
-                    }}
-                  >
-                    {videos.length > 0
-                      ? `Showing ${videos.length} video${videos.length !== 1 ? "s" : ""}`
-                      : "No videos to display"}
-                  </p>
-                </div>
-              </div>
+                No videos found for &quot;{filters.query}&quot;
+              </h5>
             </div>
-          </div>
-        </div>
 
-        {/* Results Header */}
-      </div>
+            {(() => {
+              const suggestionsPool =
+                allSuggestions && allSuggestions.length > 0
+                  ? allSuggestions
+                  : similarQueries;
 
-      {/* Table Section */}
+              const displayedSuggestions = (suggestionsPool || []).filter(
+                (term) => {
+                  const label =
+                    typeof term === "object" && term !== null
+                      ? term.query ||
+                      term.variation ||
+                      term.search_variation ||
+                      term.search_query ||
+                      term.title ||
+                      term.keyword ||
+                      Object.values(term).find(
+                        (v) => typeof v === "string",
+                      ) ||
+                      ""
+                      : String(term || "");
 
-      <div className="mb-5">
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "12px",
-            overflow: "hidden",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
-          }}
-        >
-          <div
-            className="table-responsive"
-            style={{ overflowX: "auto", width: "100%", maxWidth: "100%" }}
-          >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                tableLayout: "fixed",
-              }}
-            >
-              <thead>
-                <tr
+                  const cleanLabel = label.trim().toLowerCase();
+                  if (!cleanLabel || cleanLabel === "[object object]")
+                    return false;
+                  if (triedQueries.has(cleanLabel)) return false;
+                  return true;
+                },
+              );
+
+              if (displayedSuggestions.length > 0) {
+                return (
+                  <div style={{ marginTop: "14px" }}>
+                    <div
+                      style={{
+                        fontSize: "0.9rem",
+                        fontWeight: "600",
+                        color: "var(--text-secondary, #94a3b8)",
+                        marginBottom: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <Sparkles size={16} color="#3b82f6" />
+                      <span>Suggested Search Keywords</span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "10px",
+                        alignItems: "center",
+                      }}
+                    >
+                      {displayedSuggestions.map((term, index) => {
+                        const label =
+                          typeof term === "object" && term !== null
+                            ? term.query ||
+                            term.variation ||
+                            term.search_variation ||
+                            term.search_query ||
+                            term.title ||
+                            term.keyword ||
+                            Object.values(term).find(
+                              (v) => typeof v === "string",
+                            ) ||
+                            ""
+                            : String(term || "");
+
+                        if (
+                          !label ||
+                          label === "[object Object]" ||
+                          label === "object Object"
+                        ) {
+                          return null;
+                        }
+
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleSuggestedQueryClick(label)}
+                            style={{
+                              background: "var(--card-bg, #ffffff)",
+                              border: "1.5px solid var(--card-border, #cbd5e1)",
+                              borderRadius: "24px",
+                              padding: "8px 16px",
+                              fontSize: "0.875rem",
+                              fontWeight: "600",
+                              color: "var(--text-primary, #1e293b)",
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = "#3b82f6";
+                              e.currentTarget.style.color = "#3b82f6";
+                              e.currentTarget.style.transform =
+                                "translateY(-2px)";
+                              e.currentTarget.style.boxShadow =
+                                "0 6px 14px rgba(37,99,235,0.2)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor =
+                                "var(--card-border, #cbd5e1)";
+                              e.currentTarget.style.color =
+                                "var(--text-primary, #1e293b)";
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow =
+                                "0 2px 6px rgba(0,0,0,0.04)";
+                            }}
+                          >
+                            <Search size={14} color="#3b82f6" />
+                            <span>{label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <p
                   style={{
-                    backgroundColor: "#f8f9fa",
-                    borderBottom: "2px solid #dee2e6",
+                    color: "var(--text-secondary, #94a3b8)",
+                    fontSize: "0.9rem",
+                    margin: "8px 0 0 0",
                   }}
                 >
-                  <th
-                    style={{
-                      padding: "10px 10px 10px 24px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "16%",
-                    }}
-                  >
-                    Video
-                  </th>
-                  <th
-                    style={{
-                      padding: "10px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "11%",
-                    }}
-                  >
-                    Channel
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "13%",
-                    }}
-                  >
-                    Views
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "12%",
-                    }}
-                  >
-                    Likes
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "12%",
-                    }}
-                  >
-                    Comments
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "13%",
-                    }}
-                  >
-                    Subscribers
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "10%",
-                    }}
-                  >
-                    Published
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px 24px 14px 14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "5%",
-                    }}
-                  >
-                    Region
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {videos.length === 0 && !loading && (
-                  <tr>
-                    <td
-                      colSpan="8"
-                      style={{
-                        textAlign: "center",
-                        padding: "60px 20px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      <div>
-                        <AlertCircle
-                          size={48}
-                          style={{ color: "#dee2e6", marginBottom: "16px" }}
-                        />
-                        <h5
-                          style={{
-                            color: "#6c757d",
-                            fontWeight: "500",
-                            marginBottom: "8px",
-                            fontSize: "1rem",
-                          }}
-                        >
-                          {filters.query
-                            ? "Try adjusting your search terms or filters"
-                            : "Enter a search query to find videos"}
-                        </h5>
-                      </div>
-                    </td>
-                  </tr>
-                )}
+                  Try adjusting your search terms, region, or subscriber/view filters.
+                </p>
+              );
+            })()}
 
-                {videos.map((v, idx) => (
-                  <tr
-                    key={v.videoId}
+            {/* Model/Card: Existing DB Data without these filters */}
+            {unfilteredDbCount > 0 && (
+              <div
+                style={{
+                  marginTop: "18px",
+                  padding: "16px 20px",
+                  backgroundColor: "var(--card-bg, #ffffff)",
+                  border: "1.5px solid rgba(37, 99, 235, 0.35)",
+                  borderRadius: "14px",
+                  boxShadow: "0 4px 14px rgba(37, 99, 235, 0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "14px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    flex: "1 1 300px",
+                  }}
+                >
+                  <div
                     style={{
-                      borderBottom: "1px solid #e9ecef",
-                      transition: "background-color 0.2s ease",
-                      backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
-                      cursor: "default",
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "10px",
+                      backgroundColor: "rgba(37, 99, 235, 0.15)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
                     }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f0f4ff")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor =
-                        idx % 2 === 0 ? "#ffffff" : "#f8f9fa")
-                    }
                   >
-                    <td
+                    <Database size={20} color="#3b82f6" />
+                  </div>
+                  <div>
+                    <div
                       style={{
-                        padding: "12px 12px 12px 24px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
+                        fontSize: "0.95rem",
+                        fontWeight: "700",
+                        color: "var(--text-primary, #1e293b)",
+                        marginBottom: "2px",
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          minWidth: 0,
-                        }}
-                      >
-                        <img
-                          src={v.thumbnail}
-                          alt={v.title}
-                          width={48}
-                          height={36}
-                          style={{
-                            borderRadius: "4px",
-                            objectFit: "cover",
-                            flexShrink: 0,
-                            border: "1px solid #e9ecef",
-                          }}
-                        />
-                        <div
-                          style={{ minWidth: 0, flex: 1, overflow: "hidden" }}
-                        >
-                          <div
-                            style={{
-                              fontWeight: "500",
-                              color: "#1a1a1a",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              marginBottom: "4px",
-                              fontSize: "0.85rem",
-                            }}
-                            title={v.title}
-                          >
-                            {v.title}
-                          </div>
-                          <a
-                            href={v.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              fontSize: "0.75rem",
-                              color: "#0d6efd",
-                              textDecoration: "none",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              display: "block",
-                            }}
-                          >
-                            Watch Video →
-                          </a>
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                          minWidth: 0,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "#e9ecef",
-                            fontWeight: "600",
-                            fontSize: "0.8rem",
-                            color: "#495057",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {v.channelName.charAt(0).toUpperCase()}
-                        </div>
-                        <span
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            fontSize: "0.85rem",
-                            color: "#1a1a1a",
-                            minWidth: 0,
-                          }}
-                          title={v.channelName}
-                        >
-                          {v.channelName}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <Eye
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {formatNumber(v.views)}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <ThumbsUp
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {formatNumber(v.likes)}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <MessageCircle
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {formatNumber(v.comments)}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <Users
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {formatNumber(v.subscribers)}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "#6c757d",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          display: "block",
-                        }}
-                      >
-                        {new Date(v.publishedDate).toLocaleDateString()}
+                      <span>
+                        <strong>{unfilteredDbCount}</strong> video{unfilteredDbCount !== 1 ? "s" : ""} already present for &quot;{originalQuery || filters.query}&quot; in the database without these filters
                       </span>
-                    </td>
-                    <td
+                    </div>
+                    <div
                       style={{
-                        padding: "12px 24px 12px 12px",
-                        verticalAlign: "middle",
-                        textAlign: "center",
-                        minWidth: 0,
+                        fontSize: "0.8rem",
+                        color: "var(--text-secondary, #94a3b8)",
                       }}
                     >
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "3px 8px",
-                          backgroundColor: "#e9ecef",
-                          color: "#495057",
-                          borderRadius: "12px",
-                          fontSize: "0.7rem",
-                          fontWeight: "500",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {v.regionCode}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      You can view and analyze the previously saved videos directly on the YouTube Data page.
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleViewUnfilteredData}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "9px 18px",
+                    backgroundColor: "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)",
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1d4ed8";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(37, 99, 235, 0.35)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#2563eb";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow =
+                      "0 2px 8px rgba(37, 99, 235, 0.25)";
+                  }}
+                >
+                  <span>View in YouTube Data</span>
+                  <ExternalLink size={15} />
+                </button>
+              </div>
+            )}
           </div>
-
-          {videos.length > 0 && (
-            <div
-              style={{
-                padding: "16px",
-                backgroundColor: "#f8f9fa",
-                borderTop: "1px solid #dee2e6",
-                fontSize: "0.9rem",
-                color: "#6c757d",
-              }}
-            >
-              Showing <strong>{videos.length}</strong> video
-              {videos.length !== 1 ? "s" : ""}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

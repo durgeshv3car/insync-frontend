@@ -59,6 +59,7 @@ const YouTubeTable = () => {
   const [regions, setRegions] = useState([]);
   const [audienceId, setAudienceId] = useState(null);
   const [selectedData, setSelectedData] = useState([]);
+  const [similarQueries, setSimilarQueries] = useState([]);
   const regionCode = [
     { code: "IN", name: "India" },
     { code: "US", name: "United States" },
@@ -113,26 +114,26 @@ const YouTubeTable = () => {
       return isOldest ? (
         <ArrowDown size={12} style={{ color: "#0d6efd", marginLeft: "4px" }} />
       ) : (
-        <ArrowUp 
-          size={12} 
-          style={{ 
-            color: isActive ? "#0d6efd" : "#adb5bd", 
+        <ArrowUp
+          size={12}
+          style={{
+            color: isActive ? "#0d6efd" : "#adb5bd",
             marginLeft: "4px",
-            opacity: isActive ? 1 : 0.4 
-          }} 
+            opacity: isActive ? 1 : 0.4,
+          }}
         />
       );
     } else {
       isActive = filters.sortBy === field;
       return (
-        <ArrowUp 
-          size={12} 
-          style={{ 
-            color: isActive ? "#0d6efd" : "#adb5bd", 
+        <ArrowUp
+          size={12}
+          style={{
+            color: isActive ? "#0d6efd" : "#adb5bd",
             marginLeft: "4px",
             opacity: isActive ? 1 : 0.4,
-            transition: "all 0.2s ease"
-          }} 
+            transition: "all 0.2s ease",
+          }}
         />
       );
     }
@@ -175,17 +176,55 @@ const YouTubeTable = () => {
 
     setLoading(true);
     try {
-      const res = await getQueryResults(filters);
-      if (res && res.results) {
-        setVideos(res.results);
+      const priorityParam =
+        filters.priorityIds ||
+        searchParams.get("priorityIds") ||
+        searchParams.get("processedIds") ||
+        "";
+      const payload = {
+        ...filters,
+        priorityIds: priorityParam || undefined,
+      };
+
+      const res = await getQueryResults(payload);
+      if (res) {
+        let videoList = res.results || [];
+
+        // Ensure priority videos (processed by the latest query) appear on TOP, followed by remaining DB videos
+        if (priorityParam) {
+          const prioritySet = new Set(
+            priorityParam
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          );
+          if (prioritySet.size > 0) {
+            const topList = [];
+            const bottomList = [];
+            videoList.forEach((v) => {
+              if (
+                (v._id && prioritySet.has(String(v._id))) ||
+                (v.videoId && prioritySet.has(String(v.videoId)))
+              ) {
+                topList.push(v);
+              } else {
+                bottomList.push(v);
+              }
+            });
+            videoList = [...topList, ...bottomList];
+          }
+        }
+
+        setVideos(videoList);
         setCount(res.pagination?.totalCount || 0);
         setTotalPages(res.pagination?.totalPages || 0);
         setAnalytics(res.totals || {});
+        setSimilarQueries(res.similarQueries || []);
 
         // Update ID to videoId map
         setIdToVideoIdMap((prev) => {
           const newMap = { ...prev };
-          res.results.forEach((v) => {
+          videoList.forEach((v) => {
             if (v._id && v.videoId) {
               newMap[v._id] = v.videoId;
             }
@@ -198,6 +237,16 @@ const YouTubeTable = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSuggestedQueryClick = (suggestedTerm) => {
+    setQueryInput(suggestedTerm);
+    setFilters((prev) => ({
+      ...prev,
+      query: suggestedTerm,
+      page: 1,
+    }));
+    setCurrentPage(1);
   };
 
   const fetchRegions = async () => {
@@ -228,7 +277,7 @@ const YouTubeTable = () => {
         ...filters,
         selectedIds: selectedIds || undefined,
       };
-      
+
       const res = await getcsvResults(payload);
       setCsvVideos(res.results);
     } catch (error) {
@@ -260,9 +309,12 @@ const YouTubeTable = () => {
 
   useEffect(() => {
     if (status === "loading") return;
-    
+
     if (!session?.user?.id) {
-      console.warn("YouTube Data: No session user ID available.", { session, status });
+      console.warn("YouTube Data: No session user ID available.", {
+        session,
+        status,
+      });
       return;
     }
 
@@ -270,22 +322,37 @@ const YouTubeTable = () => {
       try {
         const uid = session.user.id;
         console.log("YouTube Data: Initializing queries for UserID:", uid);
-        
+
         const [latestRes, listRes] = await Promise.all([
           getLatestQueryByUserId(uid).catch((err) => {
-             console.error("YouTube Data: Latest query API failed:", err.message);
-             return null;
+            console.error(
+              "YouTube Data: Latest query API failed:",
+              err.message,
+            );
+            return null;
           }),
           getRecentTenQueries(uid).catch((err) => {
-             console.error("YouTube Data: Ten list API failed:", err.message);
-             return [];
+            console.error("YouTube Data: Ten list API failed:", err.message);
+            return [];
           }),
         ]);
 
-        console.log("YouTube Data: API Raw Response - Latest:", latestRes, "List:", listRes);
+        console.log(
+          "YouTube Data: API Raw Response - Latest:",
+          latestRes,
+          "List:",
+          listRes,
+        );
 
         const paramChannelName = searchParams.get("channelName");
         const paramQuery = searchParams.get("query");
+        const paramRegionCode = searchParams.get("regionCode");
+        const paramSortBy = searchParams.get("sortBy");
+        const paramMinViews = searchParams.get("minViews");
+        const paramMinSubscribers = searchParams.get("minSubscribers");
+        const paramDateRange = searchParams.get("dateRange");
+        const paramPriorityIds =
+          searchParams.get("priorityIds") || searchParams.get("processedIds");
 
         let finalQuery = "";
         let finalChannelName = "";
@@ -297,7 +364,10 @@ const YouTubeTable = () => {
           setQueryInput(finalQuery);
         } else {
           if (latestRes) {
-            finalQuery = typeof latestRes === 'string' ? latestRes : (latestRes.query || latestRes.text || "");
+            finalQuery =
+              typeof latestRes === "string"
+                ? latestRes
+                : latestRes.query || latestRes.text || "";
             setQueryInput(finalQuery);
           }
         }
@@ -307,6 +377,12 @@ const YouTubeTable = () => {
           ...prev,
           query: finalQuery,
           channelName: finalChannelName,
+          regionCode: paramRegionCode || prev.regionCode,
+          sortBy: paramSortBy || prev.sortBy,
+          minViews: paramMinViews || prev.minViews,
+          minSubscribers: paramMinSubscribers || prev.minSubscribers,
+          dateRange: paramDateRange || prev.dateRange,
+          priorityIds: paramPriorityIds || prev.priorityIds,
           userId: uid,
         }));
 
@@ -333,7 +409,18 @@ const YouTubeTable = () => {
       fetchRegions();
       setSelectedVideos(new Set());
     }
-  }, [isReady, filters.query, filters.channelName, filters.regionCode, filters.videoType, filters.sortBy, filters.page, filters.limit, filters.userId, filters.csvResults]);
+  }, [
+    isReady,
+    filters.query,
+    filters.channelName,
+    filters.regionCode,
+    filters.videoType,
+    filters.sortBy,
+    filters.page,
+    filters.limit,
+    filters.userId,
+    filters.csvResults,
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -381,9 +468,8 @@ const YouTubeTable = () => {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `youtube_results_${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
+    link.download = `youtube_results_${new Date().toISOString().split("T")[0]
+      }.csv`;
     link.click();
   };
 
@@ -405,8 +491,8 @@ const YouTubeTable = () => {
         </thead>
         <tbody>
           ${csvVideos
-            .map(
-              (v) => `
+        .map(
+          (v) => `
             <tr>
               <td>${v.title}</td>
               <td>${v.channelName}</td>
@@ -419,8 +505,8 @@ const YouTubeTable = () => {
               <td>${v.erBySubscribers}</td>
             </tr>
           `,
-            )
-            .join("")}
+        )
+        .join("")}
         </tbody>
       </table>
     `;
@@ -428,9 +514,8 @@ const YouTubeTable = () => {
     const blob = new Blob([table], { type: "application/vnd.ms-excel" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `youtube_results_${
-      new Date().toISOString().split("T")[0]
-    }.xls`;
+    link.download = `youtube_results_${new Date().toISOString().split("T")[0]
+      }.xls`;
     link.click();
   };
 
@@ -471,156 +556,112 @@ const YouTubeTable = () => {
   }, [selectedVideos]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-      }}
-    >
-      <PageHeader>{/* <PageHeaderDate /> */}</PageHeader>
-      <div className="container">
+    <div>
+      <div>
         {/* Filters Card */}
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "12px",
-            padding: "24px",
-            marginBottom: "30px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
-            marginTop: "16px",
-          }}
-        >
-          <div style={{ marginBottom: "16px" }}>
+        <div className="app-search-card">
+          <div
+            style={{
+              marginBottom: "20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#ffffff",
+                boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
+              }}
+            >
+              <Globe size={16} />
+            </div>
             <h6
               style={{
                 fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#1a1a1a",
+                fontWeight: "700",
+                color: "var(--text-primary)",
                 textTransform: "uppercase",
-                letterSpacing: "0.5px",
+                letterSpacing: "0.6px",
+                margin: 0,
               }}
             >
-              Search & Filter
+              Search & Filter Data
             </h6>
           </div>
 
           <div className="row g-3 align-items-start">
             <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "14px 0 10px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Channel Name
-              </label>
-              <div
-                className="input-group"
-                style={{ 
-                  borderRadius: "6px", 
-                  overflow: "hidden",
-                  transition: "box-shadow 0.3s ease, border-color 0.3s ease"
-                }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <Globe size={16} style={{ color: "#6c757d" }} />
+              <label className="app-search-label">Channel Name</label>
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Globe size={16} />
                 </span>
                 <input
                   type="text"
                   name="channelName"
                   value={channelNameInput}
                   onChange={handleChange}
-                  className="form-control"
+                  className="app-input"
                   placeholder="Search channel..."
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                    transition: "all 0.2s ease"
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = "#0d6efd"}
-                  onBlur={(e) => e.target.style.borderColor = "#dee2e6"}
                 />
               </div>
             </div>
 
-            <div className="col-lg-3" style={{ transition: "all 0.3s ease" }}>
-              <label
-                style={{
-                  padding: "14px 0 10px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                  transition: "color 0.2s"
-                }}
-              >
-                Search Query
-              </label>
-              <div 
-                className="input-group" 
-                style={{ 
-                  borderRadius: "6px", 
-                  overflow: "visible", 
-                  position: "relative",
-                  transition: "all 0.3s ease"
-                }} 
+            <div className="col-lg-3">
+              <label className="app-search-label">Search Query</label>
+              <div
+                className="app-input-group"
                 ref={historyRef}
+                style={{ position: "relative" }}
               >
-                <span 
-                  className="input-group-text" 
-                  style={{ 
-                    border: "1px solid #dee2e6", 
-                    backgroundColor: "#f8f9fa", 
-                    cursor: recentQueries.length > 0 ? "pointer" : "default" 
-                  }} 
-                  onClick={() => recentQueries.length > 0 && setShowHistory(!showHistory)}
+                <span
+                  className="app-input-addon"
+                  style={{
+                    cursor: recentQueries.length > 0 ? "pointer" : "default",
+                  }}
+                  onClick={() =>
+                    recentQueries.length > 0 && setShowHistory(!showHistory)
+                  }
                 >
-                  <Search size={16} style={{ color: "#6c757d" }} />
+                  <Search size={16} />
                 </span>
                 <input
                   type="text"
                   name="query"
                   value={queryInput}
                   autoComplete="off"
-                  onFocus={() => recentQueries.length > 0 && setShowHistory(true)}
+                  onFocus={() =>
+                    recentQueries.length > 0 && setShowHistory(true)
+                  }
                   onChange={handleChange}
-                  className="form-control"
+                  className="app-input"
                   placeholder="Search query..."
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                  }}
                 />
                 {showHistory && recentQueries.length > 0 && (
-                  <div style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    right: 0,
-                    backgroundColor: "#fff",
-                    border: "1px solid #dee2e6",
-                    borderRadius: "6px",
-                    boxShadow: "0 8px 16px rgba(0,0,0,0.15)",
-                    zIndex: 2000,
-                    marginTop: "4px",
-                    maxHeight: "250px",
-                    overflowY: "auto"
-                  }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      backgroundColor: "var(--card-bg)",
+                      border: "1px solid var(--card-border)",
+                      borderRadius: "10px",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+                      zIndex: 2000,
+                      marginTop: "4px",
+                      maxHeight: "250px",
+                      overflowY: "auto",
+                    }}
+                  >
                     {recentQueries.map((q, idx) => (
                       <div
                         key={idx}
@@ -629,19 +670,35 @@ const YouTubeTable = () => {
                           padding: "10px 15px",
                           fontSize: "0.85rem",
                           cursor: "pointer",
-                          backgroundColor: "#fff",
+                          color: "var(--text-primary)",
                           transition: "background-color 0.2s",
-                          borderBottom: idx === recentQueries.length - 1 ? "none" : "1px solid #f1f5f9",
+                          borderBottom:
+                            idx === recentQueries.length - 1
+                              ? "none"
+                              : "1px solid var(--card-border)",
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f8f9fa"}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
+                        onMouseOver={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          "var(--table-hover-bg)")
+                        }
+                        onMouseOut={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          "transparent")
+                        }
                         onClick={() => {
-                          setFilters(prev => ({ ...prev, query: q, page: 1 }));
+                          setFilters((prev) => ({
+                            ...prev,
+                            query: q,
+                            page: 1,
+                          }));
                           setQueryInput(q);
                           setShowHistory(false);
                         }}
                       >
-                        <i className="fa-solid fa-clock-rotate-left me-2 text-muted" style={{ fontSize: "0.75rem" }}></i>
+                        <i
+                          className="fa-solid fa-clock-rotate-left me-2 text-muted"
+                          style={{ fontSize: "0.75rem" }}
+                        ></i>
                         {q}
                       </div>
                     ))}
@@ -649,135 +706,83 @@ const YouTubeTable = () => {
                 )}
               </div>
             </div>
+
             <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Video Type
-              </label>
-              <select
-                name="videoType"
-                value={filters.videoType}
-                onChange={handleChange}
-                className="form-select"
-                style={{
-                  border: "1px solid #dee2e6",
-                  fontSize: "0.85rem",
-                  borderRadius: "6px",
-                  padding: "8px 12px",
-                }}
-              >
-                <option value="all">All</option>
-                <option value="long">Long</option>
-                <option value="short">Short</option>
-              </select>
+              <label className="app-search-label">Video Type</label>
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Video size={16} />
+                </span>
+                <select
+                  name="videoType"
+                  value={filters.videoType}
+                  onChange={handleChange}
+                  className="app-select"
+                >
+                  <option value="all">All</option>
+                  <option value="long">Long</option>
+                  <option value="short">Short</option>
+                </select>
+              </div>
             </div>
 
             <div className="col-lg-2">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Sort By
-              </label>
-              <select
-                name="sortBy"
-                value={filters.sortBy}
-                onChange={handleChange}
-                className="form-select"
-                style={{
-                  border: "1px solid #dee2e6",
-                  fontSize: "0.85rem",
-                  borderRadius: "6px",
-                  padding: "8px 12px",
-                }}
-              >
-                <option value="relevance">Relevance</option>
-                <option value="recent">Recent</option>
-                <option value="oldest">Oldest</option>
-                <option value="views">Views</option>
-                <option value="likes">Likes</option>
-                <option value="comments">Comments</option>
-                <option value="subscribers">Subscribers</option>
-                <option value="engagement">Engagement</option>
-                <option value="erscore">Top Rated</option>
-              </select>
+              <label className="app-search-label">Sort By</label>
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <TrendingUp size={16} />
+                </span>
+                <select
+                  name="sortBy"
+                  value={filters.sortBy}
+                  onChange={handleChange}
+                  className="app-select"
+                >
+                  <option value="relevance">Relevance</option>
+                  <option value="recent">Recent</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="views">Views</option>
+                  <option value="likes">Likes</option>
+                  <option value="comments">Comments</option>
+                  <option value="subscribers">Subscribers</option>
+                  <option value="engagement">Engagement</option>
+                  <option value="erscore">Top Rated</option>
+                </select>
+              </div>
             </div>
 
             <div className="col-lg-1">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Region
-              </label>
-              <select
-                name="regionCode"
-                value={filters.regionCode}
-                onChange={handleChange}
-                className="form-select"
-                style={{
-                  border: "1px solid #dee2e6",
-                  fontSize: "0.85rem",
-                  borderRadius: "6px",
-                  padding: "8px 12px",
-                }}
-              >
-                <option value="all">All</option>
-                {regions.map((code, idx) => (
-                  <option key={idx} value={code}>
-                    {code}
-                  </option>
-                ))}
-              </select>
+              <label className="app-search-label">Region</label>
+              <div className="app-input-group">
+                <select
+                  name="regionCode"
+                  value={filters.regionCode}
+                  onChange={handleChange}
+                  className="app-select"
+                  style={{ paddingLeft: "10px" }}
+                >
+                  <option value="all">All</option>
+                  {regions.map((code, idx) => (
+                    <option key={idx} value={code}>
+                      {code}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="col-lg-2">
-              <label
+              <label className="app-search-label">Filter Keywords</label>
+              <div
                 style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.80rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
-                Filters Keyword
-              </label>
-              <div 
-                style={{ 
-                  display: "flex", 
-                  flexWrap: "wrap", 
+                  display: "flex",
+                  flexWrap: "wrap",
                   gap: "6px",
                   padding: "6px 10px",
-                  backgroundColor: "#f8f9fa",
-                  borderRadius: "6px",
-                  border: "1px solid #dee2e6",
-                  minHeight: "38px",
+                  backgroundColor: "var(--input-bg)",
+                  borderRadius: "12px",
+                  border: "1px solid var(--input-border)",
+                  minHeight: "42px",
                   alignItems: "center",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   opacity: filters.query ? 1 : 0.6,
@@ -785,21 +790,36 @@ const YouTubeTable = () => {
               >
                 {/* "All" Chip */}
                 <div
-                  onClick={() => handleChange({ target: { name: "csvResults", value: "all" } })}
+                  onClick={() =>
+                    handleChange({
+                      target: { name: "csvResults", value: "all" },
+                    })
+                  }
                   style={{
-                    padding: "2px 10px",
+                    padding: "3px 12px",
                     borderRadius: "16px",
-                    fontSize: "0.7rem",
-                    fontWeight: "650",
+                    fontSize: "0.72rem",
+                    fontWeight: "700",
                     cursor: "pointer",
-                    backgroundColor: (filters.csvResults === "all" || !filters.csvResults) ? "#0d6efd" : "#ffffff",
-                    color: (filters.csvResults === "all" || !filters.csvResults) ? "#ffffff" : "#6c757d",
+                    backgroundColor:
+                      filters.csvResults === "all" || !filters.csvResults
+                        ? "#2563EB"
+                        : "transparent",
+                    color:
+                      filters.csvResults === "all" || !filters.csvResults
+                        ? "#ffffff"
+                        : "var(--text-secondary)",
                     border: "1px solid",
-                    borderColor: (filters.csvResults === "all" || !filters.csvResults) ? "#0d6efd" : "#dee2e6",
+                    borderColor:
+                      filters.csvResults === "all" || !filters.csvResults
+                        ? "#2563EB"
+                        : "var(--card-border)",
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     userSelect: "none",
-                    transform: (filters.csvResults === "all" || !filters.csvResults) ? "scale(1.05)" : "scale(1)",
-                    boxShadow: (filters.csvResults === "all" || !filters.csvResults) ? "0 2px 5px rgba(13, 110, 253, 0.2)" : "none"
+                    boxShadow:
+                      filters.csvResults === "all" || !filters.csvResults
+                        ? "0 2px 8px rgba(37,99,235,0.3)"
+                        : "none",
                   }}
                 >
                   All
@@ -815,22 +835,31 @@ const YouTubeTable = () => {
                     return (
                       <div
                         key={idx}
-                        onClick={() => handleChange({ target: { name: "csvResults", value: q.toLowerCase() } })}
+                        onClick={() =>
+                          handleChange({
+                            target: {
+                              name: "csvResults",
+                              value: q.toLowerCase(),
+                            },
+                          })
+                        }
                         style={{
-                          padding: "2px 10px",
+                          padding: "3px 12px",
                           borderRadius: "16px",
-                          fontSize: "0.7rem",
-                          fontWeight: "650",
+                          fontSize: "0.72rem",
+                          fontWeight: "700",
                           cursor: "pointer",
-                          backgroundColor: isActive ? "#0d6efd" : "#ffffff",
-                          color: isActive ? "#ffffff" : "#6c757d",
+                          backgroundColor: isActive ? "#2563EB" : "transparent",
+                          color: isActive ? "#ffffff" : "var(--text-secondary)",
                           border: "1px solid",
-                          borderColor: isActive ? "#0d6efd" : "#dee2e6",
+                          borderColor: isActive
+                            ? "#2563EB"
+                            : "var(--card-border)",
                           transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                           userSelect: "none",
-                          transform: isActive ? "scale(1.05)" : "scale(1)",
-                          boxShadow: isActive ? "0 2px 5px rgba(13, 110, 253, 0.2)" : "none",
-                          animation: "appear 0.3s ease-out"
+                          boxShadow: isActive
+                            ? "0 2px 8px rgba(37,99,235,0.3)"
+                            : "none",
                         }}
                       >
                         {q}
@@ -841,29 +870,28 @@ const YouTubeTable = () => {
             </div>
           </div>
 
-          {/* Result Actions Bar (Left Aligned) */}
-          <div 
-            className="mt-4 d-flex align-items-center flex-wrap gap-3"
-            style={{ borderTop: "none" }}
-          >
+          {/* Result Actions Bar */}
+          <div className="mt-4 d-flex align-items-center flex-wrap gap-3">
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                padding: "6px 14px",
-                backgroundColor: "#f0f4ff",
-                borderRadius: "8px",
+                padding: "8px 16px",
+                backgroundColor: "rgba(37,99,235,0.12)",
+                borderRadius: "10px",
                 fontSize: "0.85rem",
-                border: "1px solid #d0e2ff",
-                color: "#0d6efd",
-                fontWeight: "700"
+                border: "1px solid rgba(37,99,235,0.25)",
+                color: "#3B82F6",
+                fontWeight: "700",
               }}
             >
               <Users size={16} style={{ marginRight: "8px" }} />
               {count > 0 ? (
                 <span>
-                  Showing {Math.min((currentPage - 1) * filters.limit + 1, count)}-
-                  {Math.min(currentPage * filters.limit, count)} of {count.toLocaleString()} 
+                  Showing{" "}
+                  {Math.min((currentPage - 1) * filters.limit + 1, count)}-
+                  {Math.min(currentPage * filters.limit, count)} of{" "}
+                  {count.toLocaleString()}
                 </span>
               ) : (
                 "No videos to display"
@@ -876,66 +904,96 @@ const YouTubeTable = () => {
                 onClick={downloadCSV}
                 title="Download CSV"
                 style={{
-                  backgroundColor: "#ffffff",
-                  color: "#0d6efd",
-                  border: "1px solid #0d6efd",
-                  borderRadius: "8px",
-                  padding: "6px 16px",
+                  backgroundColor: "var(--card-bg)",
+                  color: "#3B82F6",
+                  border: "1px solid #3B82F6",
+                  borderRadius: "10px",
+                  padding: "8px 16px",
                   fontSize: "0.8rem",
-                  fontWeight: "600",
+                  fontWeight: "700",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transition: "all 0.2s",
-                  width: "95px"
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#0d6efd"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; e.currentTarget.style.color = "#0d6efd"; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#2563EB";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--card-bg)";
+                  e.currentTarget.style.color = "#3B82F6";
+                }}
               >
-                <Download size={14} style={{ marginRight: "6px" }} />
+                <Download
+                  size={15}
+                  color="currentColor"
+                  strokeWidth={2.2}
+                  style={{ marginRight: "6px", color: "inherit" }}
+                />
                 CSV
               </button>
+
               <button
                 className="btn btn-sm"
                 onClick={downloadExcel}
                 title="Download Excel"
                 style={{
-                  backgroundColor: "#ffffff",
-                  color: "#0d6efd",
-                  border: "1px solid #0d6efd",
-                  borderRadius: "8px",
-                  padding: "6px 16px",
+                  backgroundColor: "var(--card-bg)",
+                  color: "#3B82F6",
+                  border: "1px solid #3B82F6",
+                  borderRadius: "10px",
+                  padding: "8px 16px",
                   fontSize: "0.8rem",
-                  fontWeight: "600",
+                  fontWeight: "700",
                   display: "flex",
                   alignItems: "center",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#0d6efd"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; e.currentTarget.style.color = "#0d6efd"; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#2563EB";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--card-bg)";
+                  e.currentTarget.style.color = "#3B82F6";
+                }}
               >
-                <Download size={14} style={{ marginRight: "6px" }} />
+                <Download
+                  size={15}
+                  color="currentColor"
+                  strokeWidth={2.2}
+                  style={{ marginRight: "6px", color: "inherit" }}
+                />
                 Excel
               </button>
+
               {audienceId && (
                 <button
                   className="btn btn-sm"
                   onClick={AddToCampaign}
                   style={{
-                    backgroundColor: "#198754",
+                    background:
+                      "linear-gradient(135deg, #10B981 0%, #059669 100%)",
                     color: "#ffffff",
                     border: "none",
-                    borderRadius: "8px",
-                    padding: "6px 16px",
+                    borderRadius: "10px",
+                    padding: "8px 18px",
                     fontSize: "0.8rem",
-                    fontWeight: "600",
+                    fontWeight: "700",
                     display: "flex",
                     alignItems: "center",
-                    transition: "all 0.2s",
-                    boxShadow: "0 2px 4px rgba(25, 135, 84, 0.2)"
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#157347"}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#198754"}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.transform = "translateY(-1px)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.transform = "translateY(0)")
+                  }
                 >
                   <Star size={14} style={{ marginRight: "6px" }} />
                   Add To Campaign
@@ -953,18 +1011,18 @@ const YouTubeTable = () => {
             justifyContent: "space-between",
             alignItems: "center",
           }}
-        >
-        </div>
-
+        ></div>
 
         {/* Table Section */}
         <div
           style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "12px",
+            backgroundColor: "var(--card-bg)",
+            borderRadius: "16px",
             overflow: "hidden",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
+            boxShadow:
+              "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)",
+            border: "1px solid var(--card-border)",
+            transition: "background-color 0.25s ease, border-color 0.25s ease",
           }}
         >
           <div
@@ -982,17 +1040,17 @@ const YouTubeTable = () => {
               <thead>
                 <tr
                   style={{
-                    backgroundColor: "#f8f9fa",
-                    borderBottom: "2px solid #dee2e6",
+                    backgroundColor: "var(--table-header-bg)",
+                    borderBottom: "2px solid var(--table-border)",
                   }}
                 >
                   <th
                     style={{
                       padding: "14px",
                       textAlign: "center",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "4%",
@@ -1000,6 +1058,7 @@ const YouTubeTable = () => {
                   >
                     <input
                       type="checkbox"
+                      className="custom-checkbox"
                       checked={
                         videos.length > 0 &&
                         videos
@@ -1019,9 +1078,9 @@ const YouTubeTable = () => {
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "16%",
@@ -1033,9 +1092,9 @@ const YouTubeTable = () => {
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "10%",
@@ -1047,9 +1106,9 @@ const YouTubeTable = () => {
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "10%",
@@ -1062,9 +1121,9 @@ const YouTubeTable = () => {
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "8%",
@@ -1072,7 +1131,13 @@ const YouTubeTable = () => {
                       userSelect: "none",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Views {getSortIcon("views")}
                     </div>
                   </th>
@@ -1081,9 +1146,9 @@ const YouTubeTable = () => {
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "8%",
@@ -1091,7 +1156,13 @@ const YouTubeTable = () => {
                       userSelect: "none",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Likes {getSortIcon("likes")}
                     </div>
                   </th>
@@ -1100,9 +1171,9 @@ const YouTubeTable = () => {
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "11%",
@@ -1110,7 +1181,13 @@ const YouTubeTable = () => {
                       userSelect: "none",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Comments {getSortIcon("comments")}
                     </div>
                   </th>
@@ -1119,9 +1196,9 @@ const YouTubeTable = () => {
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "13%",
@@ -1129,7 +1206,13 @@ const YouTubeTable = () => {
                       userSelect: "none",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Subscribers {getSortIcon("subscribers")}
                     </div>
                   </th>
@@ -1138,9 +1221,9 @@ const YouTubeTable = () => {
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       width: "11%",
@@ -1148,52 +1231,69 @@ const YouTubeTable = () => {
                       userSelect: "none",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       Published {getSortIcon("published")}
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort("engagement")}
                     style={{
                       padding: "14px",
                       textAlign: "left",
-                      fontSize: "0.8rem",
+                      fontSize: "0.75rem",
                       fontWeight: "700",
-                      color: "#495057",
+                      color: "var(--text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
-                      width: "10%",
-                      cursor: "pointer",
-                      userSelect: "none",
+                      width: "9%",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
-                      ER Rate {getSortIcon("engagement")}
-                    </div>
+                    Region
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {/* Skeleton Loader Rows */}
-                {loading && (
+                {loading &&
                   Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={`skeleton-${i}`} style={{ borderBottom: "1px solid #e9ecef" }}>
-                      {["5%", "18%", "12%", "12%", "8%", "8%", "8%", "8%", "8%", "9%"].map((w, j) => (
+                    <tr
+                      key={`skeleton-${i}`}
+                      style={{ borderBottom: "1px solid var(--table-border)" }}
+                    >
+                      {[
+                        "5%",
+                        "18%",
+                        "12%",
+                        "12%",
+                        "8%",
+                        "8%",
+                        "8%",
+                        "8%",
+                        "8%",
+                        "9%",
+                      ].map((w, j) => (
                         <td key={j} style={{ padding: "14px 12px", width: w }}>
-                          <div style={{
-                            height: j === 1 ? "36px" : "14px",
-                            borderRadius: "6px",
-                            background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-                            backgroundSize: "200% 100%",
-                            animation: "shimmer 1.4s infinite",
-                            width: j === 0 ? "18px" : "85%",
-                            margin: j === 0 ? "0 auto" : "0",
-                          }} />
+                          <div
+                            style={{
+                              height: j === 1 ? "36px" : "14px",
+                              borderRadius: "6px",
+                              background:
+                                "linear-gradient(90deg, var(--skeleton-base, #1e293b) 25%, var(--skeleton-highlight, #334155) 50%, var(--skeleton-base, #1e293b) 75%)",
+                              backgroundSize: "200% 100%",
+                              animation: "shimmer 1.4s infinite",
+                              width: j === 0 ? "18px" : "85%",
+                              margin: j === 0 ? "0 auto" : "0",
+                            }}
+                          />
                         </td>
                       ))}
                     </tr>
-                  ))
-                )}
+                  ))}
 
                 {/* Empty State */}
                 {videos.length === 0 && !loading && (
@@ -1202,531 +1302,615 @@ const YouTubeTable = () => {
                       colSpan="11"
                       style={{
                         textAlign: "center",
-                        padding: "60px 20px",
+                        padding: "50px 20px",
                         borderBottom: "1px solid #dee2e6",
                       }}
                     >
-                      <div>
+                      <div style={{ maxWidth: "600px", margin: "0 auto" }}>
                         <AlertCircle
-                          size={48}
-                          style={{ color: "#dee2e6", marginBottom: "16px" }}
+                          size={44}
+                          style={{ color: "#ef4444", marginBottom: "14px" }}
                         />
                         <h5
                           style={{
-                            color: "#6c757d",
-                            fontWeight: "500",
-                            marginBottom: "8px",
-                            fontSize: "1.1rem",
+                            color: "#1e293b",
+                            fontWeight: "700",
+                            marginBottom: "6px",
+                            fontSize: "1.15rem",
                           }}
                         >
-                          No videos found
+                          No videos found {filters.query ? `for "${filters.query}"` : ""}
                         </h5>
-                        <p
-                          style={{
-                            color: "#adb5bd",
-                            marginBottom: "0",
-                            fontSize: "0.95rem",
-                          }}
-                        >
-                          {filters.query
-                            ? "Try adjusting your search terms or filters"
-                            : "Enter a search query to find videos"}
-                        </p>
+
+                        {similarQueries && similarQueries.length > 0 ? (
+                          <div style={{ marginTop: "18px" }}>
+                            <p
+                              style={{
+                                color: "#64748b",
+                                marginBottom: "12px",
+                                fontSize: "0.95rem",
+                                fontWeight: "600",
+                              }}
+                            >
+                              Did you mean?
+                            </p>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: "8px",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                            >
+                              {similarQueries.map((term, index) => {
+                                const label =
+                                  typeof term === "object" && term !== null
+                                    ? term.query ||
+                                      term.variation ||
+                                      term.search_variation ||
+                                      term.search_query ||
+                                      term.title ||
+                                      term.keyword ||
+                                      Object.values(term).find(
+                                        (v) => typeof v === "string",
+                                      ) ||
+                                      ""
+                                    : String(term || "");
+
+                                if (
+                                  !label ||
+                                  label === "[object Object]" ||
+                                  label === "object Object"
+                                ) {
+                                  return null;
+                                }
+
+                                return (
+                                  <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() =>
+                                      handleSuggestedQueryClick(label)
+                                    }
+                                    style={{
+                                      background: "#f8fafc",
+                                      border: "1.5px solid #cbd5e1",
+                                      borderRadius: "20px",
+                                      padding: "6px 14px",
+                                      fontSize: "0.85rem",
+                                      fontWeight: "600",
+                                      color: "#1e293b",
+                                      cursor: "pointer",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "6px",
+                                      transition: "all 0.2s ease",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.borderColor =
+                                        "#3b82f6";
+                                      e.currentTarget.style.color = "#2563eb";
+                                      e.currentTarget.style.backgroundColor =
+                                        "#eff6ff";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.borderColor =
+                                        "#cbd5e1";
+                                      e.currentTarget.style.color = "#1e293b";
+                                      e.currentTarget.style.backgroundColor =
+                                        "#f8fafc";
+                                    }}
+                                  >
+                                    <Search size={13} color="#3b82f6" />
+                                    <span>{label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <p
+                            style={{
+                              color: "#94a3b8",
+                              marginBottom: "0",
+                              fontSize: "0.9rem",
+                              marginTop: "8px",
+                            }}
+                          >
+                            {filters.query
+                              ? "Try adjusting your search terms or filter parameters"
+                              : "Enter a search query to find videos"}
+                          </p>
+                        )}
                       </div>
                     </td>
                   </tr>
                 )}
 
-                {!loading && videos.map((v, idx) => (
-                  <tr
-                    key={v.videoId}
-                    onClick={() => handleVideoSelect(v._id)}
-                    style={{
-                      borderBottom: "1px solid #e9ecef",
-                      transition: "background-color 0.2s ease",
-                      backgroundColor: selectedVideos.has(v._id)
-                        ? "#f0f4ff"
-                        : idx % 2 === 0
-                          ? "#ffffff"
-                          : "#f8f9fa",
-                      cursor: "default",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f0f4ff")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor =
-                        idx % 2 === 0 ? "#ffffff" : "#f8f9fa")
-                    }
-                  >
-                    <td
+                {!loading &&
+                  videos.map((v, idx) => (
+                    <tr
+                      key={v.videoId}
+                      onClick={() => handleVideoSelect(v._id)}
+                      className="app-table-row"
                       style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        textAlign: "center",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        cursor: "pointer",
+                        backgroundColor: selectedVideos.has(v._id)
+                          ? "var(--table-hover-bg)"
+                          : "transparent",
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedVideos.has(v._id)}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={() => handleVideoSelect(v._id)}
+                      <td
                         style={{
-                          width: "18px",
-                          height: "18px",
-                          cursor: "pointer",
-                        }}
-                      />
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          maxWidth: "100%",
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
-                        <img
-                          src={v.thumbnail}
-                          alt={v.title}
-                          width={48}
-                          height={36}
+                        <input
+                          type="checkbox"
+                          className="custom-checkbox"
+                          checked={selectedVideos.has(v._id)}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={() => handleVideoSelect(v._id)}
                           style={{
-                            borderRadius: "4px",
-                            objectFit: "cover",
-                            flexShrink: 0,
-                            border: "1px solid #e9ecef",
+                            width: "18px",
+                            height: "18px",
+                            cursor: "pointer",
                           }}
                         />
+                      </td>
+                      <td
+                        style={{
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          maxWidth: "0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
                         <div
-                          style={{ flex: 1, minWidth: 0, overflow: "hidden" }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            maxWidth: "100%",
+                          }}
+                        >
+                          <img
+                            src={v.thumbnail}
+                            alt={v.title}
+                            width={48}
+                            height={36}
+                            style={{
+                              borderRadius: "6px",
+                              objectFit: "cover",
+                              flexShrink: 0,
+                              border: "1px solid var(--card-border)",
+                            }}
+                          />
+                          <div
+                            style={{ flex: 1, minWidth: 0, overflow: "hidden" }}
+                          >
+                            <div
+                              style={{
+                                fontWeight: "600",
+                                color: "var(--text-primary)",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                marginBottom: "4px",
+                                fontSize: "0.85rem",
+                              }}
+                              title={v.title}
+                            >
+                              {v.title}
+                            </div>
+                            <a
+                              href={v.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                fontSize: "0.75rem",
+                                color: "#3B82F6",
+                                textDecoration: "none",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                display: "block",
+                                fontWeight: 600,
+                              }}
+                            >
+                              Watch Video →
+                            </a>
+                          </div>
+                        </div>
+                      </td>
+                      <td
+                        style={{
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          maxWidth: "0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            maxWidth: "100%",
+                          }}
                         >
                           <div
                             style={{
-                              fontWeight: "500",
-                              color: "#1a1a1a",
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
                               overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              marginBottom: "4px",
-                              fontSize: "0.85rem",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background:
+                                "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
+                              flexShrink: 0,
+                              color: "#ffffff",
                             }}
-                            title={v.title}
                           >
-                            {v.title}
+                            {v.logo ? (
+                              <img
+                                src={v.logo}
+                                alt={v.channelName}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  e.target.parentNode.innerHTML = `
+                                  <span style="
+                                    font-weight:700;
+                                    font-size:0.8rem;
+                                    color:#ffffff;
+                                  ">
+                                    ${v.channelName.charAt(0).toUpperCase()}
+                                  </span>
+                                `;
+                                }}
+                              />
+                            ) : (
+                              <span
+                                style={{
+                                  fontWeight: "700",
+                                  fontSize: "0.8rem",
+                                  color: "#ffffff",
+                                }}
+                              >
+                                {v.channelName.charAt(0).toUpperCase()}
+                              </span>
+                            )}
                           </div>
-                          <a
-                            href={v.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <span
                             style={{
-                              fontSize: "0.75rem",
-                              color: "#0d6efd",
-                              textDecoration: "none",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
-                              display: "block",
+                              fontSize: "0.85rem",
+                              color: "var(--text-primary)",
+                              fontWeight: 500,
+                              flex: 1,
                             }}
+                            title={v.channelName}
                           >
-                            Watch Video →
-                          </a>
+                            {v.channelName}
+                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <div
+                      </td>
+                      {/* Keyword cell */}
+                      <td
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          maxWidth: "100%",
-                        }}
-                      >
-                        <div
-  style={{
-    width: "32px",
-    height: "32px",
-    borderRadius: "50%",
-    overflow: "hidden",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#e9ecef",
-    flexShrink: 0,
-  }}
->
-  {v.logo ? (
-    <img
-      src={v.logo}
-      alt={v.channelName}
-      style={{
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-      }}
-      onError={(e) => {
-        e.target.style.display = "none";
-        e.target.parentNode.innerHTML = `
-          <span style="
-            font-weight:600;
-            font-size:0.8rem;
-            color:#495057;
-          ">
-            ${v.channelName.charAt(0).toUpperCase()}
-          </span>
-        `;
-      }}
-    />
-  ) : (
-    <span
-      style={{
-        fontWeight: "600",
-        fontSize: "0.8rem",
-        color: "#495057",
-      }}
-    >
-      {v.channelName.charAt(0).toUpperCase()}
-    </span>
-  )}
-</div>
-                        <span
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            fontSize: "0.85rem",
-                            color: "#1a1a1a",
-                            flex: 1,
-                          }}
-                          title={v.channelName}
-                        >
-                          {v.channelName}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          maxWidth: "100%",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "#e7f1ff",
-                            fontWeight: "600",
-                            fontSize: "0.75rem",
-                            color: "#0d6efd",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {v.query.charAt(0).toUpperCase()}
-                        </div>
-                        <span
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            fontSize: "0.85rem",
-                            color: "#1a1a1a",
-                            flex: 1,
-                          }}
-                          title={v.query}
-                        >
-                          {v.query}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          maxWidth: "100%",
-                        }}
-                      >
-                        <Eye
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {Number(v.views).toLocaleString()}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          maxWidth: "100%",
-                        }}
-                      >
-                        <ThumbsUp
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {Number(v.likes).toLocaleString()}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          maxWidth: "100%",
-                        }}
-                      >
-                        <MessageCircle
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {Number(v.comments).toLocaleString()}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          maxWidth: "100%",
-                        }}
-                      >
-                        <Users
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {Number(v.subscribers).toLocaleString()}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        maxWidth: "0",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "#6c757d",
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          maxWidth: "0",
+                          whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          display: "block",
                         }}
                       >
-                        {new Date(v.publishedDate).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            maxWidth: "100%",
+                          }}
+                        >
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              padding: "4px 10px",
+                              borderRadius: "20px",
+                              fontSize: "0.75rem",
+                              fontWeight: "700",
+                              background: "rgba(37, 99, 235, 0.15)",
+                              color: "#3B82F6",
+                              border: "1px solid rgba(37, 99, 235, 0.3)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                            title={v.query}
+                          >
+                            {v.query}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Views cell */}
+                      <td
                         style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          gap: "2px",
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          maxWidth: "0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
-                        {[1, 2, 3, 4, 5].map((i) => {
-                          const rating = v.erBySubscribers || 0;
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            maxWidth: "100%",
+                          }}
+                        >
+                          <Eye
+                            size={14}
+                            style={{ color: "#3B82F6", flexShrink: 0 }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "0.82rem",
+                              color: "var(--text-primary)",
+                              fontWeight: "600",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {Number(v.views).toLocaleString()}
+                          </span>
+                        </div>
+                      </td>
 
-                          const starColor =
-                            rating >= i
-                              ? rating === 1
-                                ? "#ff6b6b"
-                                : rating === 2
-                                  ? "#fd7e14"
-                                  : rating === 3
-                                    ? "#a1e57b"
-                                    : rating === 4
-                                      ? "#28a745"
-                                      : "#006400"
-                              : "#dee2e6";
+                      {/* Likes cell */}
+                      <td
+                        style={{
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          maxWidth: "0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            maxWidth: "100%",
+                          }}
+                        >
+                          <ThumbsUp
+                            size={14}
+                            style={{ color: "#3B82F6", flexShrink: 0 }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "0.82rem",
+                              color: "var(--text-primary)",
+                              fontWeight: "600",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {Number(v.likes).toLocaleString()}
+                          </span>
+                        </div>
+                      </td>
 
-                          return (
-                            <Star
-                              key={i}
-                              size={16}
-                              color={starColor}
-                              fill={starColor}
-                            />
-                          );
-                        })}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      {/* Comments cell */}
+                      <td
+                        style={{
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          maxWidth: "0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            maxWidth: "100%",
+                          }}
+                        >
+                          <MessageCircle
+                            size={14}
+                            style={{ color: "#3B82F6", flexShrink: 0 }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "0.82rem",
+                              color: "var(--text-primary)",
+                              fontWeight: "600",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {Number(v.comments).toLocaleString()}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Subscribers cell */}
+                      <td
+                        style={{
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          maxWidth: "0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            maxWidth: "100%",
+                          }}
+                        >
+                          <Users
+                            size={14}
+                            style={{ color: "#3B82F6", flexShrink: 0 }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "0.82rem",
+                              color: "var(--text-primary)",
+                              fontWeight: "600",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {Number(v.subscribers).toLocaleString()}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Published Date cell */}
+                      <td
+                        style={{
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          maxWidth: "0",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "0.82rem",
+                            color: "var(--text-secondary)",
+                            fontWeight: "500",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            display: "block",
+                          }}
+                        >
+                          {new Date(v.publishedDate).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td
+                        style={{
+                          padding: "12px",
+                          verticalAlign: "middle",
+                          textAlign: "center",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: "2px",
+                          }}
+                        >
+                          {[1, 2, 3, 4, 5].map((i) => {
+                            const rating = v.erBySubscribers || 0;
+
+                            const starColor =
+                              rating >= i
+                                ? rating === 1
+                                  ? "#ff6b6b"
+                                  : rating === 2
+                                    ? "#fd7e14"
+                                    : rating === 3
+                                      ? "#a1e57b"
+                                      : rating === 4
+                                        ? "#28a745"
+                                        : "#006400"
+                                : "#dee2e6";
+
+                            return (
+                              <Star
+                                key={i}
+                                size={16}
+                                color={starColor}
+                                fill={starColor}
+                              />
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
 
             {/* Pagination */}
             {videos.length > 0 && (
               <div
+                className="app-table-footer"
                 style={{
+                  padding: "20px 24px",
                   display: "flex",
-                  justifyContent: "space-between",
+                  flexDirection: "row",
+                  justifyContent: "center",
                   alignItems: "center",
-                  padding: "20px",
-                  backgroundColor: "#f8f9fa",
-                  borderTop: "1px solid #dee2e6",
                   flexWrap: "wrap",
-                  gap: "12px",
+                  gap: "24px",
+                  borderTop: "1px solid var(--card-border)",
+                  backgroundColor: "var(--card-bg)",
                 }}
               >
+                {/* Rows per page & Count */}
                 <div
-                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
                 >
                   <label
                     htmlFor="limit"
                     style={{
                       marginBottom: "0",
-                      fontSize: "0.9rem",
-                      color: "#6c757d",
-                      fontWeight: "500",
+                      fontSize: "0.85rem",
+                      color: "var(--text-secondary)",
+                      fontWeight: "600",
                     }}
                   >
                     Rows per page:
                   </label>
                   <select
                     id="limit"
-                    className="form-select form-select-sm"
-                    style={{
-                      width: "auto",
-                      fontSize: "0.9rem",
-                      border: "1px solid #dee2e6",
-                      borderRadius: "6px",
-                    }}
                     value={filters.limit}
                     onChange={(e) => {
                       const newLimit = Number(e.target.value);
@@ -1737,24 +1921,77 @@ const YouTubeTable = () => {
                         page: 1,
                       }));
                     }}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--input-border)",
+                      backgroundColor: "var(--card-bg)",
+                      color: "var(--text-primary)",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      outline: "none",
+                      cursor: "pointer",
+                    }}
                   >
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={200}>200</option>
+                    <option
+                      value={50}
+                      style={{
+                        backgroundColor: "var(--card-bg)",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      50
+                    </option>
+                    <option
+                      value={100}
+                      style={{
+                        backgroundColor: "var(--card-bg)",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      100
+                    </option>
+                    <option
+                      value={200}
+                      style={{
+                        backgroundColor: "var(--card-bg)",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      200
+                    </option>
                   </select>
-                  <span style={{ fontSize: "0.9rem", color: "#6c757d" }}>
-                    Showing <strong>{startIndex + 1}</strong>-
-                    <strong>{endIndex}</strong> of{" "}
-                    <strong>{videos.length}</strong>
+                  <span
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "var(--text-secondary)",
+                      marginLeft: "4px",
+                    }}
+                  >
+                    Showing{" "}
+                    <strong style={{ color: "var(--text-primary)" }}>
+                      {startIndex + 1}
+                    </strong>
+                    -
+                    <strong style={{ color: "var(--text-primary)" }}>
+                      {endIndex}
+                    </strong>{" "}
+                    of{" "}
+                    <strong style={{ color: "var(--text-primary)" }}>
+                      {videos.length}
+                    </strong>
                   </span>
                 </div>
 
-                <nav aria-label="Page navigation">
+                {/* Page Navigation Buttons */}
+                <nav
+                  aria-label="Page navigation"
+                  style={{ display: "flex", alignItems: "center" }}
+                >
                   <ul className="pagination pagination-sm mb-0">
                     <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
+                      className={`page-item ${currentPage === 1 ? "disabled" : ""
+                        }`}
                     >
                       <button
                         className="page-link"
@@ -1767,9 +2004,8 @@ const YouTubeTable = () => {
                     </li>
 
                     <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
+                      className={`page-item ${currentPage === 1 ? "disabled" : ""
+                        }`}
                     >
                       <button
                         className="page-link"
@@ -1829,9 +2065,8 @@ const YouTubeTable = () => {
                         return (
                           <li
                             key={page}
-                            className={`page-item ${
-                              currentPage === page ? "active" : ""
-                            }`}
+                            className={`page-item ${currentPage === page ? "active" : ""
+                              }`}
                           >
                             <button
                               className="page-link"
@@ -1845,9 +2080,8 @@ const YouTubeTable = () => {
                     })()}
 
                     <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
+                      className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                        }`}
                     >
                       <button
                         className="page-link"
@@ -1864,9 +2098,8 @@ const YouTubeTable = () => {
                     </li>
 
                     <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
+                      className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                        }`}
                     >
                       <button
                         className="page-link"
@@ -1880,15 +2113,33 @@ const YouTubeTable = () => {
                   </ul>
                 </nav>
 
+                {/* Jump to Page */}
                 <div className="d-flex align-items-center gap-2">
-                  <label htmlFor="jumpToPage" className="mb-0 text-muted small">
+                  <label
+                    htmlFor="jumpToPage"
+                    className="mb-0 small"
+                    style={{
+                      color: "var(--text-secondary)",
+                      fontWeight: "600",
+                    }}
+                  >
                     Go to page:
                   </label>
                   <input
                     id="jumpToPage"
                     type="number"
-                    className="form-control form-control-sm"
-                    style={{ width: "70px" }}
+                    style={{
+                      width: "70px",
+                      padding: "5px 10px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--input-border)",
+                      backgroundColor: "var(--input-bg)",
+                      color: "var(--text-primary)",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      textAlign: "center",
+                      outline: "none",
+                    }}
                     min="1"
                     max={totalPages}
                     placeholder={currentPage.toString()}

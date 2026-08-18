@@ -12,8 +12,14 @@ import {
   getDailyReportsByFilter,
   getDailyReportsByRange,
 } from "@/services/demographics";
-import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChartGender";
-import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import {
+  FiDownload,
+  FiChevronDown,
+  FiChevronRight,
+  FiSearch,
+  FiList,
+  FiBarChart2,
+} from "react-icons/fi";
 import {
   getDailyReportsByFilterCity,
   getDailyReportsByRangeCity,
@@ -32,18 +38,23 @@ function formatNumber(num) {
   return rounded.toLocaleString();
 }
 
+const formatGender = (gender) => {
+  if (!gender) return "Unknown";
+  const g = String(gender).trim().toLowerCase();
+  if (g === "female") return "Female";
+  if (g === "male") return "Male";
+  if (g === "unknown") return "Unknown";
+  return gender.charAt(0).toUpperCase() + gender.slice(1);
+};
+
 const getAgeRangeColor = (range) => {
-  const colors = {
-    "18-24": "#6366f1",
-    "25-34": "#ec4899",
-    "35-44": "#06b6d4",
-    "45-54": "#10b981",
-    "55-64": "#f59e0b",
-    "65+": "#8b5cf6",
-    "65 AND OVER": "#8b5cf6",
-    "UNKNOWN": "#6366f1", // Match image for Unknown
-  };
-  return colors[range] || colors[range.toUpperCase()] || "#6366f1";
+  const r = (range || "").toUpperCase();
+  if (r.includes("18-24") || r.includes("18 - 24")) return "#3b82f6";
+  if (r.includes("25-34") || r.includes("25 - 34")) return "#ec4899";
+  if (r.includes("35-44") || r.includes("35 - 44")) return "#06b6d4";
+  if (r.includes("45-54") || r.includes("45 - 54")) return "#10b981";
+  if (r.includes("55") || r.includes("65")) return "#f59e0b";
+  return "#475569";
 };
 
 const groupDemographicsData = (data) => {
@@ -144,9 +155,8 @@ const groupCityData = (data) => {
 
     const group = acc[city];
     const imps = parseInt(curr.impressions) || 0;
-    // CTR = (clicks / impressions) * 100 => clicks = (CTR / 100) * impressions
     const ctrValue = parseFloat(curr.ctr?.replace("%", "")) || 0;
-    const clks = (ctrValue / 100) * imps;
+    const clks = curr.clicks !== undefined ? parseInt(curr.clicks) || 0 : (ctrValue / 100) * imps;
     const views = parseInt(curr.completeViewsVideo) || 0;
 
     group.impressions += imps;
@@ -158,14 +168,68 @@ const groupCityData = (data) => {
 
   return Object.values(cityGroups)
     .filter((city) => city.city && city.city.toLowerCase() !== "unknown")
-    .map((city) => ({
-      city: city.city,
-      impressions: city.impressions,
-    }));
+    .map((city) => {
+      const ctr =
+        city.impressions > 0
+          ? ((city.clicks / city.impressions) * 100).toFixed(2)
+          : "0.00";
+      const vcr =
+        city.impressions > 0
+          ? ((city.completeViews / city.impressions) * 100).toFixed(2)
+          : "0.00";
+      return {
+        city: city.city,
+        impressions: city.impressions,
+        clicks: Math.round(city.clicks),
+        completeViews: city.completeViews,
+        ctr,
+        vcr,
+      };
+    });
 };
 
 export default function OverviewPage() {
-  const [expandedAgeRow, setExpandedAgeRow] = useState(null);
+  const [expandedAgeRows, setExpandedAgeRows] = useState({});
+  const [theme, setTheme] = useState(() => {
+    if (typeof document !== "undefined") {
+      return document.documentElement.getAttribute("data-theme") || "light";
+    }
+    return "light";
+  });
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const current =
+        document.documentElement.getAttribute("data-theme") || "light";
+      setTheme(current);
+    };
+    updateTheme();
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "data-theme"
+        ) {
+          updateTheme();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const toggleAgeRow = (range) => {
+    setExpandedAgeRows((prev) => ({
+      ...prev,
+      [range]: !prev[range],
+    }));
+  };
   const [dateRange, setDateRange] = useState("");
   const [campaign, setCampaign] = useState("all");
   const [platform, setPlatform] = useState("all");
@@ -437,11 +501,31 @@ export default function OverviewPage() {
     () => groupCityData(dailyReportsDataCity),
     [dailyReportsDataCity],
   );
+  const topCitiesData = React.useMemo(() => {
+    if (!cityData || cityData.length === 0) return [];
+    return [...cityData]
+      .sort((a, b) => b.impressions - a.impressions)
+      .slice(0, 50);
+  }, [cityData]);
 
   const [campaigns, setCampaigns] = useState([]);
   const [activities, setActivities] = useState([]);
   const [topPerformers, setTopPerformers] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [hoveredAgeGroup, setHoveredAgeGroup] = useState(null);
+  const [cityViewMode, setCityViewMode] = useState("chart");
+  const [citySearchQuery, setCitySearchQuery] = useState("");
+
+  const filteredCities = React.useMemo(() => {
+    if (!topCitiesData) return [];
+    if (!citySearchQuery.trim()) return topCitiesData;
+    const q = citySearchQuery.toLowerCase();
+    return topCitiesData.filter((c) => c.city.toLowerCase().includes(q));
+  }, [topCitiesData, citySearchQuery]);
+
+  const totalTopCitiesImpressions = React.useMemo(() => {
+    return topCitiesData.reduce((acc, curr) => acc + (curr.impressions || 0), 0);
+  }, [topCitiesData]);
 
   // Chart refs
   const ageBreakdownChartRef = useRef(null);
@@ -456,10 +540,13 @@ export default function OverviewPage() {
     Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
     chartsRef.current = {};
 
+    const isLight = theme === "light";
+
     if (aggregatedData && aggregatedData.length > 0) {
       // Age Breakdown (Doughnut)
       if (ageBreakdownChartRef.current) {
         const ctx = ageBreakdownChartRef.current.getContext("2d");
+
         chartsRef.current.ageBreakdown = new Chart(ctx, {
           type: "doughnut",
           data: {
@@ -467,14 +554,12 @@ export default function OverviewPage() {
             datasets: [
               {
                 data: aggregatedData.map((d) => d.impressions),
-                backgroundColor: [
-                  "#6366f1",
-                  "#ec4899",
-                  "#06b6d4",
-                  "#10b981",
-                  "#f59e0b",
-                  "#8b5cf6",
-                ],
+                backgroundColor: aggregatedData.map((d) =>
+                  getAgeRangeColor(d.range),
+                ),
+                borderWidth: 3,
+                borderColor: isLight ? "#ffffff" : "#1e293b",
+                hoverOffset: 5,
               },
             ],
           },
@@ -482,28 +567,26 @@ export default function OverviewPage() {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-              padding: 5,
+              padding: 6,
             },
-            cutout: "60%",
+            cutout: "75%",
+            onHover: (event, elements) => {
+              if (elements && elements.length > 0) {
+                const index = elements[0].index;
+                setHoveredAgeGroup(aggregatedData[index]);
+              } else {
+                setHoveredAgeGroup(null);
+              }
+            },
             plugins: {
               legend: {
-                position: "right",
-                labels: {
-                  boxWidth: 12,
-                  padding: 15,
-                  usePointStyle: true,
-                  font: { size: 11 },
-                },
+                display: false,
+              },
+              tooltip: {
+                enabled: false,
               },
               datalabels: {
-                color: "#fff",
-                font: { weight: "bold", size: 10 },
-                formatter: (value, ctx) => {
-                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage =
-                    total > 0 ? ((value / total) * 100).toFixed(1) + "%" : "";
-                  return percentage;
-                },
+                display: false,
               },
             },
           },
@@ -511,17 +594,12 @@ export default function OverviewPage() {
       }
     }
 
-    // City Chart logic
-    if (cityChartRef.current && cityData && cityData.length > 0) {
+    // Top 50 Cities Chart logic
+    if (cityChartRef.current && topCitiesData && topCitiesData.length > 0) {
       const ctx = cityChartRef.current.getContext("2d");
 
-      // Always sort by Impressions and take TOP 25
-      const processedCityData = [...cityData]
-        .sort((a, b) => b.impressions - a.impressions)
-        .slice(0, 50);
-
-      const labels = processedCityData.map((d) => d.city);
-      const dataValues = processedCityData.map((d) => d.impressions);
+      const labels = topCitiesData.map((d) => d.city);
+      const dataValues = topCitiesData.map((d) => d.impressions);
 
       chartsRef.current.city = new Chart(ctx, {
         type: "bar",
@@ -531,9 +609,10 @@ export default function OverviewPage() {
             {
               label: "Impressions",
               data: dataValues,
-              backgroundColor: "#8b5cf6", // Indigo/Purple shade
-              borderRadius: 4,
-              barPercentage: 0.7,
+              backgroundColor: isLight ? "#4f46e5" : "#6366f1",
+              borderRadius: 5,
+              barThickness: 16,
+              maxBarThickness: 20,
             },
           ],
         },
@@ -541,17 +620,26 @@ export default function OverviewPage() {
           indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: {
+              right: 48,
+              left: 5,
+              top: 5,
+              bottom: 5,
+            },
+          },
           plugins: {
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: (ctx) => `Impressions: ${ctx.parsed.x.toLocaleString()}`,
+                label: (ctx) =>
+                  `Impressions: ${ctx.parsed.x.toLocaleString()}`,
               },
             },
             datalabels: {
               anchor: "end",
               align: "end",
-              color: "#64748b", // Slate-500
+              color: () => (isLight ? "#334155" : "#94a3b8"),
               font: { weight: "bold", size: 10 },
               formatter: (v) => formatNumber(v),
             },
@@ -559,17 +647,23 @@ export default function OverviewPage() {
           scales: {
             x: {
               beginAtZero: true,
+              grace: "18%",
               ticks: {
                 callback: (v) => formatNumber(v),
+                color: () => (isLight ? "#64748b" : "#94a3b8"),
+                font: { size: 10 },
               },
-              grid: { display: false },
+              grid: {
+                color: () => (isLight ? "#f1f5f9" : "rgba(255,255,255,0.06)"),
+              },
             },
             y: {
               grid: { display: false },
-              // ticks: {
-              //   autoSkip: false,
-              //   font: { size: 10 },
-              // },
+              ticks: {
+                color: () => (isLight ? "#1e293b" : "#cbd5e1"),
+                font: { size: 12, weight: "600" },
+                autoSkip: false,
+              },
             },
           },
         },
@@ -580,7 +674,7 @@ export default function OverviewPage() {
       Object.values(chartsRef.current).forEach((chart) => chart?.destroy());
       chartsRef.current = {};
     };
-  }, [aggregatedData, cityData]);
+  }, [aggregatedData, topCitiesData, theme]);
 
   const downloadPDF = () => {
     const dateText =
@@ -593,203 +687,463 @@ export default function OverviewPage() {
 
   return (
     <>
-      <main className="main-content" ref={mainContentRef}>
-        {/* Charts Section */}
-        <section className="charts-section" style={{ position: "relative" }}>
-          {isLoadingData && (
-            <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-              <div className="loading-text">Refreshing analytics...</div>
-            </div>
-          )}
-          <div className="charts-grid top-charts">
-            {/* Gender - top left, row 1 */}
-            <div
-              className="chart-item equal-height"
-              style={{ gridColumn: 1, gridRow: 1 }}
-            >
-              <TopCountryBarChart
-                dailyReportsData={dailyReportsData}
-                audienceName={audienceName}
-              />
-            </div>
-
-            {/* City - right column, spans both rows */}
-            <ChartCard
-              title={`Top 50 Cities Performance`}
-              className="equal-height"
-              style={{ gridColumn: 2, gridRow: "1 / 3", height: "auto" }}
-            >
-              <canvas ref={cityChartRef} id="cityChart" />
-            </ChartCard>
-
-            {/* Age Breakdown - bottom left, row 2 */}
-            <ChartCard
-              title={`Age Breakdown`}
-              className="equal-height"
-              style={{ gridColumn: 1, gridRow: 2 }}
-            >
-              <canvas ref={ageBreakdownChartRef} id="ageBreakdownChart" />
-            </ChartCard>
-          </div>
-        </section>
-
-        {/* Table */}
-        <div className="data-table-card" style={{ position: "relative" }}>
-          {isLoadingData && (
-            <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-              <div className="loading-text">Updating demographics...</div>
-            </div>
-          )}
-          <div className="table-header">
-            <h3>Demographics Performance Summary</h3>
-
-            <div className="table-actions">
-              <button
-                className="btn btn-sm btn-ghost"
-                onClick={() => downloadAllDailyCityCSV(insertionOrderId)}
-                title="Download Data as PDF"
-                style={{ textTransform: "none" }}
-              >
-                <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
-                Export City Csv
-              </button>
-            </div>
-          </div>
-
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th style={{ width: "50px" }}></th>
-                <th>Age Range</th>
-                <th>Impressions</th>
-                <th>CTR</th>
-                <th>VCR</th>
-                {/* <th>Media Cost</th> */}
-              </tr>
-            </thead>
-            <tbody>
-              {aggregatedData && aggregatedData.length > 0 ? (
-                aggregatedData.map((item, index) => {
-                  const isExpanded = expandedAgeRow === index;
-
-                  return (
-                    <React.Fragment key={index}>
-                      <tr
-                        onClick={() =>
-                          setExpandedAgeRow(isExpanded ? null : index)
-                        }
-                        style={{ cursor: "pointer" }}
-                      >
-                        <td>
-                          <i
-                            className={`fas fa-chevron-${isExpanded ? "down" : "right"}`}
-                            style={{ color: "var(--text-light)" }}
-                          />
-                        </td>
-                        <td>
-                          <div
-                            className="campaign-icon active"
+      <div ref={mainContentRef}>
+        <section className="demographics-section">
+          {/* Row 1: 2 Visual Charts Side-by-Side (Age Breakdown Donut + Top 50 Cities Bar Chart) */}
+          <div className="demographics-charts-grid">
+            {/* Left: Age Breakdown Donut Card */}
+            <div className="demographics-card" style={{ position: "relative" }}>
+              {isLoadingData && (
+                <div className="loading-overlay">
+                  <div className="loading-spinner"></div>
+                  <div className="loading-text">Refreshing...</div>
+                </div>
+              )}
+              <div className="table-header">
+                <h3>
+                  <span>Age Breakdown</span>
+                  <span className="header-badge">By Age Group</span>
+                </h3>
+              </div>
+              <div className="demographics-card-body">
+                <div className="age-breakdown-layout">
+                  {/* Left: Doughnut with Dynamic Centered HUD */}
+                  <div className="age-donut-wrapper">
+                    <canvas ref={ageBreakdownChartRef} id="ageBreakdownChart" />
+                    <div className="age-donut-center-stat">
+                      {hoveredAgeGroup ? (
+                        <>
+                          <span
+                            className="center-stat-label"
                             style={{
-                              borderRadius: "50%",
-                              width: "1.5rem",
-                              height: "1.5rem",
-                              backgroundColor: getAgeRangeColor(item.range),
-                              border: "none",
+                              color: getAgeRangeColor(hoveredAgeGroup.range),
+                              fontWeight: 800,
                             }}
-                          />
-                          {item.range}
-                        </td>
-                        <td>{item.impressions.toLocaleString()}</td>
-                        <td>{item.ctr}%</td>
-                        <td>{item.vcr}%</td>
-                        {/* <td>₹{(Number(item?.cost) || 0).toFixed(2)}</td> */}
-                      </tr>
-                      {isExpanded && (
-                        <tr
-                          className="expanded-row"
-                          style={{ background: "#f8fafc" }}
-                        >
-                          <td
-                            colSpan="6"
-                            style={{ padding: "0 1rem 1rem 3rem" }}
                           >
+                            {hoveredAgeGroup.range}
+                          </span>
+                          <span className="center-stat-val">
+                            {formatNumber(hoveredAgeGroup.impressions)}
+                          </span>
+                          <span
+                            className="center-stat-badge"
+                            style={{
+                              backgroundColor: `${getAgeRangeColor(hoveredAgeGroup.range)}20`,
+                              color: getAgeRangeColor(hoveredAgeGroup.range),
+                              fontWeight: 700,
+                            }}
+                          >
+                            {(() => {
+                              const totalImps =
+                                aggregatedData?.reduce(
+                                  (acc, curr) => acc + (Number(curr.impressions) || 0),
+                                  0,
+                                ) || 0;
+                              return totalImps > 0
+                                ? ((hoveredAgeGroup.impressions / totalImps) * 100).toFixed(1) + "%"
+                                : "0%";
+                            })()}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="center-stat-label">Total Impr.</span>
+                          <span className="center-stat-val">
+                            {formatNumber(
+                              aggregatedData?.reduce(
+                                (acc, curr) => acc + (Number(curr.impressions) || 0),
+                                0,
+                              ) || 0,
+                            )}
+                          </span>
+                          <span className="center-stat-badge">
+                            {aggregatedData?.length || 0} Groups
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: Interactive Legend List */}
+                  <div className="age-legend-list">
+                    {(() => {
+                      const totalImps =
+                        aggregatedData?.reduce(
+                          (acc, curr) => acc + (Number(curr.impressions) || 0),
+                          0,
+                        ) || 0;
+                      return aggregatedData && aggregatedData.length > 0 ? (
+                        aggregatedData.map((item, idx) => {
+                          const pct =
+                            totalImps > 0
+                              ? ((item.impressions / totalImps) * 100).toFixed(1)
+                              : "0.0";
+                          const color = getAgeRangeColor(item.range);
+                          const isHovered = hoveredAgeGroup?.range === item.range;
+                          return (
                             <div
-                              className="gender-breakdown-container"
-                              style={{ paddingTop: "1rem" }}
+                              key={idx}
+                              className="age-legend-item"
+                              onMouseEnter={() => setHoveredAgeGroup(item)}
+                              onMouseLeave={() => setHoveredAgeGroup(null)}
+                              style={
+                                isHovered
+                                  ? {
+                                      borderColor: color,
+                                      transform: "translateX(3px)",
+                                      boxShadow: `0 3px 12px ${color}25`,
+                                    }
+                                  : undefined
+                              }
                             >
-                              <table
-                                className="data-table"
+                              <div className="age-legend-left">
+                                <span
+                                  className="age-legend-dot"
+                                  style={{ backgroundColor: color }}
+                                />
+                                <span className="age-legend-title">
+                                  {item.range}
+                                </span>
+                              </div>
+                              <div className="age-legend-right">
+                                <span className="age-legend-count">
+                                  {formatNumber(item.impressions)}
+                                </span>
+                                <span
+                                  className="age-legend-pill"
+                                  style={{
+                                    backgroundColor: `${color}14`,
+                                    color: color,
+                                    borderColor: `${color}35`,
+                                  }}
+                                >
+                                  {pct}%
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div
+                          className="no-data-text"
+                          style={{
+                            textAlign: "center",
+                            color: "var(--text-secondary)",
+                            padding: "20px",
+                          }}
+                        >
+                          No age data available
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Top 50 Cities Performance Card (Interactive Table & Chart View) */}
+            <div className="demographics-card" style={{ position: "relative" }}>
+              {isLoadingData && (
+                <div className="loading-overlay">
+                  <div className="loading-spinner"></div>
+                  <div className="loading-text">Refreshing top cities...</div>
+                </div>
+              )}
+              <div className="table-header">
+                <div className="table-header-left">
+                  <h3>
+                    <span>Top 50 Cities Performance</span>
+                    <span className="header-badge">Top 50</span>
+                  </h3>
+                </div>
+                <div className="table-actions">
+                  <div className="view-mode-pill-group">
+                    <button
+                      type="button"
+                      className={`view-mode-btn ${cityViewMode === "chart" ? "active" : ""}`}
+                      onClick={() => setCityViewMode("chart")}
+                      title="Chart View"
+                    >
+                      <FiBarChart2 size={13} />
+                      <span>Chart</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`view-mode-btn ${cityViewMode === "table" ? "active" : ""}`}
+                      onClick={() => setCityViewMode("table")}
+                      title="Table View"
+                    >
+                      <FiList size={13} />
+                      <span>Table</span>
+                    </button>
+                  </div>
+
+                  <button
+                    className="table-export-btn"
+                    onClick={() => downloadAllDailyCityCSV(insertionOrderId)}
+                    title="Export City CSV"
+                  >
+                    <FiDownload size={14} />
+                    <span>CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="demographics-card-body" style={{ padding: "0" }}>
+                {/* Table View */}
+                <div
+                  className="city-table-scroll-wrapper"
+                  style={{
+                    display: cityViewMode === "table" ? "block" : "none",
+                  }}
+                >
+                  <table className="city-performance-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "55px", textAlign: "center" }}>Rank</th>
+                        <th>City</th>
+                        <th style={{ textAlign: "right" }}>Impressions</th>
+                        <th style={{ textAlign: "right" }}>Complete Views</th>
+                        <th style={{ textAlign: "right" }}>CTR</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCities && filteredCities.length > 0 ? (
+                        filteredCities.map((item, idx) => {
+                          const originalRank =
+                            topCitiesData.findIndex((c) => c.city === item.city) + 1;
+                          return (
+                            <tr key={idx} className="city-table-row">
+                              <td style={{ textAlign: "center" }}>
+                                <span
+                                  className={`city-rank-pill rank-${originalRank <= 3 ? originalRank : "standard"}`}
+                                >
+                                  #{originalRank}
+                                </span>
+                              </td>
+                              <td>
+                                <span className="city-name-text">{item.city}</span>
+                              </td>
+                              <td style={{ textAlign: "right", fontWeight: 700 }}>
+                                {item.impressions.toLocaleString()}
+                              </td>
+                              <td style={{ textAlign: "right" }}>
+                                {(item.completeViews || 0).toLocaleString()}
+                              </td>
+                              <td
                                 style={{
-                                  background: "white",
-                                  borderRadius: "0.5rem",
-                                  border: "1px solid var(--border)",
+                                  textAlign: "right",
+                                  fontWeight: 600,
+                                  color: "var(--accent-color, #2563eb)",
                                 }}
                               >
-                                <thead style={{ background: "#f1f5f9" }}>
-                                  <tr>
-                                    <th>Gender</th>
-                                    <th>Impressions</th>
-                                    <th>CTR</th>
-                                    <th>VCR</th>
-                                    {/* <th>Media Cost</th> */}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {item.gender.map((g, gIdx) => (
-                                    <tr key={gIdx}>
-                                      <td>{g.type}</td>
-                                      <td>{g.impressions.toLocaleString()}</td>
-                                      <td>{g.ctr}%</td>
-                                      <td>{g.vcr}%</td>
-                                      {/* <td>
-                                        ₹{(Number(g?.cost) || 0).toFixed(2)}
-                                      </td> */}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                {item.ctr}%
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="5"
+                            style={{
+                              textAlign: "center",
+                              padding: "30px",
+                              color: "var(--text-secondary)",
+                            }}
+                          >
+                            No cities found
                           </td>
                         </tr>
                       )}
-                    </React.Fragment>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan="5"
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Chart View */}
+                <div
+                  className="demographics-chart-wrapper city-chart-wrapper"
+                  style={{
+                    display: cityViewMode === "chart" ? "block" : "none",
+                    padding: "16px 20px",
+                  }}
+                >
+                  <div
                     style={{
-                      textAlign: "center",
-                      padding: "2rem",
-                      color: "#6b7280",
+                      height: `${Math.max(340, (topCitiesData?.length || 0) * 26)}px`,
+                      minHeight: "340px",
+                      position: "relative",
+                      width: "100%",
                     }}
                   >
-                    {isLoadingData
-                      ? "Loading data..."
-                      : "No demographics data available. Please select a different date range to get data."}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            {demographicsTotals && (
-              <tfoot>
-                <tr className="totals-row">
-                  <td />
-                  <td>Total</td>
-                  <td>{demographicsTotals.impressions.toLocaleString()}</td>
-                  <td>{demographicsTotals.ctr}%</td>
-                  <td>{demographicsTotals.vcr}%</td>
-                </tr>
-              </tfoot>
-            )}
-          </table>
-        </div>
+                    <canvas ref={cityChartRef} id="cityChart" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {/* Bottom Sections */}
-      </main>
+          {/* Row 2: Full Width Demographics Performance Summary Accordion Table Card */}
+          <div className="demographics-card demographics-table-card" style={{ position: "relative" }}>
+            {isLoadingData && (
+              <div className="loading-overlay">
+                <div className="loading-spinner"></div>
+                <div className="loading-text">Updating demographics...</div>
+              </div>
+            )}
+            <div className="table-header">
+              <h3>Demographics Performance Summary</h3>
+            </div>
+
+            <div className="table-responsive-wrapper">
+              <table className="demographics-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: "35%" }}>Age Range</th>
+                    <th style={{ textAlign: "right" }}>Impressions</th>
+                    <th style={{ textAlign: "right" }}>CTR</th>
+                    <th style={{ textAlign: "right" }}>VCR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aggregatedData && aggregatedData.length > 0 ? (
+                    aggregatedData.map((item, index) => {
+                      const isExpanded = Boolean(expandedAgeRows[item.range]);
+                      return (
+                        <React.Fragment key={`group-${index}`}>
+                          <tr
+                            className={`demographics-parent-row ${isExpanded ? "is-expanded" : ""}`}
+                            onClick={() => toggleAgeRow(item.range)}
+                            title="Click to toggle age details"
+                          >
+                            <td>
+                              <div className="d-flex align-items-center gap-2">
+                                <button
+                                  type="button"
+                                  className="expand-toggle-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleAgeRow(item.range);
+                                  }}
+                                  aria-label="Toggle details"
+                                >
+                                  {isExpanded ? (
+                                    <FiChevronDown size={16} className="chevron-icon" />
+                                  ) : (
+                                    <FiChevronRight size={16} className="chevron-icon" />
+                                  )}
+                                </button>
+                                <span
+                                  className="age-dot"
+                                  style={{
+                                    backgroundColor: getAgeRangeColor(
+                                      item.range,
+                                    ),
+                                  }}
+                                />
+                                <span className="age-range-text">{item.range}</span>
+                              </div>
+                            </td>
+                            <td style={{ textAlign: "right", fontWeight: 500 }}>
+                              {item.impressions.toLocaleString()}
+                            </td>
+                            <td style={{ textAlign: "right", fontWeight: 500 }}>
+                              {item.ctr}%
+                            </td>
+                            <td style={{ textAlign: "right", fontWeight: 500 }}>
+                              {item.vcr}%
+                            </td>
+                          </tr>
+
+                          {isExpanded && (
+                            <tr className="demographics-subtable-row">
+                              <td colSpan="4" className="demographics-subtable-cell">
+                                <div className="demographics-subtable-container">
+                                  <table className="demographics-subtable">
+                                    <thead>
+                                      <tr>
+                                        <th>Gender</th>
+                                        <th style={{ textAlign: "right" }}>Impressions</th>
+                                        <th style={{ textAlign: "right" }}>CTR</th>
+                                        <th style={{ textAlign: "right" }}>VCR</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {item.gender && item.gender.length > 0 ? (
+                                        item.gender.map((g, gIdx) => (
+                                          <tr key={gIdx}>
+                                            <td className="gender-name">
+                                              {formatGender(g.type)}
+                                            </td>
+                                            <td style={{ textAlign: "right" }}>
+                                              {g.impressions.toLocaleString()}
+                                            </td>
+                                            <td style={{ textAlign: "right" }}>
+                                              {g.ctr}%
+                                            </td>
+                                            <td style={{ textAlign: "right" }}>
+                                              {g.vcr}%
+                                            </td>
+                                          </tr>
+                                        ))
+                                      ) : (
+                                        <tr>
+                                          <td colSpan="4" className="no-sub-data">
+                                            No gender breakdown available
+                                          </td>
+                                        </tr>
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="4"
+                        style={{
+                          textAlign: "center",
+                          padding: "2rem",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        {isLoadingData
+                          ? "Loading data..."
+                          : "No demographics data available."}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+                {demographicsTotals && (
+                  <tfoot>
+                    <tr className="totals-row">
+                      <td>
+                        <div style={{ paddingLeft: "30px", fontWeight: 700 }}>
+                          Total
+                        </div>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {demographicsTotals.impressions.toLocaleString()}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {demographicsTotals.ctr}%
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {demographicsTotals.vcr}%
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
     </>
   );
 }

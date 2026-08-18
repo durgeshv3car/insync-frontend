@@ -16,10 +16,17 @@ import {
 } from "@/services/reports";
 import { formatDate } from "@/utils/dateFormatter";
 import { createReportsDataDevice } from "@/services/device";
+import {
+  Eye,
+  CheckSquare,
+  TrendingUp,
+  MousePointer,
+  Target,
+  IndianRupee,
+} from "lucide-react";
+import { FiDownload, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
 import VisitorsChartVcr from "@/components/widgetsCharts/VistiorsChartVcr";
-import SiteOverviewChart from "@/components/widgetsCharts/SiteOverviewChart";
-import PageHeader from "@/components/shared/pageHeader/PageHeader";
 
 function formatNumber(num) {
   const rounded = Math.round(num);
@@ -441,17 +448,17 @@ export default function OverviewPage() {
               labels: {
                 padding: 5,
                 font: { size: 13, weight: "600" },
-                color: "#495057",
+                color: "#cbd5e1",
               },
             },
             tooltip: {
-              backgroundColor: "rgba(255,255,255,0.95)",
+              backgroundColor: "rgba(15,23,42,0.95)",
               padding: 16,
-              titleColor: "#1a1a1a",
-              bodyColor: "#495057",
+              titleColor: "#f1f5f9",
+              bodyColor: "#94a3b8",
               titleFont: { size: 14, weight: "bold" },
               bodyFont: { size: 12 },
-              borderColor: "#dee2e6",
+              borderColor: "rgba(255,255,255,0.12)",
               borderWidth: 1,
               cornerRadius: 6,
               displayColors: true,
@@ -485,14 +492,14 @@ export default function OverviewPage() {
           },
           scales: {
             x: {
-              grid: { color: "rgba(0,0,0,0.02)", drawBorder: false },
-              ticks: { font: { size: 12, color: "#6c757d" }, padding: 8 },
+              grid: { color: "rgba(255,255,255,0.06)", drawBorder: false },
+              ticks: { font: { size: 12 }, color: "#94a3b8", padding: 8 },
             },
             y: {
               beginAtZero: true,
-              grid: { color: "rgba(0,0,0,0.06)", drawBorder: false },
+              grid: { color: "rgba(255,255,255,0.06)", drawBorder: false },
               ticks: {
-                font: { size: 11, color: "#6c757d" },
+                font: { size: 11 }, color: "#94a3b8",
                 padding: 10,
                 callback: function (value) {
                   return formatNumber(value);
@@ -506,7 +513,7 @@ export default function OverviewPage() {
               beginAtZero: true,
               grid: { drawOnChartArea: false, drawBorder: false },
               ticks: {
-                font: { size: 11, color: "#6c757d" },
+                font: { size: 11 }, color: "#94a3b8",
                 padding: 10,
                 callback: function (value) {
                   return value + "%";
@@ -597,17 +604,17 @@ export default function OverviewPage() {
               labels: {
                 padding: 20,
                 font: { size: 13, weight: "600" },
-                color: "#495057",
+                color: "#cbd5e1",
               },
             },
             tooltip: {
-              backgroundColor: "rgba(255,255,255,0.95)",
+              backgroundColor: "rgba(15,23,42,0.95)",
               padding: 16,
-              titleColor: "#1a1a1a",
-              bodyColor: "#495057",
+              titleColor: "#f1f5f9",
+              bodyColor: "#94a3b8",
               titleFont: { size: 14, weight: "bold" },
               bodyFont: { size: 12 },
-              borderColor: "#dee2e6",
+              borderColor: "rgba(255,255,255,0.12)",
               borderWidth: 1,
               cornerRadius: 6,
               displayColors: true,
@@ -641,14 +648,14 @@ export default function OverviewPage() {
           },
           scales: {
             x: {
-              grid: { color: "rgba(0,0,0,0.02)", drawBorder: false },
-              ticks: { font: { size: 12, color: "#6c757d" }, padding: 8 },
+              grid: { color: "rgba(255,255,255,0.06)", drawBorder: false },
+              ticks: { font: { size: 12 }, color: "#94a3b8", padding: 8 },
             },
             y: {
               beginAtZero: true,
-              grid: { color: "rgba(0,0,0,0.06)", drawBorder: false },
+              grid: { color: "rgba(255,255,255,0.06)", drawBorder: false },
               ticks: {
-                font: { size: 11, color: "#6c757d" },
+                font: { size: 11 }, color: "#94a3b8",
                 padding: 10,
                 callback: function (value) {
                   return formatNumber(value);
@@ -662,7 +669,7 @@ export default function OverviewPage() {
               beginAtZero: true,
               grid: { drawOnChartArea: false, drawBorder: false },
               ticks: {
-                font: { size: 11, color: "#6c757d" },
+                font: { size: 11 }, color: "#94a3b8",
                 padding: 10,
                 callback: function (value) {
                   return value + "%";
@@ -691,7 +698,7 @@ export default function OverviewPage() {
                 "#10b981",
                 "#f59e0b",
               ],
-              borderColor: "#fff",
+              borderColor: "transparent",
               borderWidth: 2,
             },
           ],
@@ -705,6 +712,7 @@ export default function OverviewPage() {
               labels: {
                 font: { size: 12 },
                 padding: 15,
+                color: "#cbd5e1",
               },
             },
             datalabels: {
@@ -755,7 +763,8 @@ export default function OverviewPage() {
           scales: {
             x: {
               beginAtZero: true,
-              grid: { color: "rgba(0,0,0,0.05)" },
+              grid: { color: "rgba(255,255,255,0.06)" },
+              ticks: { color: "#94a3b8" },
             },
           },
         },
@@ -791,13 +800,13 @@ export default function OverviewPage() {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { stacked: true },
-            y: { stacked: true, grid: { color: "rgba(0,0,0,0.05)" } },
+            x: { stacked: true, ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.06)" } },
+            y: { stacked: true, ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.06)" } },
           },
           plugins: {
             legend: {
               position: "bottom",
-              labels: { padding: 15 },
+              labels: { padding: 15, color: "#cbd5e1" },
             },
             datalabels: {
               color: "#fff",
@@ -866,7 +875,8 @@ export default function OverviewPage() {
             y: {
               beginAtZero: true,
               max: 100,
-              grid: { color: "rgba(0,0,0,0.05)" },
+              grid: { color: "rgba(255,255,255,0.06)" },
+              ticks: { color: "#94a3b8" },
             },
           },
         },
@@ -884,7 +894,7 @@ export default function OverviewPage() {
             {
               data: [45, 30, 15, 10],
               backgroundColor: ["#6366f1", "#ec4899", "#06b6d4", "#10b981"],
-              borderColor: "#fff",
+              borderColor: "transparent",
               borderWidth: 2,
             },
           ],
@@ -895,7 +905,7 @@ export default function OverviewPage() {
           plugins: {
             legend: {
               position: "bottom",
-              labels: { font: { size: 12 }, padding: 15 },
+              labels: { font: { size: 12 }, padding: 15, color: "#cbd5e1" },
             },
             datalabels: {
               color: "#fff",
@@ -1017,7 +1027,7 @@ export default function OverviewPage() {
 
   return (
     <>
-      <main className="main-content" ref={mainContentRef}>
+      <div ref={mainContentRef}>
         {/* Filters Section */}
 
         {/* Real-time Stats */}
@@ -1025,7 +1035,17 @@ export default function OverviewPage() {
           <div className="realtime-card">
             <div className="realtime-header">
               <div className="realtime-title">
-                <h3>Campaign Summary ({audienceName})</h3>
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                  <h3>Campaign Summary</h3>
+                  {audienceName && (
+                    <span className="campaign-name-badge">
+                      {audienceName}
+                    </span>
+                  )}
+                </div>
+                <span className="realtime-subtitle">
+                  Key performance indicators and delivery metrics
+                </span>
               </div>
             </div>
 
@@ -1038,20 +1058,56 @@ export default function OverviewPage() {
 
             <div className="realtime-stats">
               <Stat
+                icon={Eye}
+                iconBg="#eff6ff"
+                iconColor="#2563eb"
+                iconBorder="#dbeafe"
+                accentColor="#3b82f6"
                 value={formatNumber(summaryMetrics.impressions)}
                 label="Impressions"
               />
               <Stat
+                icon={CheckSquare}
+                iconBg="#ecfdf5"
+                iconColor="#059669"
+                iconBorder="#a7f3d0"
+                accentColor="#10b981"
                 value={formatNumber(summaryMetrics.completeViews)}
                 label="Complete Views"
               />
-              <Stat value={`${summaryMetrics.vcr}%`} label="VCR" />
               <Stat
+                icon={TrendingUp}
+                iconBg="#f5f3ff"
+                iconColor="#7c3aed"
+                iconBorder="#ddd6fe"
+                accentColor="#8b5cf6"
+                value={`${summaryMetrics.vcr}%`}
+                label="VCR"
+              />
+              <Stat
+                icon={MousePointer}
+                iconBg="#fff7ed"
+                iconColor="#ea580c"
+                iconBorder="#fed7aa"
+                accentColor="#f97316"
                 value={formatNumber(summaryMetrics.clicks)}
                 label="Clicks"
               />
-              <Stat value={`${summaryMetrics.ctr}%`} label="CTR" />
               <Stat
+                icon={Target}
+                iconBg="#fef2f2"
+                iconColor="#dc2626"
+                iconBorder="#fecaca"
+                accentColor="#ef4444"
+                value={`${summaryMetrics.ctr}%`}
+                label="CTR"
+              />
+              <Stat
+                icon={IndianRupee}
+                iconBg="#f0f9ff"
+                iconColor="#0284c7"
+                iconBorder="#bae6fd"
+                accentColor="#0284c7"
                 value={`₹${(summaryMetrics.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 label="Media Cost"
               />
@@ -1086,36 +1142,33 @@ export default function OverviewPage() {
             <h3>Campaign Performance Summary</h3>
 
             <div className="table-actions">
-              <div className="btn-group" >
+              <div className="toggle-pill-group">
                 <button
-                  className={`btn btn-sm ${tableType === "daily" ? "btn-primary" : "btn-ghost"}`}
-                  style={{ textTransform: "none" }}
+                  className={`toggle-pill-btn ${tableType === "daily" ? "active" : ""}`}
                   onClick={() => setTableType("daily")}
                 >
                   Daily
                 </button>
                 <button
-                  className={`btn btn-sm ${tableType === "monthly" ? "btn-primary" : "btn-ghost"}`}
-                  style={{ textTransform: "none" }}
+                  className={`toggle-pill-btn ${tableType === "monthly" ? "active" : ""}`}
                   onClick={() => setTableType("monthly")}
                 >
                   Monthly
                 </button>
               </div>
               <button
-                className="btn btn-sm btn-ghost"
+                className="table-export-btn"
                 onClick={() => downloadAllDailyOverviewCSV(insertionOrderId)}
-                title="Download Data as PDF"
-                style={{ textTransform: "none" }}
+                title="Download CSV"
               >
-                <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
-                Export Overview Csv
+                <FiDownload size={14} />
+                <span>Export CSV</span>
               </button>
-
             </div>
           </div>
 
-          <table className="data-table">
+          <div className="table-responsive-wrapper">
+            <table className="data-table">
             <thead>
               <tr>
                 <th>{tableType === "daily" ? "Date" : "Month"}</th>
@@ -1303,13 +1356,13 @@ export default function OverviewPage() {
                 </tfoot>
               );
             })()}
-          </table>
-        </div>
+            </table>
+          </div>
 
-        {/* Pagination UI */}
-        {(tableType === "daily" ? dailyReportsData : monthlyReportsData)
-          ?.length > 0 && (
-            <div className="pagination-wrapper">
+          {/* Pagination UI */}
+          {(tableType === "daily" ? dailyReportsData : monthlyReportsData)
+            ?.length > 0 && (
+              <div className="pagination-wrapper">
               <div className="rows-per-page">
                 <span>Rows per page:</span>
                 <select
@@ -1346,11 +1399,11 @@ export default function OverviewPage() {
                 </span>
                 <div className="pagination-buttons">
                   <button
-                    className="btn btn-sm btn-ghost"
+                    className="pagination-btn"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
-                    <i className="fas fa-chevron-left" />
+                    <FiChevronLeft size={16} />
                   </button>
 
                   {/* Simple page numbers */}
@@ -1373,7 +1426,7 @@ export default function OverviewPage() {
                       pages.push(
                         <button
                           key={i}
-                          className={`btn btn-sm ${currentPage === i ? "btn-primary" : "btn-ghost"}`}
+                          className={`pagination-btn ${currentPage === i ? "active" : ""}`}
                           onClick={() => setCurrentPage(i)}
                         >
                           {i}
@@ -1384,7 +1437,7 @@ export default function OverviewPage() {
                   })()}
 
                   <button
-                    className="btn btn-sm btn-ghost"
+                    className="pagination-btn"
                     onClick={() => {
                       const totalPages = Math.ceil(
                         (tableType === "daily"
@@ -1404,34 +1457,49 @@ export default function OverviewPage() {
                       )
                     }
                   >
-                    <i className="fas fa-chevron-right" />
+                    <FiChevronRight size={16} />
                   </button>
                 </div>
               </div>
             </div>
           )}
+        </div>
 
         {/* Bottom Sections */}
-      </main>
+      </div>
     </>
   );
 }
 
 /* ===== Helpers (same file) ===== */
 
-function Stat({ value, label, trend }) {
-  const trendColor = trend?.startsWith("+") ? "#10b981" : "#ef4444";
-  const trendIcon = trend?.startsWith("+") ? "fa-arrow-up" : "fa-arrow-down";
-
+function Stat({ value, label, icon: Icon, iconBg, iconColor, iconBorder, accentColor }) {
   return (
-    <div className="realtime-stat">
-      <div className="realtime-value">{value}</div>
-      <div className="realtime-label">{label}</div>
-      {trend && (
-        <div className="stat-trend" style={{ color: trendColor }}>
-          <i className={`fas ${trendIcon}`} /> {trend}
-        </div>
-      )}
+    <div className="report-metric-card">
+      <div className="metric-card-top">
+        {Icon && (
+          <div
+            className="report-metric-icon"
+            style={{
+              backgroundColor: iconBg,
+              color: iconColor,
+              border: `1px solid ${iconBorder || "transparent"}`,
+            }}
+          >
+            <Icon size={20} strokeWidth={2.2} />
+          </div>
+        )}
+        <span
+          className="metric-accent-indicator"
+          style={{
+            backgroundColor: accentColor || iconColor,
+          }}
+        />
+      </div>
+      <div className="metric-card-content">
+        <div className="report-metric-value" title={value}>{value}</div>
+        <div className="report-metric-label">{label}</div>
+      </div>
     </div>
   );
 }

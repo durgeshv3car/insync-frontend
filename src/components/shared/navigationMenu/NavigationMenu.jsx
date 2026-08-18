@@ -67,62 +67,61 @@ const NavigationManu = () => {
                 <Menus />
               </ul>
 
-              <div style={{ width: "100%" }}>
-                {navigationOpen || isHovered ? (
+              <div
+                className="sidebar-footer-wrapper"
+                style={{
+                  width: "100%",
+                  padding: "16px 8px 8px 8px",
+                  marginTop: "auto",
+                  borderTop: "1px solid #1C2541",
+                }}
+              >
+                <div
+                  className="sidebar-footer-badge"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid #1C2541",
+                    borderRadius: "10px",
+                    padding: "8px 6px",
+                    transition: "all 0.2s ease",
+                  }}
+                >
                   <p
                     style={{
-                      marginLeft: "110px",
-                      marginBottom: "-12px",
-                      color: "#fff",
+                      margin: "0 0 2px 0",
+                      color: "#8D99AE",
                       fontSize: "9px",
+                      fontWeight: 600,
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                      textAlign: "center",
                     }}
                   >
                     Built by
                   </p>
-                ) : (
-                  <p
-                    style={{
-                      marginLeft: "45px",
-                      marginBottom: "-12px",
-                      color: "#fff",
-                      fontSize: "9px",
-                    }}
-                  >
-                    Built by
-                  </p>
-                )}
 
-                {navigationOpen || isHovered ? (
-                   <div
-                   style={{
-                      marginLeft: "30px"
-                    }}
-                  >
-                  <Image
-                    width={500}
-                    height={125}
-                    style={{ width: "110px", height: "35px" }}
-                    src="/images/automate360.png"
-                    alt="logo"
-                    className=""
-                  />
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                    }}
-                  >
+                  {navigationOpen || isHovered ? (
                     <Image
                       width={500}
                       height={125}
-                      style={{ width: "55px", height: "35px" }}
+                      style={{ width: "110px", height: "32px", objectFit: "contain" }}
+                      src="/images/automate360.png"
+                      alt="logo"
+                    />
+                  ) : (
+                    <Image
+                      width={500}
+                      height={125}
+                      style={{ width: "45px", height: "30px", objectFit: "contain" }}
                       src="/images/a360.png"
                       alt="logo"
                     />
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </PerfectScrollbar>

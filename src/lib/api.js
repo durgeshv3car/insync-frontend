@@ -35,8 +35,14 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    const message = error.response?.data?.message || error.response?.data?.error || error.message || "An error occurred";
-    toast.error(message);
+    if (!error.config?.skipToast && error.response?.status !== 404) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "An error occurred";
+      toast.error(message);
+    }
     return Promise.reject(error);
   }
 );
