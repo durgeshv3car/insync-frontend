@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useContext, useEffect, useState } from "react";
-import { FiAlignLeft, FiArrowRight } from "react-icons/fi";
+import { FiAlignLeft, FiAlignRight, FiSun, FiMoon } from "react-icons/fi";
 import Image from "next/image";
 import DateSection from "./DateSection";
 import SearchModal from "./SearchModal";
@@ -22,6 +22,22 @@ const Header = () => {
   const [selectedAudience, setSelectedAudience] = useState(null);
   // const [navigationExpand, setNavigationExpand] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Theme state: "dark" or "light" (defaults to "dark")
+  const [theme, setTheme] = useState("dark");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("appTheme") || "dark";
+    setTheme(savedTheme);
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("appTheme", nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+  };
 
   const isPathPresent = [
     "/report"
@@ -52,7 +68,7 @@ const Header = () => {
   }, [session]);
 
   // Initialize audience from localStorage
-  
+
   useEffect(() => {
     if (!audienceList.length) return;
 
@@ -64,7 +80,7 @@ const Header = () => {
 
     localStorage.setItem("audienceId", defaultAudience._id);
     localStorage.setItem("audienceName", defaultAudience.reportName);
-    localStorage.setItem("insertionId",defaultAudience.insertionOrderId); 
+    localStorage.setItem("insertionId", defaultAudience.insertionOrderId);
     localStorage.setItem("count", defaultAudience.cpcv);
 
     setIsInitialized(true);
@@ -127,34 +143,35 @@ const Header = () => {
         <div className="header-left d-flex align-items-center gap-2">
           {/* Single Navigation Toggle for All Screens */}
           <button
-            className="btn p-0 border-0 bg-transparent"
+            className="header-toggle-btn"
             onClick={() => setNavigationOpen(!navigationOpen)}
-            style={{ marginLeft: "10px", marginRight: "14px" }}
+            aria-label="Toggle Navigation"
           >
             {navigationOpen ? (
-              <FiArrowRight size={24} />
+              <FiAlignLeft size={20} />
             ) : (
-              <FiAlignLeft size={24} />
+              <FiAlignRight size={20} />
             )}
           </button>
 
           <Image
             src="/images/logo360.png"
             alt="Logo"
-            width={180}
-            height={64}
+            width={160}
+            height={56}
             priority
-            style={{padding:"12px", borderRadius:"8px",  filter:
-      "brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(2670%) hue-rotate(100deg) brightness(112%) contrast(104%)",}}
+            className="header-logo-img"
+            style={{
+              padding: "8px",
+              borderRadius: "8px",
+              objectFit: "contain",
+            }}
           />
-
-        
         </div>
 
         {/* RIGHT */}
-        <div className="header-right ms-auto d-flex align-items-center gap-2">
-
-            {isPathPresent && <DateSection />}
+        <div className="header-right ms-auto d-flex align-items-center gap-3">
+          {isPathPresent && <DateSection />}
           {isPathPresent && selectedAudience && (
             <SearchModal
               audienceList={audienceList}
@@ -162,6 +179,16 @@ const Header = () => {
               selectedAudience={selectedAudience}
             />
           )}
+
+          {/* Theme Toggle Button */}
+          <button
+            className="header-toggle-btn"
+            onClick={toggleTheme}
+            aria-label="Toggle Light/Dark Theme"
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {theme === "dark" ? <FiSun size={18} /> : <FiMoon size={18} />}
+          </button>
 
           <ProfileModal />
         </div>

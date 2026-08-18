@@ -14,27 +14,40 @@ import {
   getDailyReportsByRange,
 } from "@/services/device";
 import { formatDate } from "@/utils/dateFormatter";
-import VisitorsChart from "@/components/widgetsCharts/VisitorsChart";
-import TopCountryBarChart from "@/components/widgetsCharts/TopCountriyBarChart";
-import { FiSmartphone, FiMonitor, FiTablet, FiTv } from "react-icons/fi";
-import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import { FiSmartphone, FiMonitor, FiTablet, FiTv, FiDownload } from "react-icons/fi";
 
 const getDeviceIcon = (type) => {
-  const t = type?.toLowerCase();
+  const t = type?.toLowerCase() || "";
 
-  if (t.includes("mobile") || t.includes("smart phone"))
-    return <FiSmartphone size={16} style={{ marginRight: 6,color:  "rgba(234, 77, 77, 0.85)" }} />;
+  if (t.includes("desktop")) {
+    return (
+      <span className="device-icon-badge desktop">
+        <FiMonitor size={14} />
+      </span>
+    );
+  }
 
-  if (t.includes("desktop"))
-    return <FiMonitor size={16} style={{ marginRight: 6,color: "rgba(255, 162, 29, 0.85)" }} />;
+  if (t.includes("mobile") || t.includes("smart phone")) {
+    return (
+      <span className="device-icon-badge mobile">
+        <FiSmartphone size={14} />
+      </span>
+    );
+  }
 
-  if (t.includes("tablet"))
-    return <FiTablet size={16} style={{ marginRight: 6,color: "rgba(37, 184, 101, 0.85)" }} />;
+  if (t.includes("tablet")) {
+    return (
+      <span className="device-icon-badge tablet">
+        <FiTablet size={14} />
+      </span>
+    );
+  }
 
-  if (t.includes("tv") || t.includes("connected tv"))
-    return <FiTv size={16} style={{ marginRight: 6,color: "rgba(52, 84, 209, 0.85)" }} />;
-
-  return null;
+  return (
+    <span className="device-icon-badge tv">
+      <FiTv size={14} />
+    </span>
+  );
 };
 
 function formatNumber(num) {
@@ -436,17 +449,17 @@ export default function OverviewPage() {
               labels: {
                 padding: 5,
                 font: { size: 13, weight: "600" },
-                color: "#495057",
+                color: "#cbd5e1",
               },
             },
             tooltip: {
-              backgroundColor: "rgba(255,255,255,0.95)",
+              backgroundColor: "rgba(15,23,42,0.95)",
               padding: 16,
-              titleColor: "#1a1a1a",
-              bodyColor: "#495057",
+              titleColor: "#f1f5f9",
+              bodyColor: "#94a3b8",
               titleFont: { size: 14, weight: "bold" },
               bodyFont: { size: 12 },
-              borderColor: "#dee2e6",
+              borderColor: "rgba(255,255,255,0.12)",
               borderWidth: 1,
               cornerRadius: 6,
               displayColors: true,
@@ -467,14 +480,14 @@ export default function OverviewPage() {
           },
           scales: {
             x: {
-              grid: { color: "rgba(0,0,0,0.02)", drawBorder: false },
-              ticks: { font: { size: 12, color: "#6c757d" }, padding: 8 },
+              grid: { color: "rgba(255,255,255,0.06)", drawBorder: false },
+              ticks: { font: { size: 12 }, color: "#94a3b8", padding: 8 },
             },
             y: {
               beginAtZero: true,
-              grid: { color: "rgba(0,0,0,0.06)", drawBorder: false },
+              grid: { color: "rgba(255,255,255,0.06)", drawBorder: false },
               ticks: {
-                font: { size: 11, color: "#6c757d" },
+                font: { size: 11 }, color: "#94a3b8",
                 padding: 10,
                 callback: function (value) {
                   return formatNumber(value);
@@ -488,7 +501,7 @@ export default function OverviewPage() {
               beginAtZero: true,
               grid: { drawOnChartArea: false, drawBorder: false },
               ticks: {
-                font: { size: 11, color: "#6c757d" },
+                font: { size: 11 }, color: "#94a3b8",
                 padding: 10,
                 callback: function (value) {
                   return value + "%";
@@ -517,7 +530,7 @@ export default function OverviewPage() {
                 "#10b981",
                 "#f59e0b",
               ],
-              borderColor: "#fff",
+              borderColor: "transparent",
               borderWidth: 2,
             },
           ],
@@ -531,6 +544,7 @@ export default function OverviewPage() {
               labels: {
                 font: { size: 12 },
                 padding: 15,
+                color: "#cbd5e1",
               },
             },
           },
@@ -568,7 +582,8 @@ export default function OverviewPage() {
           scales: {
             x: {
               beginAtZero: true,
-              grid: { color: "rgba(0,0,0,0.05)" },
+              grid: { color: "rgba(255,255,255,0.06)" },
+              ticks: { color: "#94a3b8" },
             },
           },
         },
@@ -604,13 +619,13 @@ export default function OverviewPage() {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { stacked: true },
-            y: { stacked: true, grid: { color: "rgba(0,0,0,0.05)" } },
+            x: { stacked: true, ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.06)" } },
+            y: { stacked: true, ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.06)" } },
           },
           plugins: {
             legend: {
               position: "bottom",
-              labels: { padding: 15 },
+              labels: { padding: 15, color: "#cbd5e1" },
             },
           },
         },
@@ -685,136 +700,377 @@ export default function OverviewPage() {
     };
   }, [dailyReportsData, aggregatedData]); // Re-render charts when data changes
 
+  const desktopItem = aggregatedData?.find((d) =>
+    d.deviceType?.toLowerCase().includes("desktop")
+  ) || { impressions: 0 };
+
+  const mobileItem = aggregatedData?.find(
+    (d) =>
+      d.deviceType?.toLowerCase().includes("mobile") ||
+      d.deviceType?.toLowerCase().includes("smart phone")
+  ) || { impressions: 0 };
+
+  const tabletItem = aggregatedData?.find((d) =>
+    d.deviceType?.toLowerCase().includes("tablet")
+  ) || { impressions: 0 };
+
+  const totalDeviceImpressions =
+    (desktopItem.impressions || 0) +
+      (mobileItem.impressions || 0) +
+      (tabletItem.impressions || 0) ||
+    aggregatedData?.reduce((acc, curr) => acc + (curr.impressions || 0), 0) ||
+    0;
+
+  const desktopPct =
+    totalDeviceImpressions > 0
+      ? ((desktopItem.impressions / totalDeviceImpressions) * 100).toFixed(2)
+      : "0.00";
+  const mobilePct =
+    totalDeviceImpressions > 0
+      ? ((mobileItem.impressions / totalDeviceImpressions) * 100).toFixed(2)
+      : "0.00";
+  const tabletPct =
+    totalDeviceImpressions > 0
+      ? ((tabletItem.impressions / totalDeviceImpressions) * 100).toFixed(2)
+      : "0.00";
+
   return (
     <>
-      <main className="main-content" ref={mainContentRef}>
-        {/* Charts Section */}
-        <section className="charts-section" style={{ position: "relative" }}>
-          {isLoadingData && (
-            <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-              <div className="loading-text">Refreshing charts...</div>
+      <div ref={mainContentRef}>
+        {/* Device & Ad type Impression - 3 Gradient Cards */}
+        <section className="device-section">
+          <h2 className="device-section-title">Device & Ad type Impression</h2>
+          <div className="device-gradient-grid">
+            {/* Desktop */}
+            <div className="device-gradient-card desktop-card">
+              <div>
+                <div className="device-card-header">
+                  <div className="device-card-icon">
+                    <FiMonitor size={20} color="#ffffff" />
+                  </div>
+                  <span className="device-card-label">Desktop</span>
+                </div>
+                <div className="device-card-value">
+                  {formatNumber(desktopItem.impressions)}
+                </div>
+              </div>
+              <div className="device-card-pct">{desktopPct}%</div>
             </div>
-          )}
-          <div className="grid">
-            <TopCountryBarChart dailyReportsData={dailyReportsData} audienceName={audienceName} />
+
+            {/* Smart Phone */}
+            <div className="device-gradient-card mobile-card">
+              <div>
+                <div className="device-card-header">
+                  <div className="device-card-icon">
+                    <FiSmartphone size={20} color="#ffffff" />
+                  </div>
+                  <span className="device-card-label">Smart Phone</span>
+                </div>
+                <div className="device-card-value">
+                  {formatNumber(mobileItem.impressions)}
+                </div>
+              </div>
+              <div className="device-card-pct">{mobilePct}%</div>
+            </div>
+
+            {/* Tablet */}
+            <div className="device-gradient-card tablet-card">
+              <div>
+                <div className="device-card-header">
+                  <div className="device-card-icon">
+                    <FiTablet size={20} color="#ffffff" />
+                  </div>
+                  <span className="device-card-label">Tablet</span>
+                </div>
+                <div className="device-card-value">
+                  {formatNumber(tabletItem.impressions)}
+                </div>
+              </div>
+              <div className="device-card-pct">{tabletPct}%</div>
+            </div>
           </div>
         </section>
 
-        {/* Table */}
-        <div className="data-table-card" style={{ position: "relative" }}>
-          {isLoadingData && (
-            <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-              <div className="loading-text">Updating device data...</div>
-            </div>
-          )}
-          <div className="table-header">
-            <h3>Device Performance Summary</h3>
+        {/* 2-Column Row: Device Table + Gender */}
+        <div className="device-gender-grid">
+          {/* Left: Device Performance Summary Table */}
+          <div className="device-table-card" style={{ position: "relative" }}>
+            {isLoadingData && (
+              <div className="loading-overlay">
+                <div className="loading-spinner"></div>
+                <div className="loading-text">Updating device data...</div>
+              </div>
+            )}
+            <div className="table-header">
+              <h3>Device Performance Summary</h3>
 
-            <div className="table-actions">
-              <button
-                className="btn btn-sm btn-ghost"
-                onClick={() => downloadAllDailyDeviceCSV(insertionOrderId)}
-                title="Download Data as PDF"
-                style={{ textTransform: "none" }}
-              >
-                <i className="fas fa-download" style={{ marginRight: "8px" }} />{" "}
-                Export Device Csv
-              </button>
+              <div className="table-actions">
+                <button
+                  className="table-export-btn"
+                  onClick={() => downloadAllDailyDeviceCSV(insertionOrderId)}
+                  title="Download CSV"
+                >
+                  <FiDownload size={14} />
+                  <span>Export CSV</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="table-responsive-wrapper">
+              <table className="data-table device-summary-table">
+                <thead>
+                  <tr>
+                    <th>Device</th>
+                    <th style={{ textAlign: "right" }}>Impressions</th>
+                    <th style={{ textAlign: "right" }}>Clicks</th>
+                    <th style={{ textAlign: "right" }}>CTR</th>
+                    <th style={{ textAlign: "right" }}>VCR</th>
+                    <th style={{ textAlign: "right" }}>Complete Views</th>
+                    <th style={{ textAlign: "right" }}>Media Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aggregatedData && aggregatedData.length > 0 ? (
+                    aggregatedData.map((item, index) => {
+                      const ctr =
+                        item.impressions > 0
+                          ? ((item.clicks / item.impressions) * 100).toFixed(2)
+                          : "0.00";
+                      const vcr =
+                        item.impressions > 0
+                          ? (
+                              (item.completeViews / item.impressions) *
+                              100
+                            ).toFixed(2)
+                          : "0.00";
+
+                      return (
+                        <tr key={index}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              {getDeviceIcon(item.deviceType)}
+                              <span style={{ fontWeight: 600 }}>{item.deviceType}</span>
+                            </div>
+                          </td>
+
+                          <td style={{ textAlign: "right", fontWeight: 500 }}>{item.impressions.toLocaleString()}</td>
+                          <td style={{ textAlign: "right", fontWeight: 500 }}>{item.clicks.toLocaleString()}</td>
+                          <td style={{ textAlign: "right", fontWeight: 500 }}>{ctr}%</td>
+                          <td style={{ textAlign: "right", fontWeight: 500 }}>{vcr}%</td>
+                          <td style={{ textAlign: "right", fontWeight: 500 }}>{item.completeViews.toLocaleString()}</td>
+                          <td style={{ textAlign: "right", fontWeight: 500 }}>
+                            ₹{(Number(item?.cost) || 0).toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="7"
+                        style={{
+                          textAlign: "center",
+                          padding: "2rem",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        {isLoadingData
+                          ? "Loading data..."
+                          : "No data available. Please select a different date range to get data."}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+                {(() => {
+                  const totals = calculateDeviceTotals();
+                  if (!totals) return null;
+                  return (
+                    <tfoot>
+                      <tr className="totals-row">
+                        <td>Total</td>
+                        <td style={{ textAlign: "right" }}>{totals.impressions.toLocaleString()}</td>
+                        <td style={{ textAlign: "right" }}>{totals.clicks.toLocaleString()}</td>
+                        <td style={{ textAlign: "right" }}>{totals.ctr}%</td>
+                        <td style={{ textAlign: "right" }}>{totals.vcr}%</td>
+                        <td style={{ textAlign: "right" }}>{totals.completeViews.toLocaleString()}</td>
+                        <td style={{ textAlign: "right" }}>₹{totals.cost.toFixed(2)}</td>
+                      </tr>
+                    </tfoot>
+                  );
+                })()}
+              </table>
             </div>
           </div>
 
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Device Type</th>
-                <th>Impressions</th>
-                <th>Clicks</th>
-                <th>CTR</th>
-                <th>VCR</th>
-                <th>Complete Views</th>
-                <th>Media Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              {aggregatedData && aggregatedData.length > 0 ? (
-                aggregatedData.map((item, index) => {
-                  const ctr =
-                    item.impressions > 0
-                      ? ((item.clicks / item.impressions) * 100).toFixed(2)
-                      : "0.00";
-                  const vcr =
-                    item.impressions > 0
-                      ? ((item.completeViews / item.impressions) * 100).toFixed(
-                          2,
-                        )
-                      : "0.00";
-
-                  return (
-                    <tr key={index}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <div className=" me-2" />
-                          {getDeviceIcon(item.deviceType)}
-                          {item.deviceType}
-                        </div>
-                      </td>
-
-                      <td>{item.impressions.toLocaleString()}</td>
-                      <td>{item.clicks.toLocaleString()}</td>
-                      <td>{ctr}%</td>
-                      <td>{vcr}%</td>
-                      <td>{item.completeViews.toLocaleString()}</td>
-                      <td>
-                        ₹
-                        {(
-                          (Number(item?.cost) || 0)
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan="7"
-                    style={{
-                      textAlign: "center",
-                      padding: "2rem",
-                      color: "#6b7280",
-                    }}
-                  >
-                    {isLoadingData
-                      ? "Loading data..."
-                      : "No data available. Please select a different date range to get data."}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            {(() => {
-              const totals = calculateDeviceTotals();
-              if (!totals) return null;
-              return (
-                <tfoot>
-                  <tr className="totals-row">
-                    <td>Total</td>
-                    <td>{totals.impressions.toLocaleString()}</td>
-                    <td>{totals.clicks.toLocaleString()}</td>
-                    <td>{totals.ctr}%</td>
-                    <td>{totals.vcr}%</td>
-                    <td>{totals.completeViews.toLocaleString()}</td>
-                    <td>₹{totals.cost.toFixed(2)}</td>
-                  </tr>
-                </tfoot>
-              );
-            })()}
-          </table>
+          {/* Right: Gender Level Performance Card */}
+          <GenderLevelPerformance dailyReportsData={dailyReportsData} />
         </div>
 
         {/* Bottom Sections */}
-      </main>
+      </div>
     </>
+  );
+}
+
+/* ===== Gender Level Performance Component ===== */
+
+function GenderLevelPerformance({ dailyReportsData }) {
+  const [activeMetric, setActiveMetric] = useState("Impressions");
+
+  const dataArray = Array.isArray(dailyReportsData) ? dailyReportsData : [];
+
+  const groupMap = {
+    Male: { impressions: 0, clicks: 0, completes: 0 },
+    Female: { impressions: 0, clicks: 0, completes: 0 },
+    Other: { impressions: 0, clicks: 0, completes: 0 },
+  };
+
+  dataArray.forEach((item) => {
+    let gender = item.gender || "Unknown";
+    const gLower = gender.toLowerCase();
+    if (gLower.includes("male") && !gLower.includes("female")) {
+      gender = "Male";
+    } else if (gLower.includes("female")) {
+      gender = "Female";
+    } else {
+      gender = "Other";
+    }
+
+    const imps = Number(item.impressions) || 0;
+    const ctrPct = Number(item.ctr?.replace("%", "")) || 0;
+    const clks =
+      item.clicks !== undefined
+        ? Number(item.clicks)
+        : Math.round((ctrPct / 100) * imps);
+    const comps = Number(item.completeViewsVideo) || 0;
+
+    groupMap[gender].impressions += imps;
+    groupMap[gender].clicks += clks;
+    groupMap[gender].completes += comps;
+  });
+
+  const totalImpressions =
+    groupMap.Male.impressions +
+    groupMap.Female.impressions +
+    groupMap.Other.impressions;
+
+  const getMetricData = (genderKey) => {
+    const g = groupMap[genderKey];
+    if (activeMetric === "Impressions") {
+      const val = g.impressions;
+      const pct =
+        totalImpressions > 0
+          ? ((val / totalImpressions) * 100).toFixed(1)
+          : "0.0";
+      return {
+        valueText: formatNumber(val),
+        pctText: pct + "%",
+        pctNum: parseFloat(pct),
+      };
+    }
+    if (activeMetric === "VCR") {
+      const vcr =
+        g.impressions > 0
+          ? ((g.completes / g.impressions) * 100).toFixed(1)
+          : "0.0";
+      return {
+        valueText: vcr + "%",
+        pctText: vcr + "%",
+        pctNum: Math.min(100, parseFloat(vcr)),
+      };
+    }
+    // CTR
+    const ctr =
+      g.impressions > 0
+        ? ((g.clicks / g.impressions) * 100).toFixed(2)
+        : "0.00";
+    return {
+      valueText: ctr + "%",
+      pctText: ctr + "%",
+      pctNum: Math.min(100, parseFloat(ctr) * 10),
+    };
+  };
+
+  const maleData = getMetricData("Male");
+  const femaleData = getMetricData("Female");
+  const otherData = getMetricData("Other");
+
+  return (
+    <div className="gender-card">
+      <div className="table-header">
+        <h3>Gender Level Performance</h3>
+        <div className="toggle-pill-group">
+          {["Impressions", "VCR", "CTR"].map((m) => (
+            <button
+              key={m}
+              className={`toggle-pill-btn ${activeMetric === m ? "active" : ""}`}
+              onClick={() => setActiveMetric(m)}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="gender-card-body">
+        <div className="gender-bars-list">
+          {/* Male */}
+          <div className="gender-bar-item">
+            <span className="gender-bar-label">Male</span>
+            <div className="gender-bar-track">
+              <div
+                className="gender-bar-fill male"
+                style={{ width: `${Math.max(2, maleData.pctNum)}%` }}
+              />
+            </div>
+            <div className="gender-bar-val-box">
+              <div className="gender-bar-value">{maleData.valueText}</div>
+              <div className="gender-bar-pct">{maleData.pctText}</div>
+            </div>
+          </div>
+
+          {/* Female */}
+          <div className="gender-bar-item">
+            <span className="gender-bar-label">Female</span>
+            <div className="gender-bar-track">
+              <div
+                className="gender-bar-fill female"
+                style={{ width: `${Math.max(2, femaleData.pctNum)}%` }}
+              />
+            </div>
+            <div className="gender-bar-val-box">
+              <div className="gender-bar-value">{femaleData.valueText}</div>
+              <div className="gender-bar-pct">{femaleData.pctText}</div>
+            </div>
+          </div>
+
+          {/* Other */}
+          <div className="gender-bar-item">
+            <span className="gender-bar-label">Other</span>
+            <div className="gender-bar-track">
+              <div
+                className="gender-bar-fill other"
+                style={{ width: `${Math.max(2, otherData.pctNum)}%` }}
+              />
+            </div>
+            <div className="gender-bar-val-box">
+              <div className="gender-bar-value">{otherData.valueText}</div>
+              <div className="gender-bar-pct">{otherData.pctText}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="gender-total-row">
+          <span>Total</span>
+          <span style={{ color: "#2563eb" }}>
+            {activeMetric === "Impressions"
+              ? formatNumber(totalImpressions)
+              : "100%"}
+          </span>
+          <span>100%</span>
+        </div>
+      </div>
+    </div>
   );
 }
 

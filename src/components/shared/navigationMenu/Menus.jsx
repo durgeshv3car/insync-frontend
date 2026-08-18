@@ -31,10 +31,10 @@ const Menus = () => {
     if (role === "super_admin") {
       baseMenu = menuList.filter((menu) => menu.name !== "preview");
     } else if (role === "admin") {
-      baseMenu = menuList.filter((menu) => ["dashboards","Youtube Data","Keywords Search","Keyword Search","Report","Audience"].includes(menu.name));
+      baseMenu = menuList.filter((menu) => ["dashboards", "Youtube Data", "Keywords Search", "Keyword Search", "Report", "Audience"].includes(menu.name));
     }
-     else {
-      baseMenu = menuList.filter((menu) => ["dashboards","Report"].includes(menu.name));
+    else {
+      baseMenu = menuList.filter((menu) => ["dashboards", "Report"].includes(menu.name));
     }
 
     // Role-based flattening for 'user' role
@@ -104,15 +104,13 @@ const Menus = () => {
         return (
           <li
             key={id}
-            className={`nxl-item nxl-hasmenu ${isOpen ? "nxl-trigger" : ""} ${
-              isParentActive && !isOpen ? "active" : ""
-            }`}
+            className={`nxl-item nxl-hasmenu ${isOpen ? "nxl-trigger" : ""} ${isParentActive && !isOpen ? "active" : ""
+              }`}
           >
             <a
               href="#"
-              className={`nxl-link ${
-                isParentActive && !isOpen ? "active" : ""
-              }`}
+              className={`nxl-link ${isParentActive && !isOpen ? "active" : ""
+                }`}
               onClick={(e) => {
                 e.preventDefault();
                 handleMainMenu(name);
@@ -126,9 +124,8 @@ const Menus = () => {
             </a>
 
             <ul
-              className={`nxl-submenu ${
-                isOpen ? "nxl-menu-visible" : "nxl-menu-hidden"
-              }`}
+              className={`nxl-submenu ${isOpen ? "nxl-menu-visible" : "nxl-menu-hidden"
+                }`}
             >
               {dropdownMenu.map(({ id, name, path }) => (
                 <li
@@ -137,9 +134,8 @@ const Menus = () => {
                 >
                   <Link
                     href={path}
-                    className={`nxl-link text-capitalize ${
-                      isActive(path) ? "active" : ""
-                    }`}
+                    className={`nxl-link text-capitalize ${isActive(path) ? "active" : ""
+                      }`}
                   >
                     {name}
                   </Link>

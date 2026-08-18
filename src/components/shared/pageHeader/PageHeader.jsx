@@ -39,32 +39,11 @@ const PageHeader = ({ children }) => {
                     <li className="breadcrumb-item">{fileName}</li>
                 </ul> */}
             </div>
-{/* 
-            <div className="page-header-right ms-auto">
-                <div className={`page-header-right-items ${openSidebar ? "page-header-right-open" : ""}`}>
-                    <div className="d-flex d-md-none">
-                        <Link
-                            href="#"
-                            onClick={() => setOpenSidebar(false)}
-                            className="page-header-right-close-toggle"
-                        >
-                            <FiArrowLeft size={16} className="me-2" />
-                            <span>Back</span>
-                        </Link>
-                    </div>
+            {children && (
+                <div className="page-header-right ms-auto d-flex align-items-center gap-2">
                     {children}
                 </div>
-
-                <div className="d-md-none d-flex align-items-center">
-                    <Link
-                        href="#"
-                        onClick={() => setOpenSidebar(true)}
-                        className="page-header-right-open-toggle"
-                    >
-                        <FiAlignRight className="fs-20" />
-                    </Link>
-                </div>
-            </div> */}
+            )}
         </div>
     )
 }

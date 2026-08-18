@@ -4,12 +4,11 @@ import PageHeader from "@/components/shared/pageHeader/PageHeader";
 
 function page() {
   return (
-    <>
-    <PageHeader>
-      </PageHeader>
-    <Campaign/>
-    </>
-  )
+    <div className="app-page-wrapper">
+      <PageHeader />
+      <Campaign />
+    </div>
+  );
 }
 
 export default page

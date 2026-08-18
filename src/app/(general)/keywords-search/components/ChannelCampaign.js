@@ -2,20 +2,13 @@
 import React, { useEffect, useState } from "react";
 import {
   Search,
-  Eye,
-  ThumbsUp,
-  MessageCircle,
   Globe,
   Calendar,
-  Users,
   AlertCircle,
   Filter,
   BookOpen,
 } from "lucide-react";
 import { getYouTubeResultsByChannel } from "@/services/youtube";
-import PageHeader from "@/components/shared/pageHeader/PageHeader";
-import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
-import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -55,126 +48,46 @@ const AILoader = ({ realProgress }) => {
   }, [realProgress]);
 
   return (
-    <div
-      className="d-flex flex-column justify-content-center align-items-center vh-100"
-      style={{ background: "#f8f9fa" }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "450px",
-          padding: "40px",
-          textAlign: "center",
-        }}
-      >
+    <div className="ai-loader-wrapper">
+      <div className="ai-loader-card">
         {/* Animated AI Brain Icon */}
-        <div style={{ marginBottom: "30px", position: "relative" }}>
-          <div
-            className="ai-loader-pulse"
-            style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "20px",
-              background: "linear-gradient(135deg, #031035 0%, #081947 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto",
-              boxShadow: "0 10px 25px rgba(3, 16, 53, 0.2)",
-            }}
-          >
-            <Search color="white" size={32} />
+        <div className="ai-loader-icon-wrap">
+          <div className="ai-loader-pulse">
+            <Search color="#ffffff" size={32} />
           </div>
         </div>
 
-        <h4
-          style={{ fontWeight: "700", color: "#031035", marginBottom: "10px" }}
-        >
+        <h4 className="ai-loader-title">
           AI Channel Analysis in Progress
         </h4>
-        <p
-          style={{
-            color: "#64748b",
-            fontSize: "0.95rem",
-            marginBottom: "10px",
-            height: "1.5rem",
-          }}
-        >
+        <p className="ai-loader-status">
           {statuses[statusIndex]}
         </p>
 
         {realProgress && (
-          <div style={{ marginBottom: "20px" }}>
-            <span
-              style={{
-                fontSize: "1.2rem",
-                fontWeight: "800",
-                color: "#1e293b",
-                background: "#f1f5f9",
-                padding: "4px 12px",
-                borderRadius: "20px",
-                border: "1px solid #e2e8f0",
-              }}
-            >
+          <div className="ai-loader-counter-box">
+            <span className="ai-loader-counter-badge">
               {realProgress.processed} / {realProgress.total}
             </span>
-            <div
-              style={{
-                fontSize: "0.75rem",
-                color: "#64748b",
-                marginTop: "8px",
-                fontWeight: "600",
-                letterSpacing: "0.5px",
-              }}
-            >
+            <div className="ai-loader-counter-label">
               Videos Processed
             </div>
           </div>
         )}
 
         {/* Progress Bar Container */}
-        <div
-          style={{
-            width: "100%",
-            height: "10px",
-            backgroundColor: "#e9ecef",
-            borderRadius: "10px",
-            overflow: "hidden",
-            marginBottom: "15px",
-            position: "relative",
-          }}
-        >
+        <div className="ai-loader-track">
           {/* Progress Bar Fill */}
           <div
-            style={{
-              width: `${progress}%`,
-              height: "100%",
-              background: "linear-gradient(90deg, #031035, #081947)",
-              borderRadius: "10px",
-              transition: "width 0.3s ease-out",
-              position: "relative",
-            }}
+            className="ai-loader-fill"
+            style={{ width: `${progress}%` }}
           >
             {/* Shimmer effect */}
-            <div
-              className="ai-loader-shimmer"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background:
-                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
-              }}
-            />
+            <div className="ai-loader-shimmer" />
           </div>
         </div>
 
-        <div
-          className="d-flex justify-content-between"
-          style={{ fontSize: "0.85rem", fontWeight: "600", color: "#6c757d" }}
-        >
+        <div className="ai-loader-meta">
           <span>{Math.round(progress)}% Complete</span>
           <span>Please wait...</span>
         </div>
@@ -187,6 +100,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [filters, setFilters] = useState({
     channelName: "",
     query: "",
@@ -207,6 +121,7 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
   const [jobProgress, setJobProgress] = useState(null);
 
   const fetchVideos = async () => {
+    setHasSearched(true);
     setLoading(true);
     setJobProgress({
       processed: 0,
@@ -220,7 +135,6 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
           setJobProgress(prog);
         },
       });
-      console.log("YouTube Results:", res);
 
       // Smooth completion: Slide to 100% before closing
       setJobProgress((prev) => ({
@@ -252,16 +166,23 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "channelName" || name === "query") {
+      setHasSearched(false);
+    }
+
+    // Constraint for maxResults
+    if (name === "maxResults") {
+      const numericValue = value.replace(/\D/g, ""); // Remove non-digits
+      if (numericValue !== "" && Number(numericValue) > 1000) return;
+      setFilters((prev) => ({ ...prev, [name]: numericValue }));
+      return;
+    }
+
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = () => {
     fetchVideos();
-  };
-
-  const formatNumber = (num) => {
-    if (!num) return "0";
-    return Number(num).toLocaleString();
   };
 
   if (loading) {
@@ -272,92 +193,53 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
     <div style={{ minHeight: "100vh" }}>
       <div>
         {/* Filter Card */}
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "12px",
-            padding: "24px",
-            marginBottom: "30px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
-            marginTop: "16px",
-          }}
-        >
+        <div className="app-search-card">
           <div
             style={{
-              marginBottom: "16px",
+              marginBottom: "20px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
-            <h6
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#1a1a1a",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                margin: 0,
-              }}
-            >
-              Channel Search Filters
-            </h6>
-
-            <div
-              style={{
-                display: "inline-flex",
-                backgroundColor: "#f1f5f9",
-                padding: "3px",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0",
-                height: "36px",
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
+                display: "flex",
                 alignItems: "center",
-              }}
-            >
+                justifyContent: "center",
+                color: "#ffffff",
+                boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
+              }}>
+                <Filter size={16} />
+              </div>
+              <h6
+                style={{
+                  fontSize: "0.875rem",
+                  fontWeight: "700",
+                  color: "var(--text-primary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.6px",
+                  margin: 0,
+                }}
+              >
+                Channel Search Filters
+              </h6>
+            </div>
+
+            <div className="app-toggle-pill">
               <button
                 onClick={() => setSearchType("keyword")}
-                className="btn-sm"
-                style={{
-                  padding: "4px 16px",
-                  borderRadius: "10px",
-                  border: "none",
-                  fontSize: "0.75rem",
-                  fontWeight: "750",
-                  backgroundColor:
-                    searchType === "keyword" ? "#ffffff" : "transparent",
-                  color: searchType === "keyword" ? "#0d6efd" : "#64748b",
-                  boxShadow:
-                    searchType === "keyword"
-                      ? "0 2px 6px rgba(0,0,0,0.1)"
-                      : "none",
-                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                  transform:
-                    searchType === "keyword" ? "scale(1.02)" : "scale(1)",
-                }}
+                className={`app-toggle-btn ${searchType === "keyword" ? "active" : ""}`}
               >
                 Keyword
               </button>
               <button
                 onClick={() => setSearchType("channel")}
-                className="btn-sm"
-                style={{
-                  padding: "4px 16px",
-                  borderRadius: "10px",
-                  border: "none",
-                  fontSize: "0.75rem",
-                  fontWeight: "750",
-                  backgroundColor:
-                    searchType === "channel" ? "#ffffff" : "transparent",
-                  color: searchType === "channel" ? "#0d6efd" : "#64748b",
-                  boxShadow:
-                    searchType === "channel"
-                      ? "0 2px 6px rgba(0,0,0,0.1)"
-                      : "none",
-                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                  transform:
-                    searchType === "channel" ? "scale(1.02)" : "scale(1)",
-                }}
+                className={`app-toggle-btn ${searchType === "channel" ? "active" : ""}`}
               >
                 Channel
               </button>
@@ -366,51 +248,20 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
 
           <div className="row g-3">
             <div className="col-lg-4">
-              <label
-                style={{
-                  padding: "14px 0 8px 0",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  color: "#495057",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  display: "block",
-                }}
-              >
+              <label className="app-search-label">
                 Channel Name
               </label>
-              <div
-                className="input-group"
-                style={{
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  transition: "all 0.3s ease",
-                }}
-              >
-                <span
-                  className="input-group-text"
-                  style={{
-                    border: "1px solid #dee2e6",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <Globe size={16} style={{ color: "#6c757d" }} />
+              <div className="app-input-group">
+                <span className="app-input-addon">
+                  <Globe size={16} />
                 </span>
                 <input
                   type="text"
                   name="channelName"
                   value={filters.channelName}
                   onChange={handleChange}
-                  className="form-control"
+                  className="app-input"
                   placeholder="Enter channel name..."
-                  style={{
-                    border: "1px solid #dee2e6",
-                    fontSize: "0.85rem",
-                    padding: "8px 12px",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "#0d6efd")}
-                  onBlur={(e) => (e.target.style.borderColor = "#dee2e6")}
                 />
               </div>
             </div>
@@ -418,91 +269,37 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
             {filters.channelName && (
               <>
                 <div className="col-lg-4">
-                  <label
-                    style={{
-                      padding: "14px 0 8px 0",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      display: "block",
-                    }}
-                  >
+                  <label className="app-search-label">
                     Search Query
                   </label>
-                  <div
-                    className="input-group"
-                    style={{
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      transition: "all 0.3s ease",
-                    }}
-                  >
-                    <span
-                      className="input-group-text"
-                      style={{
-                        border: "1px solid #dee2e6",
-                        backgroundColor: "#f8f9fa",
-                      }}
-                    >
-                      <Search size={16} style={{ color: "#6c757d" }} />
+                  <div className="app-input-group">
+                    <span className="app-input-addon">
+                      <Search size={16} />
                     </span>
                     <input
                       type="text"
                       name="query"
                       value={filters.query}
                       onChange={handleChange}
-                      className="form-control"
+                      className="app-input"
                       placeholder="Enter search terms..."
-                      style={{
-                        border: "1px solid #dee2e6",
-                        fontSize: "0.85rem",
-                        padding: "8px 12px",
-                        transition: "all 0.2s ease",
-                      }}
-                      onFocus={(e) => (e.target.style.borderColor = "#0d6efd")}
-                      onBlur={(e) => (e.target.style.borderColor = "#dee2e6")}
                     />
                   </div>
                 </div>
+
                 <div className="col-lg-2">
-                  <label
-                    style={{
-                      padding: "14px 0 8px 0",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      display: "block",
-                    }}
-                  >
+                  <label className="app-search-label">
                     Sort By
                   </label>
-                  <div
-                    className="input-group"
-                    style={{ borderRadius: "6px", overflow: "hidden" }}
-                  >
-                    <span
-                      className="input-group-text"
-                      style={{
-                        border: "1px solid #dee2e6",
-                        backgroundColor: "#f8f9fa",
-                      }}
-                    >
-                      <Filter size={16} style={{ color: "#6c757d" }} />
+                  <div className="app-input-group">
+                    <span className="app-input-addon">
+                      <Filter size={16} />
                     </span>
                     <select
                       name="sortBy"
                       value={filters.sortBy}
                       onChange={handleChange}
-                      className="form-select"
-                      style={{
-                        border: "1px solid #dee2e6",
-                        fontSize: "0.85rem",
-                        padding: "8px 12px",
-                      }}
+                      className="app-select"
                     >
                       <option value="relevance">Relevance</option>
                       <option value="popular">Popular</option>
@@ -511,43 +308,19 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                   </div>
                 </div>
 
-                  <div className="col-lg-2">
-                  <label
-                    style={{
-                      padding: "14px 0 8px 0",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      display: "block",
-                    }}
-                  >
+                <div className="col-lg-2">
+                  <label className="app-search-label">
                     Date filter Data
                   </label>
-                  <div
-                    className="input-group"
-                    style={{ borderRadius: "6px", overflow: "hidden" }}
-                  >
-                    <span
-                      className="input-group-text"
-                      style={{
-                        border: "1px solid #dee2e6",
-                        backgroundColor: "#f8f9fa",
-                      }}
-                    >
-                      <Filter size={16} style={{ color: "#6c757d" }} />
+                  <div className="app-input-group">
+                    <span className="app-input-addon">
+                      <Calendar size={16} />
                     </span>
                     <select
                       name="dateRange"
                       value={filters.dateRange}
                       onChange={handleChange}
-                      className="form-select"
-                      style={{
-                        border: "1px solid #dee2e6",
-                        fontSize: "0.85rem",
-                        padding: "8px 12px",
-                      }}
+                      className="app-select"
                     >
                       <option value="none">None</option>
                       <option value="24h">Last 24 Hours</option>
@@ -558,100 +331,37 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
                       <option value="6m">6 Months</option>
                       <option value="12m">1 Year</option>
                       <option value="24m">2 Year</option>
-
                     </select>
                   </div>
                 </div>
 
-
                 <div className="col-lg-2">
-                  <label
-                    style={{
-                      padding: "14px 0 8px 0",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      display: "block",
-                    }}
-                  >
+                  <label className="app-search-label">
                     Max Results
                   </label>
-                  <div
-                    className="input-group"
-                    style={{ borderRadius: "6px", overflow: "hidden" }}
-                  >
-                    <span
-                      className="input-group-text"
-                      style={{
-                        border: "1px solid #dee2e6",
-                        backgroundColor: "#f8f9fa",
-                      }}
-                    >
-                      <BookOpen size={16} style={{ color: "#6c757d" }} />
+                  <div className="app-input-group">
+                    <span className="app-input-addon">
+                      <BookOpen size={16} />
                     </span>
                     <input
-                      type="number"
+                      type="text"
                       name="maxResults"
                       value={filters.maxResults}
                       onChange={handleChange}
-                      className="form-control"
-                      min="1"
-                      max="200"
-                      placeholder="100"
-                      style={{
-                        border: "1px solid #dee2e6",
-                        fontSize: "0.85rem",
-                        padding: "8px 12px",
-                      }}
+                      className="app-input"
+                      placeholder="200"
                     />
                   </div>
                 </div>
 
                 <div className="col-lg-2 d-flex align-items-end">
                   <button
-                    className="btn w-100"
+                    className="app-btn-search w-100"
                     type="button"
-                    disabled={loading || !filters.channelName || !filters.query}
+                    disabled={loading}
                     onClick={handleSubmit}
-                    style={{
-                      backgroundColor:
-                        loading || !filters.channelName || !filters.query
-                          ? "#e2e8f0"
-                          : "#0d6efd",
-                      color:
-                        loading || !filters.channelName || !filters.query
-                          ? "#94a3b8"
-                          : "#ffffff",
-                      border: "none",
-                      fontWeight: "750",
-                      padding: "10px 16px",
-                      borderRadius: "10px",
-                      cursor:
-                        loading || !filters.channelName || !filters.query
-                          ? "not-allowed"
-                          : "pointer",
-                      fontSize: "0.95rem",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      boxShadow:
-                        loading || !filters.channelName || !filters.query
-                          ? "none"
-                          : "0 4px 12px rgba(13, 110, 253, 0.25)",
-                      transform:
-                        loading || !filters.channelName || !filters.query
-                          ? "scale(1)"
-                          : "scale(1)",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!loading && filters.channelName && filters.query)
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!loading && filters.channelName && filters.query)
-                        e.currentTarget.style.transform = "translateY(0)";
-                    }}
                   >
+                    <Search size={16} />
                     {loading ? "Searching..." : "Search"}
                   </button>
                 </div>
@@ -660,490 +370,43 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
           </div>
         </div>
 
-        {/* Results Header */}
-        <div
-          style={{
-            marginBottom: "20px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
+        {/* No Videos Found State */}
+        {hasSearched && videos.length === 0 && !loading && (
+          <div
+            style={{
+              backgroundColor: "var(--card-bg, #1e293b)",
+              borderRadius: "16px",
+              padding: "24px 28px",
+              marginTop: "20px",
+              marginBottom: "24px",
+              border: "1px solid rgba(239, 68, 68, 0.25)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            }}
+          >
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <AlertCircle size={20} color="#ef4444" />
+              <h5
+                style={{
+                  margin: 0,
+                  fontSize: "1.05rem",
+                  fontWeight: "700",
+                  color: "#ef4444",
+                }}
+              >
+                No videos found for channel &quot;{filters.channelName}&quot;
+              </h5>
+            </div>
             <p
               style={{
-                fontSize: "0.85rem",
-                color: "#6c757d",
-                marginBottom: "0",
+                color: "var(--text-secondary, #94a3b8)",
+                fontSize: "0.9rem",
+                margin: "8px 0 0 0",
               }}
             >
-              {videos.length > 0
-                ? `Showing ${videos.length} video${videos.length !== 1 ? "s" : ""}`
-                : "No videos to display"}
+              Try adjusting your channel name, search terms, or date filters.
             </p>
           </div>
-        </div>
-      </div>
-
-      {/* Table Section */}
-      <div className="mb-5">
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: "12px",
-            overflow: "hidden",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
-          }}
-        >
-          <div
-            className="table-responsive"
-            style={{ overflowX: "auto", width: "100%", maxWidth: "100%" }}
-          >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                tableLayout: "fixed",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    backgroundColor: "#f8f9fa",
-                    borderBottom: "2px solid #dee2e6",
-                  }}
-                >
-                  <th
-                    style={{
-                      padding: "10px 10px 10px 24px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "21%",
-                    }}
-                  >
-                    Video
-                  </th>
-                  <th
-                    style={{
-                      padding: "10px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "13%",
-                    }}
-                  >
-                    Channel
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "13%",
-                    }}
-                  >
-                    Views
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "12%",
-                    }}
-                  >
-                    Likes
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "12%",
-                    }}
-                  >
-                    Comments
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "13%",
-                    }}
-                  >
-                    Subscribers
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px 24px 14px 14px",
-                      textAlign: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
-                      color: "#495057",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "10%",
-                    }}
-                  >
-                    Published
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {videos.length === 0 && !loading && (
-                  <tr>
-                    <td
-                      colSpan="7"
-                      style={{
-                        textAlign: "center",
-                        padding: "60px 20px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      <div>
-                        <AlertCircle
-                          size={48}
-                          style={{ color: "#dee2e6", marginBottom: "16px" }}
-                        />
-                       
-                        <h5
-                           style={{
-                            color: "#6c757d",
-                            fontWeight: "500",
-                            marginBottom: "8px",
-                            fontSize: "1rem",
-                          }}
-                        >
-                          {filters.query
-                            ? "Try adjusting your search terms or filters"
-                            : "Enter a search query to find videos"}
-                        </h5>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-
-                {videos.map((v, idx) => (
-                  <tr
-                    key={v.videoId}
-                    style={{
-                      borderBottom: "1px solid #e9ecef",
-                      transition: "background-color 0.2s ease",
-                      backgroundColor: idx % 2 === 0 ? "#ffffff" : "#f8f9fa",
-                      cursor: "default",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f0f4ff")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor =
-                        idx % 2 === 0 ? "#ffffff" : "#f8f9fa")
-                    }
-                  >
-                     <td
-                       style={{
-                         padding: "12px 12px 12px 24px",
-                         verticalAlign: "middle",
-                         minWidth: 0,
-                       }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          minWidth: 0,
-                        }}
-                      >
-                        <img
-                          src={v.thumbnail}
-                          alt={v.title}
-                          width={48}
-                          height={36}
-                          style={{
-                            borderRadius: "4px",
-                            objectFit: "cover",
-                            flexShrink: 0,
-                            border: "1px solid #e9ecef",
-                          }}
-                        />
-                        <div
-                          style={{ minWidth: 0, flex: 1, overflow: "hidden" }}
-                        >
-                          <div
-                            style={{
-                              fontWeight: "500",
-                              color: "#1a1a1a",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              marginBottom: "4px",
-                              fontSize: "0.85rem",
-                            }}
-                            title={v.title}
-                          >
-                            {v.title}
-                          </div>
-                          <a
-                            href={v.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              fontSize: "0.75rem",
-                              color: "#0d6efd",
-                              textDecoration: "none",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              display: "block",
-                            }}
-                          >
-                            Watch Video →
-                          </a>
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                          minWidth: 0,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "#e9ecef",
-                            fontWeight: "600",
-                            fontSize: "0.8rem",
-                            color: "#495057",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {v.channelName.charAt(0).toUpperCase()}
-                        </div>
-                        <span
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            fontSize: "0.85rem",
-                            color: "#1a1a1a",
-                            minWidth: 0,
-                          }}
-                          title={v.channelName}
-                        >
-                          {v.channelName}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <Eye
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {formatNumber(v.views)}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <ThumbsUp
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {formatNumber(v.likes)}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <MessageCircle
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {formatNumber(v.comments)}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px",
-                        verticalAlign: "middle",
-                        minWidth: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <Users
-                          size={12}
-                          style={{ color: "#6c757d", flexShrink: 0 }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {formatNumber(v.subscribers)}
-                        </span>
-                      </div>
-                    </td>
-                     <td
-                       style={{
-                         padding: "12px 24px 12px 12px",
-                         verticalAlign: "middle",
-                         minWidth: 0,
-                         textAlign: "center",
-                       }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "#6c757d",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          display: "block",
-                          textAlign: "center",
-                        }}
-                      >
-                        {new Date(v.publishedDate).toLocaleDateString()}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {videos.length > 0 && (
-            <div
-              style={{
-                padding: "16px",
-                backgroundColor: "#f8f9fa",
-                borderTop: "1px solid #dee2e6",
-                fontSize: "0.9rem",
-                color: "#6c757d",
-              }}
-            >
-              Showing <strong>{videos.length}</strong> video
-              {videos.length !== 1 ? "s" : ""}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
