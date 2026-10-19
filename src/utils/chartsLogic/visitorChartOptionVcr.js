@@ -6,7 +6,7 @@ export const visitorChartOption = (dailyReportsData = [], theme = "dark") => {
     ? dailyReportsData
     : dailyReportsData?.data || [];
 
-  const sorted = dataArray.sort(
+  const sorted = [...dataArray].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
 
@@ -23,126 +23,121 @@ export const visitorChartOption = (dailyReportsData = [], theme = "dark") => {
 
     const vcr =
       impressions > 0
-        ? ((completeViews / impressions) * 100).toFixed(2)
+        ? parseFloat(((completeViews / impressions) * 100).toFixed(2))
         : 0;
 
     impressionsSeries.push(impressions);
-    vcrSeries.push(Number(vcr));
+    vcrSeries.push(vcr);
   });
+
+  const impressionsColor = isLight ? "#7c3aed" : "#8b5cf6";
+  const vcrColor = isLight ? "#10b981" : "#34d399";
 
   return {
     series: [
-      { name: "Impressions", data: impressionsSeries },
-      { name: "VCR (%)", data: vcrSeries },
+      { name: "Impressions", type: "area", data: impressionsSeries },
+      { name: "VCR (%)", type: "area", data: vcrSeries },
     ],
     chart: {
-      height: 350,
+      height: 340,
       type: "area",
       toolbar: { show: false },
       background: "transparent",
+      stacked: false,
+      animations: { enabled: true, speed: 450 },
+      zoom: { enabled: false },
     },
-    stroke: { curve: "smooth", width: 2 },
-    colors: ["#3454D1", "#FFA21D"],
-    dataLabels: {
-      enabled: false,
+    stroke: {
+      curve: "smooth",
+      width: [2.5, 2.5],
     },
-    markers: isLight
-      ? {
-          size: 4,
-          colors: ["#ffffff", "#ffffff"],
-          strokeColors: ["#3454D1", "#FFA21D"],
-          strokeWidth: 2,
-          hover: {
-            size: 6,
-          },
-        }
-      : {
-          size: 4,
-          strokeWidth: 2,
-          hover: {
-            size: 6,
-          },
-        },
-    legend: {
-      show: true,
-      position: "bottom",
-      horizontalAlign: "center",
-      labels: {
-        colors: isLight ? "#334155" : "#cbd5e1",
-        useSeriesColors: false,
-      },
-      markers: {
-        width: 10,
-        height: 10,
-        radius: 10,
-      },
-      itemMargin: {
-        horizontal: 14,
-        vertical: 8,
+    colors: [impressionsColor, vcrColor],
+    dataLabels: { enabled: false },
+    fill: {
+      type: "gradient",
+      gradient: {
+        shade: isLight ? "light" : "dark",
+        type: "vertical",
+        shadeIntensity: 0.5,
+        gradientToColors: undefined,
+        inverseColors: false,
+        opacityFrom: [0.48, 0.58],
+        opacityTo: [0.08, 0.14],
+        stops: [0, 85, 100],
       },
     },
+    markers: {
+      size: [4.5, 4.5],
+      colors: [impressionsColor, "#ffffff"],
+      strokeColors: ["#ffffff", vcrColor],
+      strokeWidth: [2, 2],
+      strokeOpacity: 1,
+      fillOpacity: 1,
+      hover: { size: 7, sizeOffset: 2 },
+    },
+    legend: { show: false },
     xaxis: {
       categories,
       axisBorder: { show: false },
       axisTicks: { show: false },
       labels: {
+        rotate: -45,
+        rotateAlways: false,
         style: {
-          fontFamily: "Inter",
-          fontSize: "11px",
+          fontFamily: "Inter, sans-serif",
+          fontSize: "10px",
+          fontWeight: 500,
           colors: isLight ? "#64748b" : "#94a3b8",
         },
       },
-      tooltip: {
-        enabled: true,
-        theme: isLight ? "light" : "dark",
-      },
+      tooltip: { enabled: false },
     },
     yaxis: [
       {
-        title: {
-          text: "Impressions",
-          style: {
-            color: isLight ? "#475569" : "#94a3b8",
-            fontWeight: 600,
-          },
-        },
+        seriesName: "Impressions",
+        title: { text: undefined },
         labels: {
-          formatter: (val) => Math.round(val).toLocaleString(),
-          style: { colors: [isLight ? "#64748b" : "#94a3b8"] },
+          formatter: (val) => {
+            if (val >= 1000000) return (val / 1000000).toFixed(1) + "M";
+            if (val >= 1000) return Math.round(val / 1000) + "K";
+            return Math.round(val).toString();
+          },
+          style: {
+            colors: [impressionsColor],
+            fontFamily: "Inter, sans-serif",
+            fontSize: "11px",
+            fontWeight: 500,
+          },
         },
       },
       {
+        seriesName: "VCR (%)",
         opposite: true,
-        title: {
-          text: "VCR %",
-          style: {
-            color: isLight ? "#475569" : "#94a3b8",
-            fontWeight: 600,
-          },
-        },
+        title: { text: undefined },
         labels: {
-          formatter: (val) => (typeof val === "number" ? val.toFixed(2) + "%" : val + "%"),
-          style: { colors: [isLight ? "#64748b" : "#94a3b8"] },
+          formatter: (val) =>
+            typeof val === "number" ? val.toFixed(1) + "%" : val + "%",
+          style: {
+            colors: [vcrColor],
+            fontFamily: "Inter, sans-serif",
+            fontSize: "11px",
+            fontWeight: 500,
+          },
         },
       },
     ],
-    fill: {
-      type: "gradient",
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.45,
-        opacityTo: 0.05,
-        stops: [20, 100],
-      },
-    },
     grid: {
-      padding: { left: 0, right: 0 },
-      strokeDashArray: 3,
-      borderColor: isLight ? "#f1f5f9" : "rgba(255,255,255,0.12)",
+      padding: { left: 10, right: 10, top: 10, bottom: 0 },
+      strokeDashArray: 4,
+      borderColor: isLight ? "rgba(226, 232, 240, 0.8)" : "rgba(255,255,255,0.07)",
+      xaxis: { lines: { show: false } },
+      yaxis: { lines: { show: true } },
     },
     theme: { mode: isLight ? "light" : "dark" },
     tooltip: {
       theme: isLight ? "light" : "dark",
+      shared: true,
+      intersect: false,
       y: {
         formatter: function (val, { seriesIndex }) {
           if (seriesIndex === 0) {

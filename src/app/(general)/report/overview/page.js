@@ -1027,7 +1027,7 @@ export default function OverviewPage() {
 
   return (
     <>
-      <div ref={mainContentRef}>
+      <div ref={mainContentRef} className="report-overview-container">
         {/* Filters Section */}
 
         {/* Real-time Stats */}
@@ -1059,55 +1059,43 @@ export default function OverviewPage() {
             <div className="realtime-stats">
               <Stat
                 icon={Eye}
-                iconBg="#eff6ff"
-                iconColor="#2563eb"
-                iconBorder="#dbeafe"
-                accentColor="#3b82f6"
+                variant="impressions"
+                accentColor="#4F46E5"
                 value={formatNumber(summaryMetrics.impressions)}
                 label="Impressions"
               />
               <Stat
                 icon={CheckSquare}
-                iconBg="#ecfdf5"
-                iconColor="#059669"
-                iconBorder="#a7f3d0"
-                accentColor="#10b981"
+                variant="views"
+                accentColor="#059669"
                 value={formatNumber(summaryMetrics.completeViews)}
                 label="Complete Views"
               />
               <Stat
                 icon={TrendingUp}
-                iconBg="#f5f3ff"
-                iconColor="#7c3aed"
-                iconBorder="#ddd6fe"
-                accentColor="#8b5cf6"
+                variant="vcr"
+                accentColor="#7C3AED"
                 value={`${summaryMetrics.vcr}%`}
                 label="VCR"
               />
               <Stat
                 icon={MousePointer}
-                iconBg="#fff7ed"
-                iconColor="#ea580c"
-                iconBorder="#fed7aa"
-                accentColor="#f97316"
+                variant="clicks"
+                accentColor="#EA580C"
                 value={formatNumber(summaryMetrics.clicks)}
                 label="Clicks"
               />
               <Stat
                 icon={Target}
-                iconBg="#fef2f2"
-                iconColor="#dc2626"
-                iconBorder="#fecaca"
-                accentColor="#ef4444"
+                variant="ctr"
+                accentColor="#E11D48"
                 value={`${summaryMetrics.ctr}%`}
                 label="CTR"
               />
               <Stat
                 icon={IndianRupee}
-                iconBg="#f0f9ff"
-                iconColor="#0284c7"
-                iconBorder="#bae6fd"
-                accentColor="#0284c7"
+                variant="cost"
+                accentColor="#0284C7"
                 value={`₹${(summaryMetrics.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 label="Media Cost"
               />
@@ -1123,7 +1111,6 @@ export default function OverviewPage() {
               <div className="loading-text">Refreshing charts...</div>
             </div>
           )}
-          <h2 className="section-title">Analytics & Insights</h2>
           <div className="charts-grid">
             <VisitorsChart dailyReportsData={dailyReportsData} />
             <VisitorsChartVcr dailyReportsData={dailyReportsData} />
@@ -1473,26 +1460,19 @@ export default function OverviewPage() {
 
 /* ===== Helpers (same file) ===== */
 
-function Stat({ value, label, icon: Icon, iconBg, iconColor, iconBorder, accentColor }) {
+function Stat({ value, label, icon: Icon, variant, accentColor }) {
   return (
-    <div className="report-metric-card">
+    <div className={`report-metric-card ${variant ? `metric-${variant}` : ""}`}>
       <div className="metric-card-top">
         {Icon && (
-          <div
-            className="report-metric-icon"
-            style={{
-              backgroundColor: iconBg,
-              color: iconColor,
-              border: `1px solid ${iconBorder || "transparent"}`,
-            }}
-          >
+          <div className="report-metric-icon">
             <Icon size={20} strokeWidth={2.2} />
           </div>
         )}
         <span
           className="metric-accent-indicator"
           style={{
-            backgroundColor: accentColor || iconColor,
+            backgroundColor: accentColor,
           }}
         />
       </div>

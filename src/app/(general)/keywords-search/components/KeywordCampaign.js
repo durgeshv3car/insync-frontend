@@ -12,10 +12,34 @@ import {
   ExternalLink,
   Database,
   Sparkles,
+  RotateCcw,
+  TrendingUp,
 } from "lucide-react";
 import { getYouTubeResults } from "@/services/youtube";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+const REGION_OPTIONS = [
+  { code: "IN", name: "India", flag: "🇮🇳" },
+  { code: "US", name: "United States", flag: "🇺🇸" },
+  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "CA", name: "Canada", flag: "🇨🇦" },
+  { code: "AU", name: "Australia", flag: "🇦🇺" },
+  { code: "DE", name: "Germany", flag: "🇩🇪" },
+  { code: "FR", name: "France", flag: "🇫🇷" },
+  { code: "JP", name: "Japan", flag: "🇯🇵" },
+  { code: "BR", name: "Brazil", flag: "🇧🇷" },
+  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
+  { code: "KR", name: "South Korea", flag: "🇰🇷" },
+  { code: "MX", name: "Mexico", flag: "🇲🇽" },
+  { code: "ES", name: "Spain", flag: "🇪🇸" },
+  { code: "IT", name: "Italy", flag: "🇮🇹" },
+  { code: "NL", name: "Netherlands", flag: "🇳🇱" },
+  { code: "SG", name: "Singapore", flag: "🇸🇬" },
+  { code: "AE", name: "UAE", flag: "🇦🇪" },
+  { code: "SA", name: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "all", name: "Worldwide (All)", flag: "🌐" },
+];
 
 const AILoader = ({ realProgress }) => {
   const [progress, setProgress] = useState(0);
@@ -129,6 +153,27 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
       setFilters((prev) => ({ ...prev, userId: session.user.id }));
     }
   }, [session]);
+
+  const activeFilterCount = [
+    filters.regionCode && filters.regionCode !== "IN",
+    filters.sortBy && filters.sortBy !== "relevance",
+    Boolean(filters.minViews && Number(filters.minViews) > 0),
+    filters.minSubscribers && filters.minSubscribers !== "1000",
+    filters.dateRange && filters.dateRange !== "none",
+    filters.maxResults && filters.maxResults !== "100",
+  ].filter(Boolean).length;
+
+  const handleResetFilters = () => {
+    setFilters((prev) => ({
+      ...prev,
+      regionCode: "IN",
+      sortBy: "relevance",
+      minViews: "",
+      minSubscribers: "1000",
+      dateRange: "none",
+      maxResults: "100",
+    }));
+  };
 
   const [jobProgress, setJobProgress] = useState(null);
 
@@ -295,244 +340,293 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
   return (
     <div style={{ minHeight: "100vh" }}>
       <div>
-        {/* Filter Card */}
-        <div className="app-search-card">
-          <div
-            style={{
-              marginBottom: "20px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "10px",
-                background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#ffffff",
-                boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
-              }}>
-                <Filter size={16} />
+        {/* Discovery Filter Card */}
+        <div className="discovery-card">
+          {/* Top Bar: Title + Segmented Control */}
+          <div className="discovery-top-bar">
+            <div className="discovery-badge-wrap">
+              <div className="discovery-icon-badge">
+                <Sparkles size={16} />
               </div>
-              <h6
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: "700",
-                  color: "var(--text-primary)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.6px",
-                  margin: 0,
-                }}
-              >
-                Keyword Search Filters
-              </h6>
+              <span className="discovery-section-label">
+                KEYWORD SEARCH FILTERS
+              </span>
             </div>
 
-            <div className="app-toggle-pill">
+            <div className="discovery-toggle-pill">
               <button
                 onClick={() => setSearchType("keyword")}
-                className={`app-toggle-btn ${searchType === "keyword" ? "active" : ""}`}
+                className={`discovery-toggle-btn ${searchType === "keyword" ? "active" : ""}`}
+                type="button"
               >
-                Keyword
+                <Search size={13} />
+                <span>Keyword</span>
               </button>
               <button
                 onClick={() => setSearchType("channel")}
-                className={`app-toggle-btn ${searchType === "channel" ? "active" : ""}`}
+                className={`discovery-toggle-btn ${searchType === "channel" ? "active" : ""}`}
+                type="button"
               >
-                Channel
+                <Users size={13} />
+                <span>Channel</span>
               </button>
             </div>
           </div>
 
-          <div className="row g-3">
-            <div className="col-lg-3">
-              <label className="app-search-label">
-                Search Query
-              </label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Search size={16} />
-                </span>
-                <input
-                  type="text"
-                  name="query"
-                  value={filters.query}
-                  onChange={handleChange}
-                  className="app-input"
-                  placeholder="Enter search terms..."
-                />
-              </div>
+          {/* Primary Hero Search Bar */}
+          <div className="discovery-hero-row">
+            <div className="discovery-search-wrapper">
+              <span className="discovery-search-icon">
+                <Search size={18} />
+              </span>
+              <input
+                type="text"
+                name="query"
+                value={filters.query}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSubmit();
+                }}
+                className="discovery-search-input"
+                placeholder="Search keywords, video topics, or creator tags (e.g. AI tools, tech reviews, travel vlog)..."
+                autoComplete="off"
+              />
             </div>
 
-            <div className="col-lg-2">
-              <label className="app-search-label">
-                Region
-              </label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Globe size={16} />
-                </span>
-                <input
-                  type="text"
-                  name="regionCode"
-                  value={filters.regionCode}
-                  onChange={handleChange}
-                  className="app-input"
-                  placeholder="IN"
-                  maxLength={2}
-                />
-              </div>
-            </div>
+            <button
+              className="discovery-search-btn"
+              type="button"
+              disabled={loading}
+              onClick={handleSubmit}
+            >
+              <Search size={16} />
+              <span>{loading ? "Searching..." : "Search"}</span>
+            </button>
+          </div>
 
-            <div className="col-lg-3">
-              <label className="app-search-label">
-                Sort By
-              </label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Filter size={16} />
+          {/* Advanced Filter Toolbar Container */}
+          <div className="discovery-filters-panel">
+            {/* Filter Section Header */}
+            <div className="discovery-filters-header">
+              <div className="discovery-filters-title-wrap">
+                <span className="discovery-filters-icon-badge">
+                  <Filter size={13} />
                 </span>
-                <select
-                  name="sortBy"
-                  value={filters.sortBy}
-                  onChange={handleChange}
-                  className="app-select"
+                <span className="discovery-filters-title">
+                  Search &amp; Audience Filters
+                </span>
+                {activeFilterCount > 0 ? (
+                  <span className="discovery-filters-badge active">
+                    {activeFilterCount} active
+                  </span>
+                ) : (
+                  <span className="discovery-filters-badge">Default</span>
+                )}
+              </div>
+
+              {activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="discovery-reset-btn"
+                  title="Reset all filters to default"
                 >
-                  <option value="relevance">Relevance</option>
-                  <option value="popular">Popular</option>
-                  <option value="recent">Recent</option>
-                </select>
-              </div>
+                  <RotateCcw size={12} />
+                  <span>Reset</span>
+                </button>
+              )}
             </div>
 
-            <div className="col-lg-2">
-              <label className="app-search-label">
-                Min Views
-              </label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Eye size={16} />
-                </span>
-                <input
-                  type="number"
-                  name="minViews"
-                  value={filters.minViews}
-                  onChange={handleChange}
-                  className="app-input"
-                  placeholder="0"
-                />
-              </div>
-            </div>
-
-            <div className="col-lg-2">
-              <label className="app-search-label">
-                Min Subscribers
-              </label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Users size={16} />
-                </span>
-                <select
-                  name="minSubscribers"
-                  value={filters.minSubscribers}
-                  onChange={handleChange}
-                  className="app-select"
-                >
-                  <option value="1000">1k</option>
-                  <option value="10000">10k</option>
-                  <option value="25000">25k</option>
-                  <option value="50000">50k</option>
-                  <option value="75000">75k</option>
-                  <option value="100000">100k</option>
-                  <option value="1000000">1M+</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="col-lg-3">
-              <label className="app-search-label">
-                Date filter Data
-              </label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Calendar size={16} />
-                </span>
-                <select
-                  name="dateRange"
-                  value={filters.dateRange}
-                  onChange={handleChange}
-                  className="app-select"
-                >
-                  <option value="none">None</option>
-                  <option value="24h">Last 24 Hours</option>
-                  <option value="7d">7 Days</option>
-                  <option value="15d">15 Days</option>
-                  <option value="30d">30 Days</option>
-                  <option value="3m">3 Months</option>
-                  <option value="6m">6 Months</option>
-                  <option value="12m">1 Year</option>
-                  <option value="24m">2 Year</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="col-lg-3">
-              <label className="app-search-label">
-                Max Results
-              </label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <BookOpen size={16} />
-                </span>
-                <input
-                  type="text"
-                  name="maxResults"
-                  value={filters.maxResults}
-                  onChange={handleChange}
-                  className="app-input"
-                  placeholder="200"
-                />
-              </div>
-            </div>
-
-            <div className="col-lg-2 d-flex align-items-end">
-              <button
-                className="app-btn-search w-100"
-                type="button"
-                disabled={loading}
-                onClick={handleSubmit}
+            {/* Compact Filters Grid */}
+            <div className="discovery-filters-grid">
+              {/* Region */}
+              <div
+                className={`discovery-filter-item ${
+                  filters.regionCode !== "IN" ? "is-active" : ""
+                }`}
               >
-                <Search size={16} />
-                {loading ? "Searching..." : "Search"}
-              </button>
+                <div className="discovery-filter-item-head">
+                  <span className="discovery-filter-micro-icon region">
+                    <Globe size={13} />
+                  </span>
+                  <label className="discovery-filter-label">Region</label>
+                </div>
+                <div className="discovery-input-wrap">
+                  <select
+                    name="regionCode"
+                    value={filters.regionCode}
+                    onChange={handleChange}
+                    className="discovery-compact-select"
+                  >
+                    {REGION_OPTIONS.map((r) => (
+                      <option key={r.code} value={r.code}>
+                        {r.flag} {r.name}
+                      </option>
+                    ))}
+                    {!REGION_OPTIONS.some((r) => r.code === filters.regionCode) &&
+                      filters.regionCode && (
+                        <option value={filters.regionCode}>
+                          🌐 {filters.regionCode.toUpperCase()}
+                        </option>
+                      )}
+                  </select>
+                </div>
+              </div>
+
+              {/* Sort By */}
+              <div
+                className={`discovery-filter-item ${
+                  filters.sortBy !== "relevance" ? "is-active" : ""
+                }`}
+              >
+                <div className="discovery-filter-item-head">
+                  <span className="discovery-filter-micro-icon sort">
+                    <TrendingUp size={13} />
+                  </span>
+                  <label className="discovery-filter-label">Sort By</label>
+                </div>
+                <div className="discovery-input-wrap">
+                  <select
+                    name="sortBy"
+                    value={filters.sortBy}
+                    onChange={handleChange}
+                    className="discovery-compact-select"
+                  >
+                    <option value="relevance">⚡ Relevance</option>
+                    <option value="popular">🔥 Most Popular</option>
+                    <option value="recent">🕒 Recently Uploaded</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Min Views */}
+              <div
+                className={`discovery-filter-item ${
+                  Boolean(filters.minViews && Number(filters.minViews) > 0)
+                    ? "is-active"
+                    : ""
+                }`}
+              >
+                <div className="discovery-filter-item-head">
+                  <span className="discovery-filter-micro-icon views">
+                    <Eye size={13} />
+                  </span>
+                  <label className="discovery-filter-label">Min Views</label>
+                </div>
+                <div className="discovery-input-wrap">
+                  <input
+                    type="number"
+                    name="minViews"
+                    value={filters.minViews}
+                    onChange={handleChange}
+                    className="discovery-compact-input"
+                    placeholder="0 (Any views)"
+                    min="0"
+                    step="1000"
+                  />
+                </div>
+              </div>
+
+              {/* Min Subscribers */}
+              <div
+                className={`discovery-filter-item ${
+                  filters.minSubscribers !== "1000" ? "is-active" : ""
+                }`}
+              >
+                <div className="discovery-filter-item-head">
+                  <span className="discovery-filter-micro-icon subscribers">
+                    <Users size={13} />
+                  </span>
+                  <label className="discovery-filter-label">Min Subscribers</label>
+                </div>
+                <div className="discovery-input-wrap">
+                  <select
+                    name="minSubscribers"
+                    value={filters.minSubscribers}
+                    onChange={handleChange}
+                    className="discovery-compact-select"
+                  >
+                    <option value="1000">⭐ 1K+ (Emerging)</option>
+                    <option value="10000">🌟 10K+ (Micro)</option>
+                    <option value="25000">💫 25K+ (Growing)</option>
+                    <option value="50000">🚀 50K+ (Established)</option>
+                    <option value="75000">💎 75K+ (Mid-Tier)</option>
+                    <option value="100000">🏆 100K+ (Macro)</option>
+                    <option value="500000">✨ 500K+ (Mega)</option>
+                    <option value="1000000">👑 1M+ (Celebrity)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Date Filter */}
+              <div
+                className={`discovery-filter-item ${
+                  filters.dateRange !== "none" ? "is-active" : ""
+                }`}
+              >
+                <div className="discovery-filter-item-head">
+                  <span className="discovery-filter-micro-icon date">
+                    <Calendar size={13} />
+                  </span>
+                  <label className="discovery-filter-label">Uploaded</label>
+                </div>
+                <div className="discovery-input-wrap">
+                  <select
+                    name="dateRange"
+                    value={filters.dateRange}
+                    onChange={handleChange}
+                    className="discovery-compact-select"
+                  >
+                    <option value="none">🗓️ Any Time</option>
+                    <option value="24h">⏱️ Last 24 Hours</option>
+                    <option value="7d">📅 Last 7 Days</option>
+                    <option value="15d">📅 Last 15 Days</option>
+                    <option value="30d">🗓️ Last 30 Days</option>
+                    <option value="3m">🗓️ Last 3 Months</option>
+                    <option value="6m">🗓️ Last 6 Months</option>
+                    <option value="12m">📆 Last 1 Year</option>
+                    <option value="24m">📆 Last 2 Years</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Max Results */}
+              <div
+                className={`discovery-filter-item ${
+                  filters.maxResults !== "100" ? "is-active" : ""
+                }`}
+              >
+                <div className="discovery-filter-item-head">
+                  <span className="discovery-filter-micro-icon max">
+                    <BookOpen size={13} />
+                  </span>
+                  <label className="discovery-filter-label">Max Results</label>
+                </div>
+                <div className="discovery-input-wrap">
+                  <input
+                    type="text"
+                    name="maxResults"
+                    value={filters.maxResults}
+                    onChange={handleChange}
+                    className="discovery-compact-input"
+                    placeholder="100 (Max 1000)"
+                    maxLength={4}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* No Videos Found / Query Expansion Suggestions */}
         {hasSearched && videos.length === 0 && !loading && (
-          <div
-            style={{
-              backgroundColor: "var(--card-bg, #1e293b)",
-              borderRadius: "16px",
-              padding: "24px 28px",
-              marginTop: "20px",
-              marginBottom: "24px",
-              border: "1px solid rgba(239, 68, 68, 0.25)",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-            }}
-          >
+          <div className="discovery-suggestions-box">
             <div className="d-flex align-items-center gap-2 mb-2">
               <AlertCircle size={20} color="#ef4444" />
               <h5
                 style={{
                   margin: 0,
-                  fontSize: "1.05rem",
+                  fontSize: "1rem",
                   fontWeight: "700",
                   color: "#ef4444",
                 }}
@@ -542,13 +636,14 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
             </div>
 
             {(() => {
-              const suggestionsPool =
+              const apiPool =
                 allSuggestions && allSuggestions.length > 0
                   ? allSuggestions
-                  : similarQueries;
+                  : similarQueries || [];
 
-              const displayedSuggestions = (suggestionsPool || []).filter(
-                (term) => {
+              // Extract labels
+              const extractedLabels = (apiPool || [])
+                .map((term) => {
                   const label =
                     typeof term === "object" && term !== null
                       ? term.query ||
@@ -562,121 +657,88 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                       ) ||
                       ""
                       : String(term || "");
+                  return label.trim();
+                })
+                .filter((label) => {
+                  const clean = label.toLowerCase();
+                  return (
+                    clean &&
+                    clean !== "[object object]" &&
+                    clean !== "object object" &&
+                    !triedQueries.has(clean)
+                  );
+                });
 
-                  const cleanLabel = label.trim().toLowerCase();
-                  if (!cleanLabel || cleanLabel === "[object object]")
-                    return false;
-                  if (triedQueries.has(cleanLabel)) return false;
-                  return true;
-                },
-              );
+              // Smart fallback queries based on current query
+              const baseQ = (filters.query || "").trim();
+              const fallbackVariations = baseQ
+                ? [
+                  `${baseQ} tutorial`,
+                  `${baseQ} review`,
+                  `${baseQ} guide`,
+                  `${baseQ} tips`,
+                  `${baseQ} highlights`,
+                  `best ${baseQ}`,
+                  `${baseQ} 2024`,
+                  `${baseQ} analysis`,
+                ]
+                : [
+                  "AI tools",
+                  "Tech reviews",
+                  "Gaming highlights",
+                  "Podcasts",
+                  "Digital Marketing",
+                  "Coding tutorials",
+                ];
 
-              if (displayedSuggestions.length > 0) {
-                return (
-                  <div style={{ marginTop: "14px" }}>
-                    <div
-                      style={{
-                        fontSize: "0.9rem",
-                        fontWeight: "600",
-                        color: "var(--text-secondary, #94a3b8)",
-                        marginBottom: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <Sparkles size={16} color="#3b82f6" />
-                      <span>Suggested Search Keywords</span>
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "10px",
-                        alignItems: "center",
-                      }}
-                    >
-                      {displayedSuggestions.map((term, index) => {
-                        const label =
-                          typeof term === "object" && term !== null
-                            ? term.query ||
-                            term.variation ||
-                            term.search_variation ||
-                            term.search_query ||
-                            term.title ||
-                            term.keyword ||
-                            Object.values(term).find(
-                              (v) => typeof v === "string",
-                            ) ||
-                            ""
-                            : String(term || "");
-
-                        if (
-                          !label ||
-                          label === "[object Object]" ||
-                          label === "object Object"
-                        ) {
-                          return null;
-                        }
-
-                        return (
-                          <button
-                            key={index}
-                            type="button"
-                            onClick={() => handleSuggestedQueryClick(label)}
-                            style={{
-                              background: "var(--card-bg, #ffffff)",
-                              border: "1.5px solid var(--card-border, #cbd5e1)",
-                              borderRadius: "24px",
-                              padding: "8px 16px",
-                              fontSize: "0.875rem",
-                              fontWeight: "600",
-                              color: "var(--text-primary, #1e293b)",
-                              cursor: "pointer",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "6px",
-                              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-                              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = "#3b82f6";
-                              e.currentTarget.style.color = "#3b82f6";
-                              e.currentTarget.style.transform =
-                                "translateY(-2px)";
-                              e.currentTarget.style.boxShadow =
-                                "0 6px 14px rgba(37,99,235,0.2)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor =
-                                "var(--card-border, #cbd5e1)";
-                              e.currentTarget.style.color =
-                                "var(--text-primary, #1e293b)";
-                              e.currentTarget.style.transform = "translateY(0)";
-                              e.currentTarget.style.boxShadow =
-                                "0 2px 6px rgba(0,0,0,0.04)";
-                            }}
-                          >
-                            <Search size={14} color="#3b82f6" />
-                            <span>{label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              }
+              const combinedSuggestions = Array.from(
+                new Set([...extractedLabels, ...fallbackVariations]),
+              )
+                .filter((term) => {
+                  const clean = term.toLowerCase();
+                  return (
+                    clean !== baseQ.toLowerCase() && !triedQueries.has(clean)
+                  );
+                })
+                .slice(0, 10);
 
               return (
-                <p
-                  style={{
-                    color: "var(--text-secondary, #94a3b8)",
-                    fontSize: "0.9rem",
-                    margin: "8px 0 0 0",
-                  }}
-                >
-                  Try adjusting your search terms, region, or subscriber/view filters.
-                </p>
+                <div style={{ marginTop: "14px" }}>
+                  <div
+                    style={{
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      color: "var(--text-secondary, #64748b)",
+                      marginBottom: "10px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <Sparkles size={15} color="#3b82f6" />
+                    <span>Suggested Search Keywords</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
+                  >
+                    {combinedSuggestions.map((label, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleSuggestedQueryClick(label)}
+                        className="discovery-suggestion-chip"
+                      >
+                        <Search size={13} color="#3b82f6" />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               );
             })()}
 
@@ -684,17 +746,17 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
             {unfilteredDbCount > 0 && (
               <div
                 style={{
-                  marginTop: "18px",
-                  padding: "16px 20px",
+                  marginTop: "16px",
+                  padding: "14px 18px",
                   backgroundColor: "var(--card-bg, #ffffff)",
                   border: "1.5px solid rgba(37, 99, 235, 0.35)",
-                  borderRadius: "14px",
-                  boxShadow: "0 4px 14px rgba(37, 99, 235, 0.12)",
+                  borderRadius: "12px",
+                  boxShadow: "0 4px 14px rgba(37, 99, 235, 0.1)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   flexWrap: "wrap",
-                  gap: "14px",
+                  gap: "12px",
                 }}
               >
                 <div
@@ -707,22 +769,22 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                 >
                   <div
                     style={{
-                      width: "38px",
-                      height: "38px",
+                      width: "36px",
+                      height: "36px",
                       borderRadius: "10px",
-                      backgroundColor: "rgba(37, 99, 235, 0.15)",
+                      backgroundColor: "rgba(37, 99, 235, 0.12)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
                     }}
                   >
-                    <Database size={20} color="#3b82f6" />
+                    <Database size={18} color="#3b82f6" />
                   </div>
                   <div>
                     <div
                       style={{
-                        fontSize: "0.95rem",
+                        fontSize: "0.9rem",
                         fontWeight: "700",
                         color: "var(--text-primary, #1e293b)",
                         marginBottom: "2px",
@@ -734,7 +796,7 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                     </div>
                     <div
                       style={{
-                        fontSize: "0.8rem",
+                        fontSize: "0.775rem",
                         color: "var(--text-secondary, #94a3b8)",
                       }}
                     >
@@ -750,33 +812,21 @@ const YouTubeTableKeywordCampaign = ({ searchType, setSearchType }) => {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "8px",
-                    padding: "9px 18px",
+                    padding: "8px 16px",
                     backgroundColor: "#2563eb",
                     color: "#ffffff",
                     border: "none",
                     borderRadius: "10px",
-                    fontSize: "0.875rem",
+                    fontSize: "0.85rem",
                     fontWeight: "600",
                     cursor: "pointer",
                     boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)",
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     whiteSpace: "nowrap",
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#1d4ed8";
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 12px rgba(37, 99, 235, 0.35)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#2563eb";
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow =
-                      "0 2px 8px rgba(37, 99, 235, 0.25)";
-                  }}
                 >
                   <span>View in YouTube Data</span>
-                  <ExternalLink size={15} />
+                  <ExternalLink size={14} />
                 </button>
               </div>
             )}

@@ -13,6 +13,10 @@ import {
   getDailyReportsByFilter,
   getDailyReportsByRange,
 } from "@/services/device";
+import {
+  getDailyReportsByFilter as getDailyDemographicsByFilter,
+  getDailyReportsByRange as getDailyDemographicsByRange,
+} from "@/services/demographics";
 import { formatDate } from "@/utils/dateFormatter";
 import { FiSmartphone, FiMonitor, FiTablet, FiTv, FiDownload } from "react-icons/fi";
 
@@ -157,9 +161,8 @@ export default function OverviewPage() {
 
   // State for storing fetched data
   const [dailyReportsData, setDailyReportsData] = useState(null);
+  const [dailyDemographicsData, setDailyDemographicsData] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
-
-
 
   const fetchReportsData = async () => {
     // Validation: Check if dateRange is selected
@@ -186,31 +189,61 @@ export default function OverviewPage() {
       // 1. Helper function to perform the actual fetch
       const performFetch = async () => {
         if (dateRange === "CUSTOM") {
-          const dailyData = await getDailyReportsByRange(
-            INSERTION_ORDER_ID,
-            startDate,
-            endDate,
-            audienceId
-          );
-          return { dailyData };
+          const [dailyData, demographicsData] = await Promise.all([
+            getDailyReportsByRange(
+              INSERTION_ORDER_ID,
+              startDate,
+              endDate,
+              audienceId
+            ).catch((err) => {
+              console.error("Error fetching device range data:", err);
+              return null;
+            }),
+            getDailyDemographicsByRange(
+              INSERTION_ORDER_ID,
+              startDate,
+              endDate,
+              audienceId
+            ).catch((err) => {
+              console.error("Error fetching demographics range data:", err);
+              return null;
+            }),
+          ]);
+          return { dailyData, demographicsData };
         } else {
-          const dailyData = await getDailyReportsByFilter(
-            INSERTION_ORDER_ID,
-            dateRange,
-            audienceId
-          );
-          return { dailyData };
+          const [dailyData, demographicsData] = await Promise.all([
+            getDailyReportsByFilter(
+              INSERTION_ORDER_ID,
+              dateRange,
+              audienceId
+            ).catch((err) => {
+              console.error("Error fetching device filter data:", err);
+              return null;
+            }),
+            getDailyDemographicsByFilter(
+              INSERTION_ORDER_ID,
+              dateRange,
+              audienceId
+            ).catch((err) => {
+              console.error("Error fetching demographics filter data:", err);
+              return null;
+            }),
+          ]);
+          return { dailyData, demographicsData };
         }
       };
 
       const result = await performFetch();
       const dailyData = result.dailyData;
+      const demographicsData = result.demographicsData;
 
       setDailyReportsData(dailyData);
+      setDailyDemographicsData(demographicsData);
       console.log("Report data updated successfully.");
     } catch (error) {
       console.error("Error in fetchReportsData workflow:", error);
       setDailyReportsData(null);
+      setDailyDemographicsData(null);
     } finally {
       setIsLoadingData(false);
     }
@@ -736,174 +769,198 @@ export default function OverviewPage() {
 
   return (
     <>
-      <div ref={mainContentRef}>
-        {/* Device & Ad type Impression - 3 Gradient Cards */}
-        <section className="device-section">
-          <h2 className="device-section-title">Device & Ad type Impression</h2>
-          <div className="device-gradient-grid">
-            {/* Desktop */}
-            <div className="device-gradient-card desktop-card">
-              <div>
-                <div className="device-card-header">
-                  <div className="device-card-icon">
-                    <FiMonitor size={20} color="#ffffff" />
+      <div ref={mainContentRef} className="report-device-container">
+        {/* Top 2-Column Row: Device Impression Progress + Gender Level Performance */}
+        <div className="device-overview-grid">
+          {/* Left: Device & Ad type Impression */}
+          <div className="device-analytics-card">
+            <div className="device-analytics-header">
+              <h2 className="device-analytics-title">Device & Ad type Impression</h2>
+              <span className="device-analytics-total">
+                Total: <strong>{formatNumber(totalDeviceImpressions)}</strong>
+              </span>
+            </div>
+
+            <div className="device-analytics-body">
+              {/* Desktop Item */}
+              <div className="device-analytics-item">
+                <div className="dai-header">
+                  <div className="dai-left">
+                    <span className="dai-icon desktop">
+                      <FiMonitor size={16} />
+                    </span>
+                    <span className="dai-name">Desktop</span>
+                    <span className="dai-count">{formatNumber(desktopItem.impressions)}</span>
                   </div>
-                  <span className="device-card-label">Desktop</span>
-                </div>
-                <div className="device-card-value">
-                  {formatNumber(desktopItem.impressions)}
-                </div>
-              </div>
-              <div className="device-card-pct">{desktopPct}%</div>
-            </div>
-
-            {/* Smart Phone */}
-            <div className="device-gradient-card mobile-card">
-              <div>
-                <div className="device-card-header">
-                  <div className="device-card-icon">
-                    <FiSmartphone size={20} color="#ffffff" />
+                  <div className="dai-right">
+                    <span className="dai-pct">{desktopPct}%</span>
                   </div>
-                  <span className="device-card-label">Smart Phone</span>
                 </div>
-                <div className="device-card-value">
-                  {formatNumber(mobileItem.impressions)}
+                <div className="dai-progress-track">
+                  <div
+                    className="dai-progress-bar desktop"
+                    style={{ width: `${Math.min(100, Math.max(0, Number(desktopPct) || 0))}%` }}
+                  />
                 </div>
               </div>
-              <div className="device-card-pct">{mobilePct}%</div>
-            </div>
 
-            {/* Tablet */}
-            <div className="device-gradient-card tablet-card">
-              <div>
-                <div className="device-card-header">
-                  <div className="device-card-icon">
-                    <FiTablet size={20} color="#ffffff" />
+              {/* Smart Phone Item */}
+              <div className="device-analytics-item">
+                <div className="dai-header">
+                  <div className="dai-left">
+                    <span className="dai-icon mobile">
+                      <FiSmartphone size={16} />
+                    </span>
+                    <span className="dai-name">Smart Phone</span>
+                    <span className="dai-count">{formatNumber(mobileItem.impressions)}</span>
                   </div>
-                  <span className="device-card-label">Tablet</span>
+                  <div className="dai-right">
+                    <span className="dai-pct">{mobilePct}%</span>
+                  </div>
                 </div>
-                <div className="device-card-value">
-                  {formatNumber(tabletItem.impressions)}
+                <div className="dai-progress-track">
+                  <div
+                    className="dai-progress-bar mobile"
+                    style={{ width: `${Math.min(100, Math.max(0, Number(mobilePct) || 0))}%` }}
+                  />
                 </div>
               </div>
-              <div className="device-card-pct">{tabletPct}%</div>
-            </div>
-          </div>
-        </section>
 
-        {/* 2-Column Row: Device Table + Gender */}
-        <div className="device-gender-grid">
-          {/* Left: Device Performance Summary Table */}
-          <div className="device-table-card" style={{ position: "relative" }}>
-            {isLoadingData && (
-              <div className="loading-overlay">
-                <div className="loading-spinner"></div>
-                <div className="loading-text">Updating device data...</div>
+              {/* Tablet Item */}
+              <div className="device-analytics-item">
+                <div className="dai-header">
+                  <div className="dai-left">
+                    <span className="dai-icon tablet">
+                      <FiTablet size={16} />
+                    </span>
+                    <span className="dai-name">Tablet</span>
+                    <span className="dai-count">{formatNumber(tabletItem.impressions)}</span>
+                  </div>
+                  <div className="dai-right">
+                    <span className="dai-pct">{tabletPct}%</span>
+                  </div>
+                </div>
+                <div className="dai-progress-track">
+                  <div
+                    className="dai-progress-bar tablet"
+                    style={{ width: `${Math.min(100, Math.max(0, Number(tabletPct) || 0))}%` }}
+                  />
+                </div>
               </div>
-            )}
-            <div className="table-header">
-              <h3>Device Performance Summary</h3>
-
-              <div className="table-actions">
-                <button
-                  className="table-export-btn"
-                  onClick={() => downloadAllDailyDeviceCSV(insertionOrderId)}
-                  title="Download CSV"
-                >
-                  <FiDownload size={14} />
-                  <span>Export CSV</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="table-responsive-wrapper">
-              <table className="data-table device-summary-table">
-                <thead>
-                  <tr>
-                    <th>Device</th>
-                    <th style={{ textAlign: "right" }}>Impressions</th>
-                    <th style={{ textAlign: "right" }}>Clicks</th>
-                    <th style={{ textAlign: "right" }}>CTR</th>
-                    <th style={{ textAlign: "right" }}>VCR</th>
-                    <th style={{ textAlign: "right" }}>Complete Views</th>
-                    <th style={{ textAlign: "right" }}>Media Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {aggregatedData && aggregatedData.length > 0 ? (
-                    aggregatedData.map((item, index) => {
-                      const ctr =
-                        item.impressions > 0
-                          ? ((item.clicks / item.impressions) * 100).toFixed(2)
-                          : "0.00";
-                      const vcr =
-                        item.impressions > 0
-                          ? (
-                              (item.completeViews / item.impressions) *
-                              100
-                            ).toFixed(2)
-                          : "0.00";
-
-                      return (
-                        <tr key={index}>
-                          <td>
-                            <div className="d-flex align-items-center">
-                              {getDeviceIcon(item.deviceType)}
-                              <span style={{ fontWeight: 600 }}>{item.deviceType}</span>
-                            </div>
-                          </td>
-
-                          <td style={{ textAlign: "right", fontWeight: 500 }}>{item.impressions.toLocaleString()}</td>
-                          <td style={{ textAlign: "right", fontWeight: 500 }}>{item.clicks.toLocaleString()}</td>
-                          <td style={{ textAlign: "right", fontWeight: 500 }}>{ctr}%</td>
-                          <td style={{ textAlign: "right", fontWeight: 500 }}>{vcr}%</td>
-                          <td style={{ textAlign: "right", fontWeight: 500 }}>{item.completeViews.toLocaleString()}</td>
-                          <td style={{ textAlign: "right", fontWeight: 500 }}>
-                            ₹{(Number(item?.cost) || 0).toFixed(2)}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="7"
-                        style={{
-                          textAlign: "center",
-                          padding: "2rem",
-                          color: "var(--text-secondary)",
-                        }}
-                      >
-                        {isLoadingData
-                          ? "Loading data..."
-                          : "No data available. Please select a different date range to get data."}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-                {(() => {
-                  const totals = calculateDeviceTotals();
-                  if (!totals) return null;
-                  return (
-                    <tfoot>
-                      <tr className="totals-row">
-                        <td>Total</td>
-                        <td style={{ textAlign: "right" }}>{totals.impressions.toLocaleString()}</td>
-                        <td style={{ textAlign: "right" }}>{totals.clicks.toLocaleString()}</td>
-                        <td style={{ textAlign: "right" }}>{totals.ctr}%</td>
-                        <td style={{ textAlign: "right" }}>{totals.vcr}%</td>
-                        <td style={{ textAlign: "right" }}>{totals.completeViews.toLocaleString()}</td>
-                        <td style={{ textAlign: "right" }}>₹{totals.cost.toFixed(2)}</td>
-                      </tr>
-                    </tfoot>
-                  );
-                })()}
-              </table>
             </div>
           </div>
 
           {/* Right: Gender Level Performance Card */}
-          <GenderLevelPerformance dailyReportsData={dailyReportsData} />
+          <GenderLevelPerformance dailyReportsData={dailyDemographicsData || dailyReportsData} />
+        </div>
+
+        {/* Bottom Full-Width Row: Device Performance Summary Table */}
+        <div className="device-table-card" style={{ position: "relative" }}>
+          {isLoadingData && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+              <div className="loading-text">Updating device data...</div>
+            </div>
+          )}
+          <div className="table-header">
+            <h3>Device Performance Summary</h3>
+
+            <div className="table-actions">
+              <button
+                className="table-export-btn"
+                onClick={() => downloadAllDailyDeviceCSV(insertionOrderId)}
+                title="Download CSV"
+              >
+                <FiDownload size={14} />
+                <span>Export CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="table-responsive-wrapper">
+            <table className="data-table device-summary-table">
+              <thead>
+                <tr>
+                  <th>Device</th>
+                  <th style={{ textAlign: "right" }}>Impressions</th>
+                  <th style={{ textAlign: "right" }}>Clicks</th>
+                  <th style={{ textAlign: "right" }}>CTR</th>
+                  <th style={{ textAlign: "right" }}>VCR</th>
+                  <th style={{ textAlign: "right" }}>Complete Views</th>
+                  <th style={{ textAlign: "right" }}>Media Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aggregatedData && aggregatedData.length > 0 ? (
+                  aggregatedData.map((item, index) => {
+                    const ctr =
+                      item.impressions > 0
+                        ? ((item.clicks / item.impressions) * 100).toFixed(2)
+                        : "0.00";
+                    const vcr =
+                      item.impressions > 0
+                        ? (
+                            (item.completeViews / item.impressions) *
+                            100
+                          ).toFixed(2)
+                        : "0.00";
+
+                    return (
+                      <tr key={index}>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            {getDeviceIcon(item.deviceType)}
+                            <span style={{ fontWeight: 600 }}>{item.deviceType}</span>
+                          </div>
+                        </td>
+
+                        <td style={{ textAlign: "right", fontWeight: 500 }}>{item.impressions.toLocaleString()}</td>
+                        <td style={{ textAlign: "right", fontWeight: 500 }}>{item.clicks.toLocaleString()}</td>
+                        <td style={{ textAlign: "right", fontWeight: 500 }}>{ctr}%</td>
+                        <td style={{ textAlign: "right", fontWeight: 500 }}>{vcr}%</td>
+                        <td style={{ textAlign: "right", fontWeight: 500 }}>{item.completeViews.toLocaleString()}</td>
+                        <td style={{ textAlign: "right", fontWeight: 500 }}>
+                          ₹{(Number(item?.cost) || 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="7"
+                      style={{
+                        textAlign: "center",
+                        padding: "2rem",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      {isLoadingData
+                        ? "Loading data..."
+                        : "No data available. Please select a different date range to get data."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              {(() => {
+                const totals = calculateDeviceTotals();
+                if (!totals) return null;
+                return (
+                  <tfoot>
+                    <tr className="totals-row">
+                      <td>Total</td>
+                      <td style={{ textAlign: "right" }}>{totals.impressions.toLocaleString()}</td>
+                      <td style={{ textAlign: "right" }}>{totals.clicks.toLocaleString()}</td>
+                      <td style={{ textAlign: "right" }}>{totals.ctr}%</td>
+                      <td style={{ textAlign: "right" }}>{totals.vcr}%</td>
+                      <td style={{ textAlign: "right" }}>{totals.completeViews.toLocaleString()}</td>
+                      <td style={{ textAlign: "right" }}>₹{totals.cost.toFixed(2)}</td>
+                    </tr>
+                  </tfoot>
+                );
+              })()}
+            </table>
+          </div>
         </div>
 
         {/* Bottom Sections */}
@@ -926,23 +983,27 @@ function GenderLevelPerformance({ dailyReportsData }) {
   };
 
   dataArray.forEach((item) => {
-    let gender = item.gender || "Unknown";
-    const gLower = gender.toLowerCase();
-    if (gLower.includes("male") && !gLower.includes("female")) {
-      gender = "Male";
-    } else if (gLower.includes("female")) {
+    const rawGender = item.gender || item.genderType || "Unknown";
+    const gLower = String(rawGender).toLowerCase().trim();
+    let gender = "Other";
+    if (gLower.includes("female")) {
       gender = "Female";
+    } else if (gLower.includes("male")) {
+      gender = "Male";
     } else {
       gender = "Other";
     }
 
     const imps = Number(item.impressions) || 0;
-    const ctrPct = Number(item.ctr?.replace("%", "")) || 0;
+    const ctrPct =
+      typeof item.ctr === "string"
+        ? Number(item.ctr.replace("%", "")) || 0
+        : Number(item.ctr) || 0;
     const clks =
-      item.clicks !== undefined
-        ? Number(item.clicks)
+      item.clicks !== undefined && item.clicks !== null
+        ? Number(item.clicks) || 0
         : Math.round((ctrPct / 100) * imps);
-    const comps = Number(item.completeViewsVideo) || 0;
+    const comps = Number(item.completeViewsVideo || item.completeViews || 0);
 
     groupMap[gender].impressions += imps;
     groupMap[gender].clicks += clks;
@@ -953,6 +1014,26 @@ function GenderLevelPerformance({ dailyReportsData }) {
     groupMap.Male.impressions +
     groupMap.Female.impressions +
     groupMap.Other.impressions;
+
+  const totalClicks =
+    groupMap.Male.clicks +
+    groupMap.Female.clicks +
+    groupMap.Other.clicks;
+
+  const totalCompletes =
+    groupMap.Male.completes +
+    groupMap.Female.completes +
+    groupMap.Other.completes;
+
+  const totalCtr =
+    totalImpressions > 0
+      ? ((totalClicks / totalImpressions) * 100).toFixed(2) + "%"
+      : "0.00%";
+
+  const totalVcr =
+    totalImpressions > 0
+      ? ((totalCompletes / totalImpressions) * 100).toFixed(2) + "%"
+      : "0.00%";
 
   const getMetricData = (genderKey) => {
     const g = groupMap[genderKey];
@@ -971,10 +1052,10 @@ function GenderLevelPerformance({ dailyReportsData }) {
     if (activeMetric === "VCR") {
       const vcr =
         g.impressions > 0
-          ? ((g.completes / g.impressions) * 100).toFixed(1)
-          : "0.0";
+          ? ((g.completes / g.impressions) * 100).toFixed(2)
+          : "0.00";
       return {
-        valueText: vcr + "%",
+        valueText: formatNumber(g.completes),
         pctText: vcr + "%",
         pctNum: Math.min(100, parseFloat(vcr)),
       };
@@ -985,7 +1066,7 @@ function GenderLevelPerformance({ dailyReportsData }) {
         ? ((g.clicks / g.impressions) * 100).toFixed(2)
         : "0.00";
     return {
-      valueText: ctr + "%",
+      valueText: formatNumber(g.clicks),
       pctText: ctr + "%",
       pctNum: Math.min(100, parseFloat(ctr) * 10),
     };
@@ -1016,11 +1097,17 @@ function GenderLevelPerformance({ dailyReportsData }) {
         <div className="gender-bars-list">
           {/* Male */}
           <div className="gender-bar-item">
-            <span className="gender-bar-label">Male</span>
+            <div className="gender-bar-label-group">
+              <span className="gender-category-dot male" />
+              <span className="gender-bar-label">Male</span>
+            </div>
             <div className="gender-bar-track">
               <div
                 className="gender-bar-fill male"
-                style={{ width: `${Math.max(2, maleData.pctNum)}%` }}
+                style={{
+                  width: `${maleData.pctNum > 0 ? maleData.pctNum : 0}%`,
+                  opacity: maleData.pctNum > 0 ? 1 : 0,
+                }}
               />
             </div>
             <div className="gender-bar-val-box">
@@ -1031,11 +1118,17 @@ function GenderLevelPerformance({ dailyReportsData }) {
 
           {/* Female */}
           <div className="gender-bar-item">
-            <span className="gender-bar-label">Female</span>
+            <div className="gender-bar-label-group">
+              <span className="gender-category-dot female" />
+              <span className="gender-bar-label">Female</span>
+            </div>
             <div className="gender-bar-track">
               <div
                 className="gender-bar-fill female"
-                style={{ width: `${Math.max(2, femaleData.pctNum)}%` }}
+                style={{
+                  width: `${femaleData.pctNum > 0 ? femaleData.pctNum : 0}%`,
+                  opacity: femaleData.pctNum > 0 ? 1 : 0,
+                }}
               />
             </div>
             <div className="gender-bar-val-box">
@@ -1046,11 +1139,17 @@ function GenderLevelPerformance({ dailyReportsData }) {
 
           {/* Other */}
           <div className="gender-bar-item">
-            <span className="gender-bar-label">Other</span>
+            <div className="gender-bar-label-group">
+              <span className="gender-category-dot other" />
+              <span className="gender-bar-label">Other</span>
+            </div>
             <div className="gender-bar-track">
               <div
                 className="gender-bar-fill other"
-                style={{ width: `${Math.max(2, otherData.pctNum)}%` }}
+                style={{
+                  width: `${otherData.pctNum > 0 ? otherData.pctNum : 0}%`,
+                  opacity: otherData.pctNum > 0 ? 1 : 0,
+                }}
               />
             </div>
             <div className="gender-bar-val-box">
@@ -1061,13 +1160,23 @@ function GenderLevelPerformance({ dailyReportsData }) {
         </div>
 
         <div className="gender-total-row">
-          <span>Total</span>
-          <span style={{ color: "#2563eb" }}>
+          <span className="gender-total-label">Total</span>
+          <span className="gender-total-value">
             {activeMetric === "Impressions"
               ? formatNumber(totalImpressions)
-              : "100%"}
+              : activeMetric === "VCR"
+              ? formatNumber(totalCompletes)
+              : formatNumber(totalClicks)}
           </span>
-          <span>100%</span>
+          <span className="gender-total-pct">
+            {activeMetric === "Impressions"
+              ? totalImpressions > 0
+                ? "100%"
+                : "0.0%"
+              : activeMetric === "VCR"
+              ? totalVcr
+              : totalCtr}
+          </span>
         </div>
       </div>
     </div>

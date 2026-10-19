@@ -1,6 +1,7 @@
 import React from 'react'
 import YouTubeTable from './components/Campaign'
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import "./styles.css";
 
 function page() {
   return (

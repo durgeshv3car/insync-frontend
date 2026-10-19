@@ -16,6 +16,8 @@ import {
   Video,
   ArrowUp,
   ArrowDown,
+  Tag,
+  Sparkles,
 } from "lucide-react";
 import {
   LineChart,
@@ -46,6 +48,35 @@ import { createCampaignData } from "@/services/campaignData";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import PageHeaderDate from "@/components/shared/pageHeader/PageHeaderDate";
+
+const formatCompactNumber = (val) => {
+  const num = Number(val);
+  if (isNaN(num) || num === null || num === undefined) return "0";
+  if (num >= 1000000) {
+    const formatted = (num / 1000000).toFixed(2);
+    return formatted.endsWith(".00")
+      ? `${parseInt(formatted)}M`
+      : `${formatted.replace(/0+$/, "").replace(/\.$/, "")}M`;
+  }
+  if (num >= 1000) {
+    const formatted = (num / 1000).toFixed(1);
+    return formatted.endsWith(".0")
+      ? `${parseInt(formatted)}K`
+      : `${formatted}K`;
+  }
+  return num.toLocaleString();
+};
+
+const formatPublishedDate = (dateStr) => {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return String(dateStr);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 const YouTubeTable = () => {
   const searchParams = useSearchParams();
@@ -115,14 +146,20 @@ const YouTubeTable = () => {
       const isOldest = filters.sortBy === "oldest";
 
       return isOldest ? (
-        <ArrowDown size={12} style={{ color: "#0d6efd", marginLeft: "4px" }} />
+        <ArrowDown
+          size={13}
+          strokeWidth={2.4}
+          style={{ color: "#2563EB", marginLeft: "4px", flexShrink: 0 }}
+        />
       ) : (
         <ArrowUp
-          size={12}
+          size={13}
+          strokeWidth={2.4}
           style={{
-            color: isActive ? "#0d6efd" : "#adb5bd",
+            color: isActive ? "#2563EB" : "#94A3B8",
             marginLeft: "4px",
             opacity: isActive ? 1 : 0.4,
+            flexShrink: 0,
           }}
         />
       );
@@ -130,11 +167,13 @@ const YouTubeTable = () => {
       isActive = filters.sortBy === field;
       return (
         <ArrowUp
-          size={12}
+          size={13}
+          strokeWidth={2.4}
           style={{
-            color: isActive ? "#0d6efd" : "#adb5bd",
+            color: isActive ? "#2563EB" : "#94A3B8",
             marginLeft: "4px",
             opacity: isActive ? 1 : 0.4,
+            flexShrink: 0,
             transition: "all 0.2s ease",
           }}
         />
@@ -626,415 +665,257 @@ const YouTubeTable = () => {
     <div>
       <div>
         {/* Filters Card */}
-        <div className="app-search-card">
-          <div
-            style={{
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "10px",
-                background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#ffffff",
-                boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
-              }}
-            >
-              <Globe size={16} />
+        <div className="yt-search-card">
+          <div className="yt-top-bar">
+            <div className="yt-badge-wrap">
+              <div className="yt-icon-badge">
+                <Sparkles size={16} />
+              </div>
+              <span className="yt-section-label">
+                Search &amp; Filter Data
+              </span>
             </div>
-            <h6
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "700",
-                color: "var(--text-primary)",
-                textTransform: "uppercase",
-                letterSpacing: "0.6px",
-                margin: 0,
-              }}
-            >
-              Search & Filter Data
-            </h6>
           </div>
 
-          <div className="row g-3 align-items-start">
-            <div className="col-lg-2">
-              <label className="app-search-label">Channel Name</label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Globe size={16} />
-                </span>
-                <input
-                  type="text"
-                  name="channelName"
-                  value={channelNameInput}
-                  onChange={handleChange}
-                  className="app-input"
-                  placeholder="Search channel..."
-                />
-              </div>
-            </div>
-
-            <div className="col-lg-3">
-              <label className="app-search-label">Search Query</label>
-              <div
-                className="app-input-group"
-                ref={historyRef}
-                style={{ position: "relative" }}
-              >
-                <span
-                  className="app-input-addon"
-                  style={{
-                    cursor: recentQueries.length > 0 ? "pointer" : "default",
-                  }}
-                  onClick={() =>
-                    recentQueries.length > 0 && setShowHistory(!showHistory)
-                  }
-                >
-                  <Search size={16} />
-                </span>
-                <input
-                  type="text"
-                  name="query"
-                  value={queryInput}
-                  autoComplete="off"
-                  onFocus={() =>
-                    recentQueries.length > 0 && setShowHistory(true)
-                  }
-                  onChange={handleChange}
-                  className="app-input"
-                  placeholder="Search query..."
-                />
-                {showHistory && recentQueries.length > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      backgroundColor: "var(--card-bg)",
-                      border: "1px solid var(--card-border)",
-                      borderRadius: "10px",
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
-                      zIndex: 2000,
-                      marginTop: "4px",
-                      maxHeight: "250px",
-                      overflowY: "auto",
-                    }}
-                  >
-                    {recentQueries.map((q, idx) => (
-                      <div
-                        key={idx}
-                        className="history-item"
-                        style={{
-                          padding: "10px 15px",
-                          fontSize: "0.85rem",
-                          cursor: "pointer",
-                          color: "var(--text-primary)",
-                          transition: "background-color 0.2s",
-                          borderBottom:
-                            idx === recentQueries.length - 1
-                              ? "none"
-                              : "1px solid var(--card-border)",
-                        }}
-                        onMouseOver={(e) =>
-                        (e.currentTarget.style.backgroundColor =
-                          "var(--table-hover-bg)")
-                        }
-                        onMouseOut={(e) =>
-                        (e.currentTarget.style.backgroundColor =
-                          "transparent")
-                        }
-                        onClick={() => {
-                          setFilters((prev) => ({
-                            ...prev,
-                            query: q,
-                            page: 1,
-                          }));
-                          setQueryInput(q);
-                          setShowHistory(false);
-                        }}
-                      >
-                        <i
-                          className="fa-solid fa-clock-rotate-left me-2 text-muted"
-                          style={{ fontSize: "0.75rem" }}
-                        ></i>
-                        {q}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-lg-2">
-              <label className="app-search-label">Video Type</label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Video size={16} />
-                </span>
-                <select
-                  name="videoType"
-                  value={filters.videoType}
-                  onChange={handleChange}
-                  className="app-select"
-                >
-                  <option value="all">All</option>
-                  <option value="long">Long</option>
-                  <option value="short">Short</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="col-lg-2">
-              <label className="app-search-label">Sort By</label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <TrendingUp size={16} />
-                </span>
-                <select
-                  name="sortBy"
-                  value={filters.sortBy}
-                  onChange={handleChange}
-                  className="app-select"
-                >
-                  <option value="relevance">Relevance</option>
-                  <option value="recent">Recent</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="views">Views</option>
-                  <option value="likes">Likes</option>
-                  <option value="comments">Comments</option>
-                  <option value="subscribers">Subscribers</option>
-                  <option value="engagement">Engagement</option>
-                  <option value="erscore">Top Rated</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="col-lg-1">
-              <label className="app-search-label">Region</label>
-              <div className="app-input-group">
-                <select
-                  name="regionCode"
-                  value={filters.regionCode}
-                  onChange={handleChange}
-                  className="app-select"
-                  style={{ paddingLeft: "10px" }}
-                >
-                  <option value="all">All</option>
-                  {regions.map((code, idx) => (
-                    <option key={idx} value={code}>
-                      {code}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="col-lg-2">
-              <label className="app-search-label">Filter Keywords</label>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "6px",
-                  padding: "6px 10px",
-                  backgroundColor: "var(--input-bg)",
-                  borderRadius: "12px",
-                  border: "1px solid var(--input-border)",
-                  minHeight: "42px",
-                  alignItems: "center",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  opacity: filters.query ? 1 : 0.6,
-                }}
-              >
-                {/* "All" Chip */}
-                <div
-                  onClick={() =>
-                    handleChange({
-                      target: { name: "csvResults", value: "all" },
-                    })
-                  }
-                  style={{
-                    padding: "3px 12px",
-                    borderRadius: "16px",
-                    fontSize: "0.72rem",
-                    fontWeight: "700",
-                    cursor: "pointer",
-                    backgroundColor:
-                      filters.csvResults === "all" || !filters.csvResults
-                        ? "#2563EB"
-                        : "transparent",
-                    color:
-                      filters.csvResults === "all" || !filters.csvResults
-                        ? "#ffffff"
-                        : "var(--text-secondary)",
-                    border: "1px solid",
-                    borderColor:
-                      filters.csvResults === "all" || !filters.csvResults
-                        ? "#2563EB"
-                        : "var(--card-border)",
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    userSelect: "none",
-                    boxShadow:
-                      filters.csvResults === "all" || !filters.csvResults
-                        ? "0 2px 8px rgba(37,99,235,0.3)"
-                        : "none",
-                  }}
-                >
-                  All
+          <div className="yt-filters-panel">
+            <div className="yt-filters-grid">
+              {/* Channel Name */}
+              <div className="yt-filter-item">
+                <div className="yt-filter-item-head">
+                  <span className="yt-filter-micro-icon channel">
+                    <Globe size={13} />
+                  </span>
+                  <label className="yt-filter-label">Channel Name</label>
                 </div>
+                <div className="yt-input-wrap">
+                  <input
+                    type="text"
+                    name="channelName"
+                    value={channelNameInput}
+                    onChange={handleChange}
+                    className="yt-compact-input"
+                    placeholder="Search channel..."
+                  />
+                </div>
+              </div>
 
-                {/* Keyword Chips */}
-                {filters.query
-                  ?.split(",")
-                  .map((q) => q.trim())
-                  .filter(Boolean)
-                  .map((q, idx) => {
-                    const isActive = filters.csvResults === q.toLowerCase();
-                    return (
-                      <div
-                        key={idx}
-                        onClick={() =>
-                          handleChange({
-                            target: {
-                              name: "csvResults",
-                              value: q.toLowerCase(),
-                            },
-                          })
-                        }
-                        style={{
-                          padding: "3px 12px",
-                          borderRadius: "16px",
-                          fontSize: "0.72rem",
-                          fontWeight: "700",
-                          cursor: "pointer",
-                          backgroundColor: isActive ? "#2563EB" : "transparent",
-                          color: isActive ? "#ffffff" : "var(--text-secondary)",
-                          border: "1px solid",
-                          borderColor: isActive
-                            ? "#2563EB"
-                            : "var(--card-border)",
-                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                          userSelect: "none",
-                          boxShadow: isActive
-                            ? "0 2px 8px rgba(37,99,235,0.3)"
-                            : "none",
-                        }}
-                      >
-                        {q}
-                      </div>
-                    );
-                  })}
+              {/* Search Query */}
+              <div className="yt-filter-item">
+                <div className="yt-filter-item-head">
+                  <span className="yt-filter-micro-icon query">
+                    <Search size={13} />
+                  </span>
+                  <label className="yt-filter-label">Search Query</label>
+                </div>
+                <div className="yt-input-wrap" ref={historyRef}>
+                  <input
+                    type="text"
+                    name="query"
+                    value={queryInput}
+                    autoComplete="off"
+                    onFocus={() =>
+                      recentQueries.length > 0 && setShowHistory(true)
+                    }
+                    onChange={handleChange}
+                    className="yt-compact-input"
+                    placeholder="Search query..."
+                  />
+                  {showHistory && recentQueries.length > 0 && (
+                    <div className="yt-history-dropdown">
+                      {recentQueries.map((q, idx) => (
+                        <div
+                          key={idx}
+                          className="yt-history-item"
+                          onClick={() => {
+                            setFilters((prev) => ({
+                              ...prev,
+                              query: q,
+                              page: 1,
+                            }));
+                            setQueryInput(q);
+                            setShowHistory(false);
+                          }}
+                        >
+                          <i
+                            className="fa-solid fa-clock-rotate-left me-2 text-muted"
+                            style={{ fontSize: "0.75rem" }}
+                          ></i>
+                          {q}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Video Type */}
+              <div className="yt-filter-item">
+                <div className="yt-filter-item-head">
+                  <span className="yt-filter-micro-icon type">
+                    <Video size={13} />
+                  </span>
+                  <label className="yt-filter-label">Video Type</label>
+                </div>
+                <div className="yt-input-wrap">
+                  <select
+                    name="videoType"
+                    value={filters.videoType}
+                    onChange={handleChange}
+                    className="yt-compact-select"
+                  >
+                    <option value="all">All</option>
+                    <option value="long">Long</option>
+                    <option value="short">Short</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Sort By */}
+              <div className="yt-filter-item">
+                <div className="yt-filter-item-head">
+                  <span className="yt-filter-micro-icon sort">
+                    <TrendingUp size={13} />
+                  </span>
+                  <label className="yt-filter-label">Sort By</label>
+                </div>
+                <div className="yt-input-wrap">
+                  <select
+                    name="sortBy"
+                    value={filters.sortBy}
+                    onChange={handleChange}
+                    className="yt-compact-select"
+                  >
+                    <option value="relevance">Relevance</option>
+                    <option value="recent">Recent</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="views">Views</option>
+                    <option value="likes">Likes</option>
+                    <option value="comments">Comments</option>
+                    <option value="subscribers">Subscribers</option>
+                    <option value="engagement">Engagement</option>
+                    <option value="erscore">Top Rated</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Region */}
+              <div className="yt-filter-item">
+                <div className="yt-filter-item-head">
+                  <span className="yt-filter-micro-icon region">
+                    <Globe size={13} />
+                  </span>
+                  <label className="yt-filter-label">Region</label>
+                </div>
+                <div className="yt-input-wrap">
+                  <select
+                    name="regionCode"
+                    value={filters.regionCode}
+                    onChange={handleChange}
+                    className="yt-compact-select"
+                  >
+                    <option value="all">All</option>
+                    {regions.map((code, idx) => (
+                      <option key={idx} value={code}>
+                        {code}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Filter Keywords */}
+              <div className="yt-filter-item">
+                <div className="yt-filter-item-head">
+                  <span className="yt-filter-micro-icon keywords">
+                    <Tag size={13} />
+                  </span>
+                  <label className="yt-filter-label">Filter Keywords</label>
+                </div>
+                <div className="yt-chips-container">
+                  {/* "All" Chip */}
+                  <button
+                    type="button"
+                    className={`yt-chip-btn ${filters.csvResults === "all" || !filters.csvResults ? "active" : ""}`}
+                    onClick={() =>
+                      handleChange({
+                        target: { name: "csvResults", value: "all" },
+                      })
+                    }
+                  >
+                    All
+                  </button>
+
+                  {/* Keyword Chips */}
+                  {filters.query
+                    ?.split(",")
+                    .map((q) => q.trim())
+                    .filter(Boolean)
+                    .map((q, idx) => {
+                      const isActive = filters.csvResults === q.toLowerCase();
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          className={`yt-chip-btn ${isActive ? "active" : ""}`}
+                          onClick={() =>
+                            handleChange({
+                              target: {
+                                name: "csvResults",
+                                value: q.toLowerCase(),
+                              },
+                            })
+                          }
+                        >
+                          {q}
+                        </button>
+                      );
+                    })}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Result Actions Bar */}
-          <div className="mt-4 d-flex align-items-center flex-wrap gap-3">
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                padding: "8px 16px",
-                backgroundColor: "rgba(37,99,235,0.12)",
-                borderRadius: "10px",
-                fontSize: "0.85rem",
-                border: "1px solid rgba(37,99,235,0.25)",
-                color: "#3B82F6",
-                fontWeight: "700",
-              }}
-            >
-              <Users size={16} style={{ marginRight: "8px" }} />
+          <div className="yt-actions-toolbar">
+            <div className="yt-count-pill">
+              <span className="yt-count-icon-badge">
+                <Users size={13} />
+              </span>
               {count > 0 ? (
-                <span>
+                <span className="yt-count-text">
                   Showing{" "}
-                  {Math.min((currentPage - 1) * filters.limit + 1, count)}-
-                  {Math.min(currentPage * filters.limit, count)} of{" "}
-                  {count.toLocaleString()}
+                  <strong className="yt-count-num">
+                    {Math.min((currentPage - 1) * filters.limit + 1, count)}-
+                    {Math.min(currentPage * filters.limit, count)}
+                  </strong>{" "}
+                  of{" "}
+                  <strong className="yt-count-num">{count.toLocaleString()}</strong>{" "}
+                  videos
                 </span>
               ) : (
-                "No videos to display"
+                <span className="yt-count-text">No videos to display</span>
               )}
             </div>
 
-            <div className="d-flex align-items-center gap-2">
+            <div className="yt-export-btn-group">
               <button
-                className="btn btn-sm"
+                type="button"
+                className="yt-export-btn csv"
                 onClick={downloadCSV}
                 title="Download CSV"
-                style={{
-                  backgroundColor: "var(--card-bg)",
-                  color: "#3B82F6",
-                  border: "1px solid #3B82F6",
-                  borderRadius: "10px",
-                  padding: "8px 16px",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#2563EB";
-                  e.currentTarget.style.color = "#fff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--card-bg)";
-                  e.currentTarget.style.color = "#3B82F6";
-                }}
               >
-                <Download
-                  size={15}
-                  color="currentColor"
-                  strokeWidth={2.2}
-                  style={{ marginRight: "6px", color: "inherit" }}
-                />
-                CSV
+                <Download size={13} strokeWidth={2.4} />
+                <span>CSV</span>
               </button>
 
               <button
-                className="btn btn-sm"
+                type="button"
+                className="yt-export-btn excel"
                 onClick={downloadExcel}
                 title="Download Excel"
-                style={{
-                  backgroundColor: "var(--card-bg)",
-                  color: "#3B82F6",
-                  border: "1px solid #3B82F6",
-                  borderRadius: "10px",
-                  padding: "8px 16px",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
-                  display: "flex",
-                  alignItems: "center",
-                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#2563EB";
-                  e.currentTarget.style.color = "#fff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--card-bg)";
-                  e.currentTarget.style.color = "#3B82F6";
-                }}
               >
-                <Download
-                  size={15}
-                  color="currentColor"
-                  strokeWidth={2.2}
-                  style={{ marginRight: "6px", color: "inherit" }}
-                />
-                Excel
+                <Download size={13} strokeWidth={2.4} />
+                <span>EXCEL</span>
               </button>
 
               {audienceId && (
@@ -1366,51 +1247,21 @@ const YouTubeTable = () => {
         ></div>
 
         {/* Table Section */}
-        <div
-          style={{
-            backgroundColor: "var(--card-bg)",
-            borderRadius: "16px",
-            overflow: "hidden",
-            boxShadow:
-              "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)",
-            border: "1px solid var(--card-border)",
-            transition: "background-color 0.25s ease, border-color 0.25s ease",
-          }}
-        >
-          <div
-            className="table-responsive"
-            style={{ overflowX: "auto", width: "100%", maxWidth: "100%" }}
-          >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "separate",
-                borderSpacing: "0",
-                tableLayout: "fixed",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    backgroundColor: "var(--table-header-bg)",
-                    borderBottom: "2px solid var(--table-border)",
-                  }}
-                >
+        <div className="yt-table-card">
+          <div className="yt-table-responsive">
+            <table className="yt-data-table">
+              <thead className="yt-table-head">
+                <tr>
                   <th
+                    className="yt-th"
                     style={{
-                      padding: "14px",
+                      width: "3.5%",
                       textAlign: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "4%",
                     }}
                   >
                     <input
                       type="checkbox"
-                      className="custom-checkbox"
+                      className="yt-checkbox"
                       checked={
                         videos.length > 0 &&
                         videos
@@ -1419,193 +1270,98 @@ const YouTubeTable = () => {
                           .every((id) => selectedVideos.has(id))
                       }
                       onChange={handleSelectAll}
-                      style={{
-                        width: "18px",
-                        height: "18px",
-                        cursor: "pointer",
-                      }}
                     />
                   </th>
                   <th
+                    className="yt-th"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "16%",
+                      width: "25.5%",
                     }}
                   >
                     Video
                   </th>
                   <th
+                    className="yt-th"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "10%",
+                      width: "14%",
                     }}
                   >
                     Channel
                   </th>
                   <th
+                    className="yt-th"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "10%",
+                      width: "10.5%",
                     }}
                   >
                     Keyword
                   </th>
                   <th
                     onClick={() => handleSort("views")}
+                    className="yt-th sortable"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "8%",
-                      cursor: "pointer",
-                      userSelect: "none",
+                      width: "9%",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                    <div className="yt-th-inner">
                       Views {getSortIcon("views")}
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort("likes")}
+                    className="yt-th sortable"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
                       width: "8%",
-                      cursor: "pointer",
-                      userSelect: "none",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                    <div className="yt-th-inner">
                       Likes {getSortIcon("likes")}
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort("comments")}
+                    className="yt-th sortable"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "11%",
-                      cursor: "pointer",
-                      userSelect: "none",
+                      width: "8%",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                    <div className="yt-th-inner">
                       Comments {getSortIcon("comments")}
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort("subscribers")}
+                    className="yt-th sortable"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "13%",
-                      cursor: "pointer",
-                      userSelect: "none",
+                      width: "9%",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                    <div className="yt-th-inner">
                       Subscribers {getSortIcon("subscribers")}
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort("published")}
+                    className="yt-th sortable"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "11%",
-                      cursor: "pointer",
-                      userSelect: "none",
+                      width: "8%",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                    <div className="yt-th-inner">
                       Published {getSortIcon("published")}
                     </div>
                   </th>
                   <th
+                    onClick={() => handleSort("erscore")}
+                    className="yt-th sortable"
                     style={{
-                      padding: "14px",
-                      textAlign: "left",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      width: "9%",
+                      width: "8%",
+                      textAlign: "center",
                     }}
                   >
-                    Region
+                    <div className="yt-th-inner" style={{ justifyContent: "center" }}>
+                      ER RATE {getSortIcon("erscore")}
+                    </div>
                   </th>
                 </tr>
               </thead>
@@ -1615,31 +1371,31 @@ const YouTubeTable = () => {
                   Array.from({ length: 8 }).map((_, i) => (
                     <tr
                       key={`skeleton-${i}`}
-                      style={{ borderBottom: "1px solid var(--table-border)" }}
+                      className="yt-table-row"
                     >
                       {[
-                        "5%",
-                        "18%",
-                        "12%",
-                        "12%",
-                        "8%",
-                        "8%",
-                        "8%",
+                        "3.5%",
+                        "25.5%",
+                        "14%",
+                        "10.5%",
+                        "9%",
                         "8%",
                         "8%",
                         "9%",
+                        "8%",
+                        "8%",
                       ].map((w, j) => (
-                        <td key={j} style={{ padding: "14px 12px", width: w }}>
+                        <td key={j} className="yt-td" style={{ width: w, textAlign: j === 0 || j === 9 ? "center" : "left" }}>
                           <div
                             style={{
-                              height: j === 1 ? "36px" : "14px",
+                              height: j === 1 ? "40px" : "14px",
                               borderRadius: "6px",
                               background:
-                                "linear-gradient(90deg, var(--skeleton-base, #1e293b) 25%, var(--skeleton-highlight, #334155) 50%, var(--skeleton-base, #1e293b) 75%)",
+                                "linear-gradient(90deg, var(--skeleton-base, #f1f5f9) 25%, var(--skeleton-highlight, #e2e8f0) 50%, var(--skeleton-base, #f1f5f9) 75%)",
                               backgroundSize: "200% 100%",
                               animation: "shimmer 1.4s infinite",
-                              width: j === 0 ? "18px" : "85%",
-                              margin: j === 0 ? "0 auto" : "0",
+                              width: j === 0 ? "18px" : j === 1 ? "85%" : "70%",
+                              margin: j === 0 || j === 9 ? "0 auto" : "0",
                             }}
                           />
                         </td>
@@ -1651,11 +1407,11 @@ const YouTubeTable = () => {
                 {videos.length === 0 && !loading && (
                   <tr>
                     <td
-                      colSpan="11"
+                      colSpan="10"
                       style={{
                         textAlign: "center",
                         padding: "50px 20px",
-                        borderBottom: "1px solid #dee2e6",
+                        borderBottom: "none",
                       }}
                     >
                       <div style={{ maxWidth: "600px", margin: "0 auto" }}>
@@ -1665,7 +1421,7 @@ const YouTubeTable = () => {
                         />
                         <h5
                           style={{
-                            color: "#1e293b",
+                            color: "var(--text-primary, #1e293b)",
                             fontWeight: "700",
                             marginBottom: "6px",
                             fontSize: "1.15rem",
@@ -1697,7 +1453,7 @@ const YouTubeTable = () => {
                             >
                               {similarQueries.map((term, index) => {
                                 const label =
-                                  typeof term === "object" && term !== null
+                                   typeof term === "object" && term !== null
                                     ? term.query ||
                                     term.variation ||
                                     term.search_variation ||
@@ -1783,82 +1539,33 @@ const YouTubeTable = () => {
                 {!loading &&
                   videos.map((v, idx) => (
                     <tr
-                      key={v.videoId}
+                      key={v.videoId || v._id || idx}
                       onClick={() => handleVideoSelect(v._id)}
-                      className="app-table-row"
-                      style={{
-                        cursor: "pointer",
-                        backgroundColor: selectedVideos.has(v._id)
-                          ? "var(--table-hover-bg)"
-                          : "transparent",
-                      }}
+                      className={`yt-table-row ${selectedVideos.has(v._id) ? "selected" : ""}`}
+                      style={{ cursor: "pointer" }}
                     >
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
+                      {/* Checkbox cell */}
+                      <td className="yt-td" style={{ textAlign: "center" }}>
                         <input
                           type="checkbox"
-                          className="custom-checkbox"
+                          className="yt-checkbox"
                           checked={selectedVideos.has(v._id)}
                           onClick={(e) => e.stopPropagation()}
                           onChange={() => handleVideoSelect(v._id)}
-                          style={{
-                            width: "18px",
-                            height: "18px",
-                            cursor: "pointer",
-                          }}
                         />
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          maxWidth: "0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            maxWidth: "100%",
-                          }}
-                        >
+
+                      {/* Video cell */}
+                      <td className="yt-td">
+                        <div className="yt-video-cell">
                           <img
                             src={v.thumbnail}
                             alt={v.title}
-                            width={48}
-                            height={36}
-                            style={{
-                              borderRadius: "6px",
-                              objectFit: "cover",
-                              flexShrink: 0,
-                              border: "1px solid var(--card-border)",
-                            }}
+                            className="yt-video-thumb"
                           />
-                          <div
-                            style={{ flex: 1, minWidth: 0, overflow: "hidden" }}
-                          >
+                          <div className="yt-video-info">
                             <div
-                              style={{
-                                fontWeight: "600",
-                                color: "var(--text-primary)",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                marginBottom: "4px",
-                                fontSize: "0.85rem",
-                              }}
+                              className="yt-video-title"
                               title={v.title}
                             >
                               {v.title}
@@ -1867,359 +1574,152 @@ const YouTubeTable = () => {
                               href={v.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              style={{
-                                fontSize: "0.75rem",
-                                color: "#3B82F6",
-                                textDecoration: "none",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                display: "block",
-                                fontWeight: 600,
-                              }}
+                              className="yt-video-link"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               Watch Video →
                             </a>
                           </div>
                         </div>
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          maxWidth: "0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            maxWidth: "100%",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: "32px",
-                              height: "32px",
-                              borderRadius: "50%",
-                              overflow: "hidden",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background:
-                                "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
-                              flexShrink: 0,
-                              color: "#ffffff",
-                            }}
-                          >
+
+                      {/* Channel cell */}
+                      <td className="yt-td">
+                        <div className="yt-channel-cell">
+                          <div className="yt-channel-avatar">
                             {v.logo ? (
                               <img
                                 src={v.logo}
                                 alt={v.channelName}
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                }}
                                 onError={(e) => {
                                   e.target.style.display = "none";
-                                  e.target.parentNode.innerHTML = `
-                                  <span style="
-                                    font-weight:700;
-                                    font-size:0.8rem;
-                                    color:#ffffff;
-                                  ">
-                                    ${v.channelName.charAt(0).toUpperCase()}
-                                  </span>
-                                `;
+                                  e.target.parentNode.innerHTML = `<span>${(v.channelName || "C").charAt(0).toUpperCase()}</span>`;
                                 }}
                               />
                             ) : (
-                              <span
-                                style={{
-                                  fontWeight: "700",
-                                  fontSize: "0.8rem",
-                                  color: "#ffffff",
-                                }}
-                              >
-                                {v.channelName.charAt(0).toUpperCase()}
-                              </span>
+                              <span>{(v.channelName || "C").charAt(0).toUpperCase()}</span>
                             )}
                           </div>
                           <span
-                            style={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              fontSize: "0.85rem",
-                              color: "var(--text-primary)",
-                              fontWeight: 500,
-                              flex: 1,
-                            }}
+                            className="yt-channel-name"
                             title={v.channelName}
                           >
                             {v.channelName}
                           </span>
                         </div>
                       </td>
+
                       {/* Keyword cell */}
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          maxWidth: "0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            maxWidth: "100%",
-                          }}
+                      <td className="yt-td">
+                        <span
+                          className="yt-keyword-badge"
+                          title={v.query}
                         >
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              padding: "4px 10px",
-                              borderRadius: "20px",
-                              fontSize: "0.75rem",
-                              fontWeight: "700",
-                              background: "rgba(37, 99, 235, 0.15)",
-                              color: "#3B82F6",
-                              border: "1px solid rgba(37, 99, 235, 0.3)",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                            title={v.query}
-                          >
-                            {v.query}
-                          </span>
-                        </div>
+                          {v.query}
+                        </span>
                       </td>
 
                       {/* Views cell */}
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          maxWidth: "0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            maxWidth: "100%",
-                          }}
-                        >
+                      <td className="yt-td">
+                        <div className="yt-metric-cell">
                           <Eye
-                            size={14}
-                            style={{ color: "#3B82F6", flexShrink: 0 }}
+                            size={16}
+                            className="yt-metric-icon"
                           />
                           <span
-                            style={{
-                              fontSize: "0.82rem",
-                              color: "var(--text-primary)",
-                              fontWeight: "600",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
+                            className="yt-metric-val"
+                            title={`${Number(v.views || 0).toLocaleString()} views`}
                           >
-                            {Number(v.views).toLocaleString()}
+                            {formatCompactNumber(v.views)}
                           </span>
                         </div>
                       </td>
 
                       {/* Likes cell */}
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          maxWidth: "0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            maxWidth: "100%",
-                          }}
-                        >
+                      <td className="yt-td">
+                        <div className="yt-metric-cell">
                           <ThumbsUp
-                            size={14}
-                            style={{ color: "#3B82F6", flexShrink: 0 }}
+                            size={16}
+                            className="yt-metric-icon"
                           />
                           <span
-                            style={{
-                              fontSize: "0.82rem",
-                              color: "var(--text-primary)",
-                              fontWeight: "600",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
+                            className="yt-metric-val"
+                            title={`${Number(v.likes || 0).toLocaleString()} likes`}
                           >
-                            {Number(v.likes).toLocaleString()}
+                            {formatCompactNumber(v.likes)}
                           </span>
                         </div>
                       </td>
 
                       {/* Comments cell */}
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          maxWidth: "0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            maxWidth: "100%",
-                          }}
-                        >
+                      <td className="yt-td">
+                        <div className="yt-metric-cell">
                           <MessageCircle
-                            size={14}
-                            style={{ color: "#3B82F6", flexShrink: 0 }}
+                            size={16}
+                            className="yt-metric-icon"
                           />
                           <span
-                            style={{
-                              fontSize: "0.82rem",
-                              color: "var(--text-primary)",
-                              fontWeight: "600",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
+                            className="yt-metric-val"
+                            title={`${Number(v.comments || 0).toLocaleString()} comments`}
                           >
-                            {Number(v.comments).toLocaleString()}
+                            {formatCompactNumber(v.comments)}
                           </span>
                         </div>
                       </td>
 
                       {/* Subscribers cell */}
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          maxWidth: "0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            maxWidth: "100%",
-                          }}
-                        >
+                      <td className="yt-td">
+                        <div className="yt-metric-cell">
                           <Users
-                            size={14}
-                            style={{ color: "#3B82F6", flexShrink: 0 }}
+                            size={16}
+                            className="yt-metric-icon"
                           />
                           <span
-                            style={{
-                              fontSize: "0.82rem",
-                              color: "var(--text-primary)",
-                              fontWeight: "600",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
+                            className="yt-metric-val"
+                            title={`${Number(v.subscribers || 0).toLocaleString()} subscribers`}
                           >
-                            {Number(v.subscribers).toLocaleString()}
+                            {formatCompactNumber(v.subscribers)}
                           </span>
                         </div>
                       </td>
 
                       {/* Published Date cell */}
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          maxWidth: "0",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
+                      <td className="yt-td">
                         <span
-                          style={{
-                            fontSize: "0.82rem",
-                            color: "var(--text-secondary)",
-                            fontWeight: "500",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            display: "block",
-                          }}
+                          className="yt-published-date"
+                          title={v.publishedDate ? new Date(v.publishedDate).toLocaleDateString() : ""}
                         >
-                          {new Date(v.publishedDate).toLocaleDateString()}
+                          {formatPublishedDate(v.publishedDate)}
                         </span>
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            gap: "2px",
-                          }}
-                        >
-                          {[1, 2, 3, 4, 5].map((i) => {
-                            const rating = v.erBySubscribers || 0;
 
-                            const starColor =
-                              rating >= i
-                                ? rating === 1
-                                  ? "#ff6b6b"
-                                  : rating === 2
-                                    ? "#fd7e14"
-                                    : rating === 3
-                                      ? "#a1e57b"
-                                      : rating === 4
-                                        ? "#28a745"
-                                        : "#006400"
-                                : "#dee2e6";
+                      {/* ER Rate cell */}
+                      <td className="yt-td" style={{ textAlign: "center" }}>
+                        <div className="yt-stars-wrap">
+                          {[1, 2, 3, 4, 5].map((i) => {
+                            const rating = Number(v.erBySubscribers) || 0;
+                            const isFilled = rating >= i;
+
+                            const starColor = isFilled
+                              ? rating === 1
+                                ? "#ff6b6b"
+                                : rating === 2
+                                  ? "#fd7e14"
+                                  : rating === 3
+                                    ? "#a1e57b"
+                                    : rating === 4
+                                      ? "#28a745"
+                                      : "#006400"
+                              : "#dee2e6";
 
                             return (
                               <Star
                                 key={i}
-                                size={16}
+                                size={15}
+                                strokeWidth={1.5}
                                 color={starColor}
                                 fill={starColor}
+                                style={{ flexShrink: 0 }}
                               />
                             );
                           })}

@@ -49,12 +49,13 @@ const formatGender = (gender) => {
 
 const getAgeRangeColor = (range) => {
   const r = (range || "").toUpperCase();
-  if (r.includes("18-24") || r.includes("18 - 24")) return "#3b82f6";
-  if (r.includes("25-34") || r.includes("25 - 34")) return "#ec4899";
-  if (r.includes("35-44") || r.includes("35 - 44")) return "#06b6d4";
-  if (r.includes("45-54") || r.includes("45 - 54")) return "#10b981";
-  if (r.includes("55") || r.includes("65")) return "#f59e0b";
-  return "#475569";
+  if (r.includes("18-24") || r.includes("18 - 24") || r.includes("18_24")) return "#3b82f6";
+  if (r.includes("25-34") || r.includes("25 - 34") || r.includes("25_34")) return "#ec4899";
+  if (r.includes("35-44") || r.includes("35 - 44") || r.includes("35_44")) return "#06b6d4";
+  if (r.includes("45-54") || r.includes("45 - 54") || r.includes("45_54")) return "#10b981";
+  if (r.includes("55-64") || r.includes("55 - 64") || r.includes("55_64") || r.includes("55")) return "#f59e0b";
+  if (r.includes("65+") || r.includes("65 +") || r.includes("65_PLUS") || r.includes("65")) return "#8b5cf6";
+  return "#64748b";
 };
 
 const groupDemographicsData = (data) => {
@@ -601,6 +602,31 @@ export default function OverviewPage() {
       const labels = topCitiesData.map((d) => d.city);
       const dataValues = topCitiesData.map((d) => d.impressions);
 
+      // Create horizontal gradients (Emerald & Teal)
+      const top1Grad = ctx.createLinearGradient(0, 0, 450, 0);
+      top1Grad.addColorStop(0, "#047857");
+      top1Grad.addColorStop(1, "#10B981");
+
+      const top23Grad = ctx.createLinearGradient(0, 0, 450, 0);
+      top23Grad.addColorStop(0, "#059669");
+      top23Grad.addColorStop(1, "#14B8A6");
+
+      const remainingGrad = ctx.createLinearGradient(0, 0, 450, 0);
+      remainingGrad.addColorStop(0, "#0D9488");
+      remainingGrad.addColorStop(1, "#2DD4BF");
+
+      const barColors = dataValues.map((_, idx) => {
+        if (idx === 0) return top1Grad; // Top 1: Strong Emerald (#047857 -> #10B981)
+        if (idx === 1 || idx === 2) return top23Grad; // Top 2 & 3: Rich Emerald (#059669 -> #14B8A6)
+        return remainingGrad; // Remaining: Teal (#0D9488 -> #2DD4BF)
+      });
+
+      const hoverColors = dataValues.map((_, idx) => {
+        if (idx === 0) return "#047857";
+        if (idx === 1 || idx === 2) return "#059669";
+        return "#0D9488";
+      });
+
       chartsRef.current.city = new Chart(ctx, {
         type: "bar",
         data: {
@@ -609,7 +635,8 @@ export default function OverviewPage() {
             {
               label: "Impressions",
               data: dataValues,
-              backgroundColor: isLight ? "#4f46e5" : "#6366f1",
+              backgroundColor: barColors,
+              hoverBackgroundColor: hoverColors,
               borderRadius: 5,
               barThickness: 16,
               maxBarThickness: 20,
@@ -639,8 +666,8 @@ export default function OverviewPage() {
             datalabels: {
               anchor: "end",
               align: "end",
-              color: () => (isLight ? "#334155" : "#94a3b8"),
-              font: { weight: "bold", size: 10 },
+              color: () => (isLight ? "#475569" : "#94a3b8"),
+              font: { weight: "bold", size: 10, family: "Inter, sans-serif" },
               formatter: (v) => formatNumber(v),
             },
           },
@@ -650,18 +677,20 @@ export default function OverviewPage() {
               grace: "18%",
               ticks: {
                 callback: (v) => formatNumber(v),
-                color: () => (isLight ? "#64748b" : "#94a3b8"),
-                font: { size: 10 },
+                color: () => (isLight ? "#475569" : "#94a3b8"),
+                font: { size: 10, family: "Inter, sans-serif" },
               },
               grid: {
-                color: () => (isLight ? "#f1f5f9" : "rgba(255,255,255,0.06)"),
+                color: () => (isLight ? "#E2E8F0" : "rgba(255,255,255,0.06)"),
+                borderDash: [4, 4],
+                drawBorder: false,
               },
             },
             y: {
               grid: { display: false },
               ticks: {
-                color: () => (isLight ? "#1e293b" : "#cbd5e1"),
-                font: { size: 12, weight: "600" },
+                color: () => (isLight ? "#334155" : "#cbd5e1"),
+                font: { size: 12, weight: "600", family: "Inter, sans-serif" },
                 autoSkip: false,
               },
             },
@@ -687,7 +716,7 @@ export default function OverviewPage() {
 
   return (
     <>
-      <div ref={mainContentRef}>
+      <div ref={mainContentRef} className="report-demographics-container">
         <section className="demographics-section">
           {/* Row 1: 2 Visual Charts Side-by-Side (Age Breakdown Donut + Top 50 Cities Bar Chart) */}
           <div className="demographics-charts-grid">
@@ -934,7 +963,7 @@ export default function OverviewPage() {
                                 style={{
                                   textAlign: "right",
                                   fontWeight: 600,
-                                  color: "var(--accent-color, #2563eb)",
+                                  color: "var(--accent-color, #059669)",
                                 }}
                               >
                                 {item.ctr}%

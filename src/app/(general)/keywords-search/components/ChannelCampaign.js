@@ -7,6 +7,9 @@ import {
   AlertCircle,
   Filter,
   BookOpen,
+  Users,
+  RotateCcw,
+  TrendingUp,
 } from "lucide-react";
 import { getYouTubeResultsByChannel } from "@/services/youtube";
 import { useSession } from "next-auth/react";
@@ -118,6 +121,23 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
     }
   }, [session]);
 
+  const activeFilterCount = [
+    Boolean(filters.query?.trim()),
+    filters.sortBy && filters.sortBy !== "relevance",
+    filters.dateRange && filters.dateRange !== "none",
+    filters.maxResults && String(filters.maxResults) !== "100",
+  ].filter(Boolean).length;
+
+  const handleResetFilters = () => {
+    setFilters((prev) => ({
+      ...prev,
+      query: "",
+      sortBy: "relevance",
+      dateRange: "none",
+      maxResults: 100,
+    }));
+  };
+
   const [jobProgress, setJobProgress] = useState(null);
 
   const fetchVideos = async () => {
@@ -192,203 +212,243 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
   return (
     <div style={{ minHeight: "100vh" }}>
       <div>
-        {/* Filter Card */}
-        <div className="app-search-card">
-          <div
-            style={{
-              marginBottom: "20px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "10px",
-                background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#ffffff",
-                boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
-              }}>
-                <Filter size={16} />
+        {/* Discovery Filter Card */}
+        <div className="discovery-card">
+          {/* Top Bar: Title + Segmented Control */}
+          <div className="discovery-top-bar">
+            <div className="discovery-badge-wrap">
+              <div className="discovery-icon-badge channel">
+                <Users size={16} />
               </div>
-              <h6
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: "700",
-                  color: "var(--text-primary)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.6px",
-                  margin: 0,
-                }}
-              >
-                Channel Search Filters
-              </h6>
+              <span className="discovery-section-label">
+                CHANNEL SEARCH FILTER
+              </span>
             </div>
 
-            <div className="app-toggle-pill">
+            <div className="discovery-toggle-pill">
               <button
                 onClick={() => setSearchType("keyword")}
-                className={`app-toggle-btn ${searchType === "keyword" ? "active" : ""}`}
+                className={`discovery-toggle-btn ${searchType === "keyword" ? "active" : ""}`}
+                type="button"
               >
-                Keyword
+                <Search size={13} />
+                <span>Keyword</span>
               </button>
               <button
                 onClick={() => setSearchType("channel")}
-                className={`app-toggle-btn ${searchType === "channel" ? "active" : ""}`}
+                className={`discovery-toggle-btn ${searchType === "channel" ? "active" : ""}`}
+                type="button"
               >
-                Channel
+                <Users size={13} />
+                <span>Channel</span>
               </button>
             </div>
           </div>
 
-          <div className="row g-3">
-            <div className="col-lg-4">
-              <label className="app-search-label">
-                Channel Name
-              </label>
-              <div className="app-input-group">
-                <span className="app-input-addon">
-                  <Globe size={16} />
-                </span>
-                <input
-                  type="text"
-                  name="channelName"
-                  value={filters.channelName}
-                  onChange={handleChange}
-                  className="app-input"
-                  placeholder="Enter channel name..."
-                />
-              </div>
+          {/* Primary Hero Search Bar: Channel Name */}
+          <div
+            className="discovery-hero-row"
+            style={{ marginBottom: filters.channelName?.trim() ? "18px" : "0" }}
+          >
+            <div className="discovery-search-wrapper">
+              <span className="discovery-search-icon">
+                <Globe size={18} />
+              </span>
+              <input
+                type="text"
+                name="channelName"
+                value={filters.channelName}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSubmit();
+                }}
+                className="discovery-search-input"
+                placeholder="Enter YouTube channel name, creator name, or handle (e.g. MrBeast, Marques Brownlee)..."
+                autoComplete="off"
+              />
             </div>
 
-            {filters.channelName && (
-              <>
-                <div className="col-lg-4">
-                  <label className="app-search-label">
-                    Search Query
-                  </label>
-                  <div className="app-input-group">
-                    <span className="app-input-addon">
-                      <Search size={16} />
+            <button
+              className="discovery-search-btn"
+              type="button"
+              disabled={loading || !filters.channelName?.trim()}
+              onClick={handleSubmit}
+            >
+              <Search size={16} />
+              <span>{loading ? "Searching..." : "Search"}</span>
+            </button>
+          </div>
+
+          {/* Compact Filters Toolbar - Shown only when channelName is filled */}
+          {Boolean(filters.channelName?.trim()) && (
+            <div
+              className="discovery-filters-panel"
+              style={{
+                animation: "fadeIn 0.25s ease-out forwards",
+              }}
+            >
+              {/* Filter Section Header */}
+              <div className="discovery-filters-header">
+                <div className="discovery-filters-title-wrap">
+                  <span className="discovery-filters-icon-badge">
+                    <Filter size={13} />
+                  </span>
+                  <span className="discovery-filters-title">
+                    Channel Search &amp; Audience Filters
+                  </span>
+                  {activeFilterCount > 0 ? (
+                    <span className="discovery-filters-badge active">
+                      {activeFilterCount} active
                     </span>
+                  ) : (
+                    <span className="discovery-filters-badge">Default</span>
+                  )}
+                </div>
+
+                {activeFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="discovery-reset-btn"
+                    title="Reset channel filters to default"
+                  >
+                    <RotateCcw size={12} />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Compact Filters Grid */}
+              <div className="discovery-filters-grid channel-filters-grid">
+                {/* Search Query within Channel */}
+                <div
+                  className={`discovery-filter-item ${
+                    filters.query?.trim() ? "is-active" : ""
+                  }`}
+                >
+                  <div className="discovery-filter-item-head">
+                    <span className="discovery-filter-micro-icon region">
+                      <Search size={13} />
+                    </span>
+                    <label className="discovery-filter-label">
+                      Filter Keywords
+                    </label>
+                    <span className="discovery-filter-pill">Optional</span>
+                  </div>
+                  <div className="discovery-input-wrap">
                     <input
                       type="text"
                       name="query"
                       value={filters.query}
                       onChange={handleChange}
-                      className="app-input"
-                      placeholder="Enter search terms..."
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSubmit();
+                      }}
+                      className="discovery-compact-input"
+                      placeholder="Keywords within channel (e.g. tutorial, vlog)..."
                     />
                   </div>
                 </div>
 
-                <div className="col-lg-2">
-                  <label className="app-search-label">
-                    Sort By
-                  </label>
-                  <div className="app-input-group">
-                    <span className="app-input-addon">
-                      <Filter size={16} />
+                {/* Sort By */}
+                <div
+                  className={`discovery-filter-item ${
+                    filters.sortBy !== "relevance" ? "is-active" : ""
+                  }`}
+                >
+                  <div className="discovery-filter-item-head">
+                    <span className="discovery-filter-micro-icon sort">
+                      <TrendingUp size={13} />
                     </span>
+                    <label className="discovery-filter-label">Sort By</label>
+                    <span className="discovery-filter-pill">Order</span>
+                  </div>
+                  <div className="discovery-input-wrap">
                     <select
                       name="sortBy"
                       value={filters.sortBy}
                       onChange={handleChange}
-                      className="app-select"
+                      className="discovery-compact-select"
                     >
-                      <option value="relevance">Relevance</option>
-                      <option value="popular">Popular</option>
-                      <option value="recent">Recent</option>
+                      <option value="relevance">⚡ Relevance</option>
+                      <option value="popular">🔥 Most Popular</option>
+                      <option value="recent">🕒 Recently Uploaded</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="col-lg-2">
-                  <label className="app-search-label">
-                    Date filter Data
-                  </label>
-                  <div className="app-input-group">
-                    <span className="app-input-addon">
-                      <Calendar size={16} />
+                {/* Date Filter */}
+                <div
+                  className={`discovery-filter-item ${
+                    filters.dateRange !== "none" ? "is-active" : ""
+                  }`}
+                >
+                  <div className="discovery-filter-item-head">
+                    <span className="discovery-filter-micro-icon date">
+                      <Calendar size={13} />
                     </span>
+                    <label className="discovery-filter-label">Uploaded</label>
+                    <span className="discovery-filter-pill">Window</span>
+                  </div>
+                  <div className="discovery-input-wrap">
                     <select
                       name="dateRange"
                       value={filters.dateRange}
                       onChange={handleChange}
-                      className="app-select"
+                      className="discovery-compact-select"
                     >
-                      <option value="none">None</option>
-                      <option value="24h">Last 24 Hours</option>
-                      <option value="7d">7 Days</option>
-                      <option value="15d">15 Days</option>
-                      <option value="30d">30 Days</option>
-                      <option value="3m">3 Months</option>
-                      <option value="6m">6 Months</option>
-                      <option value="12m">1 Year</option>
-                      <option value="24m">2 Year</option>
+                      <option value="none">🗓️ Any Time</option>
+                      <option value="24h">⏱️ Last 24 Hours</option>
+                      <option value="7d">📅 Last 7 Days</option>
+                      <option value="15d">📅 Last 15 Days</option>
+                      <option value="30d">🗓️ Last 30 Days</option>
+                      <option value="3m">🗓️ Last 3 Months</option>
+                      <option value="6m">🗓️ Last 6 Months</option>
+                      <option value="12m">📆 Last 1 Year</option>
+                      <option value="24m">📆 Last 2 Years</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="col-lg-2">
-                  <label className="app-search-label">
-                    Max Results
-                  </label>
-                  <div className="app-input-group">
-                    <span className="app-input-addon">
-                      <BookOpen size={16} />
+                {/* Max Results */}
+                <div
+                  className={`discovery-filter-item ${
+                    String(filters.maxResults) !== "100" ? "is-active" : ""
+                  }`}
+                >
+                  <div className="discovery-filter-item-head">
+                    <span className="discovery-filter-micro-icon max">
+                      <BookOpen size={13} />
                     </span>
+                    <label className="discovery-filter-label">Max Results</label>
+                    <span className="discovery-filter-pill">Limit</span>
+                  </div>
+                  <div className="discovery-input-wrap">
                     <input
                       type="text"
                       name="maxResults"
                       value={filters.maxResults}
                       onChange={handleChange}
-                      className="app-input"
-                      placeholder="200"
+                      className="discovery-compact-input"
+                      placeholder="100 (Max 1000)"
+                      maxLength={4}
                     />
                   </div>
                 </div>
-
-                <div className="col-lg-2 d-flex align-items-end">
-                  <button
-                    className="app-btn-search w-100"
-                    type="button"
-                    disabled={loading}
-                    onClick={handleSubmit}
-                  >
-                    <Search size={16} />
-                    {loading ? "Searching..." : "Search"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* No Videos Found State */}
         {hasSearched && videos.length === 0 && !loading && (
-          <div
-            style={{
-              backgroundColor: "var(--card-bg, #1e293b)",
-              borderRadius: "16px",
-              padding: "24px 28px",
-              marginTop: "20px",
-              marginBottom: "24px",
-              border: "1px solid rgba(239, 68, 68, 0.25)",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-            }}
-          >
+          <div className="discovery-suggestions-box">
             <div className="d-flex align-items-center gap-2 mb-2">
               <AlertCircle size={20} color="#ef4444" />
               <h5
                 style={{
                   margin: 0,
-                  fontSize: "1.05rem",
+                  fontSize: "1rem",
                   fontWeight: "700",
                   color: "#ef4444",
                 }}
@@ -399,12 +459,47 @@ const YouTubeTableChannelCampaign = ({ searchType, setSearchType }) => {
             <p
               style={{
                 color: "var(--text-secondary, #94a3b8)",
-                fontSize: "0.9rem",
-                margin: "8px 0 0 0",
+                fontSize: "0.85rem",
+                margin: "6px 0 12px 0",
               }}
             >
-              Try adjusting your channel name, search terms, or date filters.
+              Try adjusting your channel name or explore these popular channels:
             </p>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "8px",
+                alignItems: "center",
+              }}
+            >
+              {[
+                "MrBeast",
+                "Marques Brownlee",
+                "Veritasium",
+                "Huberman Lab",
+                "Lex Fridman",
+                "Fireship",
+              ].map((ch, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      channelName: ch,
+                      query: "",
+                    }));
+                    fetchVideos(ch);
+                  }}
+                  className="discovery-suggestion-chip"
+                >
+                  <Users size={13} color="#2563eb" />
+                  <span>{ch}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

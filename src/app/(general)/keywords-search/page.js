@@ -1,9 +1,9 @@
 "use client";
-
 import React, { useState } from "react";
 import YouTubeTableChannelCampaign from "./components/ChannelCampaign";
 import YouTubeTableKeywordCampaign from "./components/KeywordCampaign";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
+import "./styles.css";
 
 function Page() {
   const [searchType, setSearchType] = useState("keyword");

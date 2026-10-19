@@ -10,10 +10,11 @@ export const topCountryBarChartOptions = (
   const parseCTR = (ctr) => Number(ctr?.replace("%", "")) || 0;
 
   const colorMap = {
-  Female: "#3454d1",
-  Male: "#25b865",
-  Unknown: "#ffa21d",
-};
+    Male: "#0EA5E9",
+    Female: "#F43F5E",
+    Other: "#F59E0B",
+    Unknown: "#F59E0B",
+  };
 
 
   const round = (num, d = 2) =>
@@ -71,79 +72,79 @@ export const topCountryBarChartOptions = (
   });
 
   return {
-  chart: {
-    type: "bar",
-    height: 400,
-    toolbar: { show: false },
-    background: "transparent",
-  },
-  theme: { mode: "dark" },
-  series: [
-    {
-      name: activeMetric,
-      data: seriesData,
+    chart: {
+      type: "bar",
+      height: 400,
+      toolbar: { show: false },
+      background: "transparent",
     },
-  ],
+    theme: { mode: "dark" },
+    series: [
+      {
+        name: activeMetric,
+        data: seriesData,
+      },
+    ],
 
-  colors: categories.map((g) => colorMap[g] || "#999"),
-  dataLabels: {
-    enabled: true,
-    formatter: function (val, opts) {
-      if (activeMetric === "Impressions") {
-        if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
-        if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
-        return val;
-      }
-      return val.toFixed(2) + "%";
-    },
-    style: {
-      fontSize: '12px',
-      colors: ["#fff"]
-    }
-  },
-  plotOptions: {
-    bar: {
-      columnWidth: "30%",
-      borderRadius: 6,
-      distributed: true,
-      dataLabels: {
-        position: 'top',
-      },
-    },
-  },
-  grid: {
-    borderColor: "rgba(255,255,255,0.10)",
-    strokeDashArray: 4,
-  },
-  xaxis: {
-    categories,
-    labels: {
-      style: {
-        fontSize: "12px",
-      },
-    },
-  },
-  yaxis: {
-    labels: {
-      style: { colors: ["#94a3b8"] },
-      formatter: (val) => {
+    colors: categories.map((g) => colorMap[g] || "#999"),
+    dataLabels: {
+      enabled: true,
+      formatter: function (val, opts) {
         if (activeMetric === "Impressions") {
-          return Math.round(val);
+          if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+          if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+          return val;
         }
-        return val.toFixed(2);
+        return val.toFixed(2) + "%";
+      },
+      style: {
+        fontSize: '12px',
+        colors: ["#fff"]
+      }
+    },
+    plotOptions: {
+      bar: {
+        columnWidth: "30%",
+        borderRadius: 6,
+        distributed: true,
+        dataLabels: {
+          position: 'top',
+        },
       },
     },
-  },
-
-  tooltip: {
-    theme: "dark",
-    y: {
-      formatter: (val) =>
-        activeMetric === "Impressions"
-          ? val.toLocaleString()
-          : `${val}%`,
+    grid: {
+      borderColor: "rgba(255,255,255,0.10)",
+      strokeDashArray: 4,
     },
-  },
-};
+    xaxis: {
+      categories,
+      labels: {
+        style: {
+          fontSize: "12px",
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        style: { colors: ["#94a3b8"] },
+        formatter: (val) => {
+          if (activeMetric === "Impressions") {
+            return Math.round(val);
+          }
+          return val.toFixed(2);
+        },
+      },
+    },
+
+    tooltip: {
+      theme: "dark",
+      y: {
+        formatter: (val) =>
+          activeMetric === "Impressions"
+            ? val.toLocaleString()
+            : `${val}%`,
+      },
+    },
+  };
 
 };

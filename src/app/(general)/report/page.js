@@ -8,6 +8,8 @@ import { downloadDashboardPDF } from "@/utils/pdfExport";
 import { FiDownload } from "react-icons/fi";
 import PageHeader from "@/components/shared/pageHeader/PageHeader";
 import "./overview/styles.css";
+import "./device/styles.css";
+import "./demographics/styles.css";
 
 export default function UnifiedReportDashboard() {
   const mainContentRef = useRef(null);
@@ -54,22 +56,22 @@ export default function UnifiedReportDashboard() {
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "28px",
-            paddingBottom: "4rem",
+            gap: "24px",
+            paddingBottom: "2rem",
           }}
         >
           {/* Section 1: Overview */}
-          <section>
+          <section style={{ margin: 0, padding: 0 }}>
             <OverviewReport />
           </section>
 
           {/* Section 2: Device */}
-          <section>
+          <section style={{ margin: 0, padding: 0 }}>
             <DeviceReport />
           </section>
 
           {/* Section 3: Demographics */}
-          <section>
+          <section style={{ margin: 0, padding: 0 }}>
             <DemographicsReport />
           </section>
         </div>
