@@ -20,16 +20,14 @@
 }
 
 [data-theme="dark"] .discovery-card,
-html.app-skin-dark .discovery-card,
-:root:not([data-theme="light"]) .discovery-card {
+html.app-skin-dark .discovery-card{
   background-color: var(--card-bg, #1e293b);
   border-color: var(--card-border, rgba(255, 255, 255, 0.1));
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="dark"] .discovery-card:hover,
-html.app-skin-dark .discovery-card:hover,
-:root:not([data-theme="light"]) .discovery-card:hover {
+html.app-skin-dark .discovery-card:hover{
   border-color: rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
@@ -45,8 +43,7 @@ html.app-skin-dark .discovery-card:hover,
 }
 
 [data-theme="dark"] .discovery-top-bar,
-html.app-skin-dark .discovery-top-bar,
-:root:not([data-theme="light"]) .discovery-top-bar {
+html.app-skin-dark .discovery-top-bar{
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -82,8 +79,7 @@ html.app-skin-dark .discovery-top-bar,
 }
 
 [data-theme="dark"] .discovery-section-label,
-html.app-skin-dark .discovery-section-label,
-:root:not([data-theme="light"]) .discovery-section-label {
+html.app-skin-dark .discovery-section-label{
   color: #f8fafc;
 }
 
@@ -99,8 +95,7 @@ html.app-skin-dark .discovery-section-label,
 }
 
 [data-theme="dark"] .discovery-toggle-pill,
-html.app-skin-dark .discovery-toggle-pill,
-:root:not([data-theme="light"]) .discovery-toggle-pill {
+html.app-skin-dark .discovery-toggle-pill{
   background-color: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
 }
@@ -128,14 +123,12 @@ html.app-skin-dark .discovery-toggle-pill,
 }
 
 [data-theme="dark"] .discovery-toggle-btn,
-html.app-skin-dark .discovery-toggle-btn,
-:root:not([data-theme="light"]) .discovery-toggle-btn {
+html.app-skin-dark .discovery-toggle-btn{
   color: #94a3b8;
 }
 
 [data-theme="dark"] .discovery-toggle-btn.active,
-html.app-skin-dark .discovery-toggle-btn.active,
-:root:not([data-theme="light"]) .discovery-toggle-btn.active {
+html.app-skin-dark .discovery-toggle-btn.active{
   background: #2563eb;
   color: #ffffff;
   box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4);
@@ -146,8 +139,7 @@ html.app-skin-dark .discovery-toggle-btn.active,
 }
 
 [data-theme="dark"] .discovery-toggle-btn:not(.active):hover,
-html.app-skin-dark .discovery-toggle-btn:not(.active):hover,
-:root:not([data-theme="light"]) .discovery-toggle-btn:not(.active):hover {
+html.app-skin-dark .discovery-toggle-btn:not(.active):hover{
   color: #ffffff;
 }
 
@@ -203,29 +195,25 @@ html.app-skin-dark .discovery-toggle-btn:not(.active):hover,
 
 /* Dark Mode Input Visibility Fixes */
 [data-theme="dark"] .discovery-search-input,
-html.app-skin-dark .discovery-search-input,
-:root:not([data-theme="light"]) .discovery-search-input {
+html.app-skin-dark .discovery-search-input{
   background-color: #0f172a;
   border-color: #334155;
   color: #f8fafc;
 }
 
 [data-theme="dark"] .discovery-search-input::placeholder,
-html.app-skin-dark .discovery-search-input::placeholder,
-:root:not([data-theme="light"]) .discovery-search-input::placeholder {
+html.app-skin-dark .discovery-search-input::placeholder{
   color: #64748b;
   opacity: 1;
 }
 
 [data-theme="dark"] .discovery-search-input:hover,
-html.app-skin-dark .discovery-search-input:hover,
-:root:not([data-theme="light"]) .discovery-search-input:hover {
+html.app-skin-dark .discovery-search-input:hover{
   border-color: #475569;
 }
 
 [data-theme="dark"] .discovery-search-input:focus,
-html.app-skin-dark .discovery-search-input:focus,
-:root:not([data-theme="light"]) .discovery-search-input:focus {
+html.app-skin-dark .discovery-search-input:focus{
   background-color: #0f172a;
   border-color: #3b82f6;
   color: #ffffff;
@@ -285,8 +273,7 @@ html.app-skin-dark .discovery-search-input:focus,
 }
 
 [data-theme="dark"] .discovery-filters-panel,
-html.app-skin-dark .discovery-filters-panel,
-:root:not([data-theme="light"]) .discovery-filters-panel {
+html.app-skin-dark .discovery-filters-panel{
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.5) 100%);
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -303,8 +290,7 @@ html.app-skin-dark .discovery-filters-panel,
 }
 
 [data-theme="dark"] .discovery-filters-header,
-html.app-skin-dark .discovery-filters-header,
-:root:not([data-theme="light"]) .discovery-filters-header {
+html.app-skin-dark .discovery-filters-header{
   border-bottom-color: rgba(255, 255, 255, 0.07);
 }
 
@@ -326,8 +312,7 @@ html.app-skin-dark .discovery-filters-header,
 }
 
 [data-theme="dark"] .discovery-filters-icon-badge,
-html.app-skin-dark .discovery-filters-icon-badge,
-:root:not([data-theme="light"]) .discovery-filters-icon-badge {
+html.app-skin-dark .discovery-filters-icon-badge{
   background: rgba(59, 130, 246, 0.2);
   color: #60a5fa;
 }
@@ -341,8 +326,7 @@ html.app-skin-dark .discovery-filters-icon-badge,
 }
 
 [data-theme="dark"] .discovery-filters-title,
-html.app-skin-dark .discovery-filters-title,
-:root:not([data-theme="light"]) .discovery-filters-title {
+html.app-skin-dark .discovery-filters-title{
   color: #94a3b8;
 }
 
@@ -365,15 +349,13 @@ html.app-skin-dark .discovery-filters-title,
 }
 
 [data-theme="dark"] .discovery-filters-badge,
-html.app-skin-dark .discovery-filters-badge,
-:root:not([data-theme="light"]) .discovery-filters-badge {
+html.app-skin-dark .discovery-filters-badge{
   background: rgba(255, 255, 255, 0.08);
   color: #94a3b8;
 }
 
 [data-theme="dark"] .discovery-filters-badge.active,
-html.app-skin-dark .discovery-filters-badge.active,
-:root:not([data-theme="light"]) .discovery-filters-badge.active {
+html.app-skin-dark .discovery-filters-badge.active{
   background: rgba(59, 130, 246, 0.22);
   color: #60a5fa;
   border-color: rgba(59, 130, 246, 0.4);
@@ -410,8 +392,7 @@ html.app-skin-dark .discovery-filters-badge.active,
 }
 
 [data-theme="dark"] .discovery-reset-btn,
-html.app-skin-dark .discovery-reset-btn,
-:root:not([data-theme="light"]) .discovery-reset-btn {
+html.app-skin-dark .discovery-reset-btn{
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.1);
   color: #94a3b8;
@@ -419,8 +400,7 @@ html.app-skin-dark .discovery-reset-btn,
 }
 
 [data-theme="dark"] .discovery-reset-btn:hover,
-html.app-skin-dark .discovery-reset-btn:hover,
-:root:not([data-theme="light"]) .discovery-reset-btn:hover {
+html.app-skin-dark .discovery-reset-btn:hover{
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
   border-color: rgba(239, 68, 68, 0.4);
@@ -509,30 +489,26 @@ html.app-skin-dark .discovery-reset-btn:hover,
 }
 
 [data-theme="dark"] .discovery-filter-item,
-html.app-skin-dark .discovery-filter-item,
-:root:not([data-theme="light"]) .discovery-filter-item {
+html.app-skin-dark .discovery-filter-item{
   background: #111c30;
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 [data-theme="dark"] .discovery-filter-item:hover,
-html.app-skin-dark .discovery-filter-item:hover,
-:root:not([data-theme="light"]) .discovery-filter-item:hover {
+html.app-skin-dark .discovery-filter-item:hover{
   border-color: rgba(255, 255, 255, 0.16);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .discovery-filter-item:focus-within,
-html.app-skin-dark .discovery-filter-item:focus-within,
-:root:not([data-theme="light"]) .discovery-filter-item:focus-within {
+html.app-skin-dark .discovery-filter-item:focus-within{
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme="dark"] .discovery-filter-item.is-active,
-html.app-skin-dark .discovery-filter-item.is-active,
-:root:not([data-theme="light"]) .discovery-filter-item.is-active {
+html.app-skin-dark .discovery-filter-item.is-active{
   border-color: rgba(59, 130, 246, 0.45);
   background: linear-gradient(180deg, rgba(37, 99, 235, 0.14) 0%, #111c30 100%);
   box-shadow: 0 2px 12px rgba(37, 99, 235, 0.2);
@@ -582,38 +558,32 @@ html.app-skin-dark .discovery-filter-item.is-active,
 }
 
 [data-theme="dark"] .discovery-filter-micro-icon.region,
-html.app-skin-dark .discovery-filter-micro-icon.region,
-:root:not([data-theme="light"]) .discovery-filter-micro-icon.region {
+html.app-skin-dark .discovery-filter-micro-icon.region{
   background: rgba(59, 130, 246, 0.18);
   color: #60a5fa;
 }
 [data-theme="dark"] .discovery-filter-micro-icon.sort,
-html.app-skin-dark .discovery-filter-micro-icon.sort,
-:root:not([data-theme="light"]) .discovery-filter-micro-icon.sort {
+html.app-skin-dark .discovery-filter-micro-icon.sort{
   background: rgba(167, 139, 250, 0.18);
   color: #c4b5fd;
 }
 [data-theme="dark"] .discovery-filter-micro-icon.views,
-html.app-skin-dark .discovery-filter-micro-icon.views,
-:root:not([data-theme="light"]) .discovery-filter-micro-icon.views {
+html.app-skin-dark .discovery-filter-micro-icon.views{
   background: rgba(52, 211, 153, 0.18);
   color: #6ee7b7;
 }
 [data-theme="dark"] .discovery-filter-micro-icon.subscribers,
-html.app-skin-dark .discovery-filter-micro-icon.subscribers,
-:root:not([data-theme="light"]) .discovery-filter-micro-icon.subscribers {
+html.app-skin-dark .discovery-filter-micro-icon.subscribers{
   background: rgba(251, 191, 36, 0.18);
   color: #fcd34d;
 }
 [data-theme="dark"] .discovery-filter-micro-icon.date,
-html.app-skin-dark .discovery-filter-micro-icon.date,
-:root:not([data-theme="light"]) .discovery-filter-micro-icon.date {
+html.app-skin-dark .discovery-filter-micro-icon.date{
   background: rgba(251, 113, 133, 0.18);
   color: #fda4af;
 }
 [data-theme="dark"] .discovery-filter-micro-icon.max,
-html.app-skin-dark .discovery-filter-micro-icon.max,
-:root:not([data-theme="light"]) .discovery-filter-micro-icon.max {
+html.app-skin-dark .discovery-filter-micro-icon.max{
   background: rgba(56, 189, 248, 0.18);
   color: #7dd3fc;
 }
@@ -632,8 +602,7 @@ html.app-skin-dark .discovery-filter-micro-icon.max,
 }
 
 [data-theme="dark"] .discovery-filter-label,
-html.app-skin-dark .discovery-filter-label,
-:root:not([data-theme="light"]) .discovery-filter-label {
+html.app-skin-dark .discovery-filter-label{
   color: #94a3b8;
 }
 
@@ -649,8 +618,7 @@ html.app-skin-dark .discovery-filter-label,
 }
 
 [data-theme="dark"] .discovery-filter-pill,
-html.app-skin-dark .discovery-filter-pill,
-:root:not([data-theme="light"]) .discovery-filter-pill {
+html.app-skin-dark .discovery-filter-pill{
   background: rgba(255, 255, 255, 0.06);
   color: #64748b;
 }
@@ -674,8 +642,7 @@ html.app-skin-dark .discovery-filter-pill,
 }
 
 [data-theme="dark"] .discovery-input-icon,
-html.app-skin-dark .discovery-input-icon,
-:root:not([data-theme="light"]) .discovery-input-icon {
+html.app-skin-dark .discovery-input-icon{
   color: #64748b;
 }
 
@@ -732,9 +699,7 @@ html.app-skin-dark .discovery-input-icon,
 [data-theme="dark"] .discovery-compact-input,
 [data-theme="dark"] .discovery-compact-select,
 html.app-skin-dark .discovery-compact-input,
-html.app-skin-dark .discovery-compact-select,
-:root:not([data-theme="light"]) .discovery-compact-input,
-:root:not([data-theme="light"]) .discovery-compact-select {
+html.app-skin-dark .discovery-compact-select{
   background-color: #0b1329;
   border-color: #243048;
   color: #f8fafc;
@@ -742,14 +707,12 @@ html.app-skin-dark .discovery-compact-select,
 }
 
 [data-theme="dark"] .discovery-compact-select,
-html.app-skin-dark .discovery-compact-select,
-:root:not([data-theme="light"]) .discovery-compact-select {
+html.app-skin-dark .discovery-compact-select{
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 [data-theme="dark"] .discovery-compact-input::placeholder,
-html.app-skin-dark .discovery-compact-input::placeholder,
-:root:not([data-theme="light"]) .discovery-compact-input::placeholder {
+html.app-skin-dark .discovery-compact-input::placeholder{
   color: #64748b;
   opacity: 1;
 }
@@ -762,8 +725,7 @@ html.app-skin-dark .discovery-compact-input::placeholder,
 }
 
 [data-theme="dark"] .discovery-compact-select option,
-html.app-skin-dark .discovery-compact-select option,
-:root:not([data-theme="light"]) .discovery-compact-select option {
+html.app-skin-dark .discovery-compact-select option{
   background-color: #1e293b;
   color: #f8fafc;
 }
@@ -771,9 +733,7 @@ html.app-skin-dark .discovery-compact-select option,
 [data-theme="dark"] .discovery-compact-input:hover,
 [data-theme="dark"] .discovery-compact-select:hover,
 html.app-skin-dark .discovery-compact-input:hover,
-html.app-skin-dark .discovery-compact-select:hover,
-:root:not([data-theme="light"]) .discovery-compact-input:hover,
-:root:not([data-theme="light"]) .discovery-compact-select:hover {
+html.app-skin-dark .discovery-compact-select:hover{
   border-color: #475569;
   background-color: #0f172a;
 }
@@ -781,9 +741,7 @@ html.app-skin-dark .discovery-compact-select:hover,
 [data-theme="dark"] .discovery-compact-input:focus,
 [data-theme="dark"] .discovery-compact-select:focus,
 html.app-skin-dark .discovery-compact-input:focus,
-html.app-skin-dark .discovery-compact-select:focus,
-:root:not([data-theme="light"]) .discovery-compact-input:focus,
-:root:not([data-theme="light"]) .discovery-compact-select:focus {
+html.app-skin-dark .discovery-compact-select:focus{
   border-color: #3b82f6;
   background-color: #0f172a;
   color: #ffffff;
@@ -802,8 +760,7 @@ html.app-skin-dark .discovery-compact-select:focus,
 }
 
 [data-theme="dark"] .discovery-suggestions-box,
-html.app-skin-dark .discovery-suggestions-box,
-:root:not([data-theme="light"]) .discovery-suggestions-box {
+html.app-skin-dark .discovery-suggestions-box{
   background-color: var(--card-bg, #1e293b);
   border-color: rgba(239, 68, 68, 0.3);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
@@ -833,16 +790,14 @@ html.app-skin-dark .discovery-suggestions-box,
 }
 
 [data-theme="dark"] .discovery-suggestion-chip,
-html.app-skin-dark .discovery-suggestion-chip,
-:root:not([data-theme="light"]) .discovery-suggestion-chip {
+html.app-skin-dark .discovery-suggestion-chip{
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.12);
   color: #f1f5f9;
 }
 
 [data-theme="dark"] .discovery-suggestion-chip:hover,
-html.app-skin-dark .discovery-suggestion-chip:hover,
-:root:not([data-theme="light"]) .discovery-suggestion-chip:hover {
+html.app-skin-dark .discovery-suggestion-chip:hover{
   border-color: #60a5fa;
   color: #60a5fa;
   background: rgba(37, 99, 235, 0.18);

@@ -14,8 +14,20 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('appTheme') || 'light';
+                  document.documentElement.setAttribute('data-theme', saved);
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
         {/* Google Fonts - Inter */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -9,14 +9,14 @@ const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 const VisitorsChartVcr = ({ dailyReportsData }) => {
     const [theme, setTheme] = useState(() => {
         if (typeof document !== "undefined") {
-            return document.documentElement.getAttribute("data-theme") || "dark";
+            return document.documentElement.getAttribute("data-theme") || "light";
         }
-        return "dark";
+        return "light";
     });
 
     useEffect(() => {
         const updateTheme = () => {
-            const current = document.documentElement.getAttribute("data-theme") || "dark";
+            const current = document.documentElement.getAttribute("data-theme") || "light";
             setTheme(current);
         };
         updateTheme();

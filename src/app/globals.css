@@ -162,38 +162,9 @@ pre {
    DYNAMIC PAGE THEME SYSTEM (LIGHT & DARK MODE VARIABLES)
 ========================================================= */
 
-:root {
-  /* Default Dark Mode Theme Tokens (Midnight Enterprise) */
-  --page-bg: #0f172a;
-  --card-bg: #1e293b;
-  --card-border: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --table-header-bg: #1a2234;
-  --table-border: #334155;
-  --table-hover-bg: rgba(255, 255, 255, 0.04);
-  --badge-admin-bg: rgba(16, 185, 129, 0.15);
-  --badge-admin-color: #34d399;
-  --badge-admin-border: rgba(16, 185, 129, 0.3);
-  --badge-super-bg: rgba(37, 99, 235, 0.2);
-  --badge-super-color: #60a5fa;
-  --badge-super-border: rgba(37, 99, 235, 0.4);
-  --badge-user-bg: rgba(148, 163, 184, 0.15);
-  --badge-user-color: #cbd5e1;
-  --badge-user-border: rgba(148, 163, 184, 0.3);
-  --modal-bg: #1e293b;
-  --modal-header-bg: linear-gradient(135deg, #0b132b 0%, #1e293b 100%);
-  --modal-border: #334155;
-  --input-bg: rgba(255, 255, 255, 0.05);
-  --input-border: #334155;
-  --input-text: #f8fafc;
-  --skeleton-base: #1e293b;
-  --skeleton-highlight: #334155;
-  --skeleton-border: #334155;
-}
-
+:root,
 [data-theme="light"] {
-  /* Light Mode Theme Tokens (Premium Slate & Blue) */
+  /* Default Theme Tokens: Light Mode (Premium Slate & Blue) */
   --page-bg: #f1f5f9;
   --card-bg: #ffffff;
   --card-border: #e2e8f0;
@@ -222,40 +193,64 @@ pre {
   --skeleton-border: #e2e8f0;
 }
 
+[data-theme="dark"] {
+  /* Dark Mode Theme Tokens (Midnight Enterprise) */
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --table-header-bg: #1a2234;
+  --table-border: #334155;
+  --table-hover-bg: rgba(255, 255, 255, 0.04);
+  --badge-admin-bg: rgba(16, 185, 129, 0.15);
+  --badge-admin-color: #34d399;
+  --badge-admin-border: rgba(16, 185, 129, 0.3);
+  --badge-super-bg: rgba(37, 99, 235, 0.2);
+  --badge-super-color: #60a5fa;
+  --badge-super-border: rgba(37, 99, 235, 0.4);
+  --badge-user-bg: rgba(148, 163, 184, 0.15);
+  --badge-user-color: #cbd5e1;
+  --badge-user-border: rgba(148, 163, 184, 0.3);
+  --modal-bg: #1e293b;
+  --modal-header-bg: linear-gradient(135deg, #0b132b 0%, #1e293b 100%);
+  --modal-border: #334155;
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: #334155;
+  --input-text: #f8fafc;
+  --skeleton-base: #1e293b;
+  --skeleton-highlight: #334155;
+  --skeleton-border: #334155;
+}
+
 /* =========================================================
    NXL LAYOUT WRAPPER — force dark background in dark mode
    (nxl theme uses html.app-skin-dark but we use data-theme)
 ========================================================= */
 
-/* Force html/body dark — prevents white gaps from nxl 95px padding-top on .nxl-content */
-:root:not([data-theme="light"]),
+/* Force html/body dark in dark mode */
 [data-theme="dark"] {
   background-color: var(--page-bg) !important;
 }
 
-:root:not([data-theme="light"]) body,
 [data-theme="dark"] body {
   background-color: var(--page-bg) !important;
 }
 
 /* Remove the white bottom border of the app header in dark mode */
-:root:not([data-theme="light"]) .nxl-header,
 [data-theme="dark"] .nxl-header {
   background-color: var(--page-bg) !important;
   border-bottom: 1px solid #334155 !important;
 }
 
-:root:not([data-theme="light"]) .header-wrapper,
 [data-theme="dark"] .header-wrapper {
   border-bottom: none !important;
 }
 
-:root:not([data-theme="light"]) .nxl-content,
 [data-theme="dark"] .nxl-content {
   background-color: var(--page-bg) !important;
 }
 
-:root:not([data-theme="light"]) .nxl-container,
 [data-theme="dark"] .nxl-container {
   background-color: var(--page-bg) !important;
 }
@@ -280,7 +275,6 @@ pre {
 }
 
 /* In dark mode, page-header blends into the dark page bg */
-:root:not([data-theme="light"]) .page-header,
 [data-theme="dark"] .page-header {
   background-color: var(--page-bg) !important;
   border-color: #334155 !important;
@@ -330,14 +324,12 @@ table tbody tr:hover {
 }
 
 /* Custom styling for Form Switches in Dark Mode (Input track & knob only) */
-:root:not([data-theme="light"]) .form-check-input:not(:checked),
 [data-theme="dark"] .form-check-input:not(:checked) {
   background-color: #475569 !important;
   border-color: #64748b !important;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23f8fafc'/%3e%3c/svg%3e") !important;
 }
 
-:root:not([data-theme="light"]) .form-check-input:checked,
 [data-theme="dark"] .form-check-input:checked {
   background-color: #2563eb !important;
   border-color: #2563eb !important;
@@ -404,63 +396,60 @@ table tbody td div {
 
 /* Color Schemes per Theme */
 :root,
+[data-theme="light"] {
+  color-scheme: light;
+  --close-btn-filter: none;
+}
+
 [data-theme="dark"] {
   color-scheme: dark;
   --close-btn-filter: invert(1) grayscale(100%) brightness(200%);
 }
 
-/* Auth page logo — bright white in dark mode (default :root), original colors in light mode */
-:root .app-auth-logo,
+/* Auth page logo — bright white in dark mode, original colors in light mode */
 [data-theme="dark"] .app-auth-logo {
   filter: brightness(0) invert(1) drop-shadow(0 0 12px rgba(59, 130, 246, 0.5)) !important;
 }
 
+.app-auth-logo,
 [data-theme="light"] .app-auth-logo {
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1)) !important;
 }
 
-/* Chart widget card title — always visible in dark mode */
-:root .card-title,
-[data-theme="dark"] .card-title {
+/* Chart widget card title */
+.card-title {
   color: var(--text-primary) !important;
 }
 
-:root .card-header,
-[data-theme="dark"] .card-header {
+.card-header {
   background-color: transparent !important;
   border-bottom-color: var(--card-border) !important;
 }
 
-
-
-/* Override Bootstrap card bg + ApexCharts white canvas in dark mode */
-:root .card,
-[data-theme="dark"] .card {
+/* Override Bootstrap card bg + ApexCharts white canvas */
+.card {
   --bs-card-bg: var(--card-bg) !important;
   background-color: var(--card-bg) !important;
   border-color: var(--card-border) !important;
   color: var(--text-primary) !important;
 }
 
-/* Force ApexCharts transparent chart area in dark mode */
-:root .apexcharts-canvas,
-[data-theme="dark"] .apexcharts-canvas {
+/* Force ApexCharts transparent chart area */
+.apexcharts-canvas {
   background: transparent !important;
 }
 
-:root .apexcharts-theme-light,
-[data-theme="dark"] .apexcharts-theme-light {
+.apexcharts-theme-light,
+.apexcharts-theme-dark {
   background: transparent !important;
 }
 
 /* Target the SVG background rect ApexCharts renders internally */
-:root .apexcharts-canvas svg,
-[data-theme="dark"] .apexcharts-canvas svg {
+.apexcharts-canvas svg {
   background: transparent !important;
 }
 
-:root .apexcharts-canvas .apexcharts-bg,
-[data-theme="dark"] .apexcharts-canvas .apexcharts-bg {
+.apexcharts-canvas .apexcharts-bg {
   fill: transparent !important;
 }
 
@@ -529,8 +518,7 @@ table tbody td div {
 }
 
 /* Dark Mode: Tooltip & Legend Styling */
-[data-theme="dark"] .apexcharts-tooltip,
-:root:not([data-theme="light"]) .apexcharts-tooltip {
+[data-theme="dark"] .apexcharts-tooltip {
   background: #1e293b !important;
   color: #f1f5f9 !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -538,8 +526,7 @@ table tbody td div {
   border-radius: 8px !important;
 }
 
-[data-theme="dark"] .apexcharts-tooltip-title,
-:root:not([data-theme="light"]) .apexcharts-tooltip-title {
+[data-theme="dark"] .apexcharts-tooltip-title {
   background: #0f172a !important;
   color: #f8fafc !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -547,16 +534,10 @@ table tbody td div {
   font-weight: 600 !important;
 }
 
-[data-theme="dark"] .apexcharts-legend-text,
-:root:not([data-theme="light"]) .apexcharts-legend-text {
+[data-theme="dark"] .apexcharts-legend-text {
   color: #cbd5e1 !important;
   font-weight: 500 !important;
   font-family: inherit !important;
-}
-
-[data-theme="light"] {
-  color-scheme: light;
-  --close-btn-filter: none;
 }
 
 /* Modal Overlay & Card Styling for Light & Dark */
@@ -888,9 +869,7 @@ table tbody td .form-check.form-switch .form-check-input.nudge-center {
 }
 
 /* Dark Mode AI Loader Card */
-:root:not([data-theme="light"]) .ai-loader-card,
 [data-theme="dark"] .ai-loader-card,
-:root:not([data-theme="light"]) .campaign-loader-card,
 [data-theme="dark"] .campaign-loader-card {
   background-color: #1e293b !important;
   border: 1px solid #334155 !important;
@@ -965,7 +944,6 @@ table tbody td .form-check.form-switch .form-check-input.nudge-center {
   display: inline-block;
 }
 
-:root:not([data-theme="light"]) .ai-loader-counter-badge,
 [data-theme="dark"] .ai-loader-counter-badge {
   background: rgba(37, 99, 235, 0.15);
   border: 1px solid rgba(37, 99, 235, 0.3);
@@ -998,9 +976,7 @@ table tbody td .form-check.form-switch .form-check-input.nudge-center {
   transition: all 0.25s ease;
 }
 
-:root:not([data-theme="light"]) .ai-loader-track,
 [data-theme="dark"] .ai-loader-track,
-:root:not([data-theme="light"]) .campaign-progress-track,
 [data-theme="dark"] .campaign-progress-track {
   background-color: #0f172a !important;
   border: 1px solid #334155 !important;
@@ -1078,7 +1054,6 @@ table tbody td .form-check.form-switch .form-check-input.nudge-center {
 }
 
 /* Dark Mode Global Loading Card */
-:root:not([data-theme="light"]) .app-loading-card,
 [data-theme="dark"] .app-loading-card {
   background-color: #1e293b !important;
   border: 1px solid #334155 !important;
@@ -1116,7 +1091,6 @@ table tbody td .form-check.form-switch .form-check-input.nudge-center {
   animation: app-spin 1.4s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
 }
 
-:root:not([data-theme="light"]) .app-loading-spinner-outer,
 [data-theme="dark"] .app-loading-spinner-outer {
   border: 3px solid rgba(37, 99, 235, 0.2);
   border-top-color: #3b82f6;
@@ -1139,7 +1113,6 @@ table tbody td .form-check.form-switch .form-check-input.nudge-center {
   animation: app-spin-reverse 1.8s linear infinite;
 }
 
-:root:not([data-theme="light"]) .app-loading-spinner-inner,
 [data-theme="dark"] .app-loading-spinner-inner {
   border: 2px dashed rgba(96, 165, 250, 0.3);
   border-top-color: #38bdf8;

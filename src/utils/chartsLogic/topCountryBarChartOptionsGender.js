@@ -71,6 +71,11 @@ export const topCountryBarChartOptions = (
     return g.impressions;
   });
 
+  const isLight =
+    typeof document !== "undefined"
+      ? document.documentElement.getAttribute("data-theme") !== "dark"
+      : true;
+
   return {
     chart: {
       type: "bar",
@@ -78,7 +83,7 @@ export const topCountryBarChartOptions = (
       toolbar: { show: false },
       background: "transparent",
     },
-    theme: { mode: "dark" },
+    theme: { mode: isLight ? "light" : "dark" },
     series: [
       {
         name: activeMetric,
@@ -113,7 +118,7 @@ export const topCountryBarChartOptions = (
       },
     },
     grid: {
-      borderColor: "rgba(255,255,255,0.10)",
+      borderColor: isLight ? "#e2e8f0" : "rgba(255,255,255,0.10)",
       strokeDashArray: 4,
     },
     xaxis: {
@@ -126,7 +131,7 @@ export const topCountryBarChartOptions = (
     },
     yaxis: {
       labels: {
-        style: { colors: ["#94a3b8"] },
+        style: { colors: [isLight ? "#64748b" : "#94a3b8"] },
         formatter: (val) => {
           if (activeMetric === "Impressions") {
             return Math.round(val);
@@ -137,7 +142,7 @@ export const topCountryBarChartOptions = (
     },
 
     tooltip: {
-      theme: "dark",
+      theme: isLight ? "light" : "dark",
       y: {
         formatter: (val) =>
           activeMetric === "Impressions"

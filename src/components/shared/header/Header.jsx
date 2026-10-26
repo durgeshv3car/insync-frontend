@@ -24,10 +24,10 @@ const Header = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Theme state: "dark" or "light" (defaults to "dark")
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("appTheme") || "dark";
+    const savedTheme = localStorage.getItem("appTheme") || "light";
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
   }, []);

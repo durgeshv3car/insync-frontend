@@ -1,6 +1,6 @@
 import { formatDate } from "../dateFormatter";
 
-export const visitorChartOption = (dailyReportsData = [], theme = "dark") => {
+export const visitorChartOption = (dailyReportsData = [], theme = "light") => {
   const isLight = theme === "light";
   const dataArray = Array.isArray(dailyReportsData)
     ? dailyReportsData

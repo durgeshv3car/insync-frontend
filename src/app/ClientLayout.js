@@ -1,4 +1,6 @@
 "use client";
+
+import { useEffect } from "react";
 import { SessionProvider } from "next-auth/react";
 import NavigationProvider from "@/contentApi/navigationProvider";
 import SettingSideBarProvider from "@/contentApi/settingSideBarProvider";
@@ -11,6 +13,11 @@ export const metadata = {
 };
 
 export default function ClientLayout({ children }) {
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("appTheme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }, []);
+
   return (
     <SessionProvider>
       <SettingSideBarProvider>
